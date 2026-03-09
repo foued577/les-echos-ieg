@@ -33,9 +33,9 @@ const teamValidation = [
     .withMessage('La couleur doit être un code hexadécimal valide (ex: #FF5733)')
 ];
 
-// Routes publiques (lecture)
-router.get('/', getTeams);
-router.get('/:id', getTeamById);
+// Routes protégées (lecture et écriture) - nécessitent l'authentification
+router.get('/', authMiddleware, getTeams);
+router.get('/:id', authMiddleware, getTeamById);
 
 // Routes protégées (écriture) - Admin et Editor
 router.post('/', authMiddleware, roleMiddleware('ADMIN', 'EDITOR'), teamValidation, createTeam);
