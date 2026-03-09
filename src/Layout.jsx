@@ -72,6 +72,7 @@ export default function Layout({ children, currentPageName }) {
   };
 
   const loadTeams = async () => {
+    console.log('🔥 loadTeams called!');
     try {
       console.log('🔍=== LOAD TEAMS START ===');
       console.log('👤 User object:', user);
