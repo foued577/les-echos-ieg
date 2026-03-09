@@ -61,13 +61,15 @@ export default function CreateContent() {
         rubriquesAPI.getAll(),
       ]);
 
-      if (teamsResponse.success) {
-        const normalizedTeams = teamsResponse.data.map(team => ({
+      if (Array.isArray(teamsResponse)) {
+        const normalizedTeams = teamsResponse.map(team => ({
           ...team,
           id: team._id || team.id
         }));
         setTeams(normalizedTeams);
         console.log('✅ Teams loaded for CreateContent:', normalizedTeams.length);
+      } else {
+        console.log('❌ Teams API failed or returned unexpected format:', teamsResponse);
       }
 
       if (rubriquesResponse.success) {

@@ -66,9 +66,10 @@ export default function Rubriques() {
         console.log('✅ Rubriques loaded:', rubriquesResponse.data.length);
       }
       
-      if (teamsResponse.success) {
+      // teamsAPI.getAll() returns directly an array, not an object with success/data
+      if (Array.isArray(teamsResponse)) {
         // Normalize team IDs
-        const normalizedTeams = teamsResponse.data.map(team => ({
+        const normalizedTeams = teamsResponse.map(team => ({
           ...team,
           id: team._id || team.id
         }));
@@ -76,7 +77,7 @@ export default function Rubriques() {
         console.log('✅ Teams loaded and normalized:', normalizedTeams.length);
         console.log('📋 Teams details:', normalizedTeams);
       } else {
-        console.log('❌ Teams API failed:', teamsResponse);
+        console.log('❌ Teams API failed or returned unexpected format:', teamsResponse);
       }
     } catch (error) {
       console.error('💥 Error fetching data:', error);

@@ -40,7 +40,7 @@ export default function Dashboard() {
       const myContents = myContentsResponse.success ? myContentsResponse.data : [];
       const pendingContents = pendingContentsResponse.success ? pendingContentsResponse.data : [];
       const approvedContents = approvedContentsResponse.success ? approvedContentsResponse.data : [];
-      const teams = teamsResponse.success ? teamsResponse.data : [];
+      const teams = Array.isArray(teamsResponse) ? teamsResponse : []; // teamsAPI.getAll() returns array
       const rubriques = rubriquesResponse.success ? rubriquesResponse.data : [];
 
       console.log('📊 Final counts:');
