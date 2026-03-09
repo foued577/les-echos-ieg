@@ -77,8 +77,18 @@ export default function Layout({ children, currentPageName }) {
       const teamsResponse = await apiClient.get('/teams');
       const teamsData = teamsResponse.data;
       
+      console.log('📦 Teams API raw response:', teamsData);
+      
       // apiClient retourne directement les données
       const teamsArray = Array.isArray(teamsData) ? teamsData : teamsData?.teams || [];
+      
+      console.log('📋 Teams array structure:', teamsArray.map(team => ({
+        _id: team._id,
+        name: team.name,
+        hasMembers: !!team.members,
+        membersCount: team.members?.length || 0,
+        members: team.members
+      })));
       
       // Filtrer les équipes où l'utilisateur est membre
       const userTeams = teamsArray.filter(team => {
