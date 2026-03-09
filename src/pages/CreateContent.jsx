@@ -150,6 +150,10 @@ export default function CreateContent() {
         }
 
         console.log('🔨 Creating file content with FormData');
+        console.log('📦 FormData contents:');
+        for (let [key, value] of fd.entries()) {
+          console.log(`  ${key}:`, value);
+        }
         
         response = await contentsAPI.createWithFile(fd);
       } else {
