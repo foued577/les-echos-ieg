@@ -79,12 +79,21 @@ export default function Layout({ children, currentPageName }) {
       
       // apiClient retourne directement les données
       const teamsArray = Array.isArray(teamsData) ? teamsData : teamsData?.teams || [];
-      const normalizedTeams = teamsArray.map(team => ({
+      
+      // Filtrer les équipes où l'utilisateur est membre
+      const userTeams = teamsArray.filter(team => {
+        return team.members && team.members.some(member => 
+          member._id === user?.id || member === user?.id || member === user?._id
+        );
+      });
+      
+      const normalizedTeams = userTeams.map(team => ({
         ...team,
         id: team._id || team.id
       }));
       setTeams(normalizedTeams.slice(0, 5));
       console.log('✅ Teams loaded for Layout:', normalizedTeams.length);
+      console.log('👤 User teams:', normalizedTeams.map(t => ({ name: t.name, id: t.id })));
     } catch (error) {
       console.error('💥 Error loading teams for Layout:', error);
     }
