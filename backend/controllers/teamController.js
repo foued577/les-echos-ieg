@@ -5,11 +5,21 @@ const { validationResult } = require('express-validator');
 const getTeams = async (req, res) => {
   try {
     console.log('🔍=== GET TEAMS START ===');
-    console.log('👤 User ID from token:', req.user?._id || req.user?.id);
+    const userId = req.user?._id || req.user?.id;
+    console.log('👤 User ID from token:', userId);
+    console.log('👤 Full req.user object:', req.user);
+    
+    if (!userId) {
+      console.log('❌ No user ID found in request');
+      return res.status(401).json({
+        success: false,
+        message: 'Utilisateur non authentifié'
+      });
+    }
     
     // Récupérer seulement les équipes où l'utilisateur est membre
     const teams = await Team.find({ 
-      members: req.user._id || req.user.id 
+      members: userId
     }).populate('members', 'name email avatar').lean();
     
     console.log('📊 Teams found for user:', teams.length);
