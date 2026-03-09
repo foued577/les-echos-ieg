@@ -79,15 +79,13 @@ export default function Layout({ children, currentPageName }) {
       console.log('🔐 Is authenticated:', isAuthenticated);
       
       console.log('🌐 Making API call to /teams...');
-      const teamsResponse = await apiClient.get('/teams');
-      const teamsData = teamsResponse.data;
+      const response = await apiClient.get('/teams');
       
-      console.log('📦 Teams API raw response:', teamsData);
-      console.log('📦 Teams API response type:', typeof teamsData);
-      console.log('📦 Is array?', Array.isArray(teamsData));
+      console.log('📦 Full API response:', response);
+      console.log('📦 Response data:', response.data);
       
-      // apiClient retourne directement les données
-      const teamsArray = Array.isArray(teamsData) ? teamsData : teamsData?.teams || [];
+      // Backend renvoie {success: true, count: 2, data: [...]}
+      const teamsArray = Array.isArray(response.data?.data) ? response.data.data : [];
       
       console.log('📋 Teams array length:', teamsArray.length);
       console.log('📋 Teams array:', teamsArray);
@@ -107,10 +105,10 @@ export default function Layout({ children, currentPageName }) {
       console.log('🔍=== LOAD TEAMS END ===');
     } catch (error) {
       console.error('💥=== LOAD TEAMS ERROR ===');
-      console.error('💥 Error object:', error);
-      console.error('💥 Error message:', error.message);
-      console.error('💥 Error response:', error.response?.data);
       console.error('💥 Error status:', error.response?.status);
+      console.error('💥 Error response:', error.response?.data);
+      console.error('💥 Error message:', error.message);
+      setTeams([]);
     }
   };
 
