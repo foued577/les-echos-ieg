@@ -1,10 +1,18 @@
 const Team = require('../models/Team');
 const { validationResult } = require('express-validator');
 
-// Obtenir toutes les équipes
+// Obtenir toutes les équipes de l'utilisateur connecté
 const getTeams = async (req, res) => {
   try {
-    const teams = await Team.find({}).populate('members', 'name email avatar').lean();
+    console.log('🔍=== GET TEAMS START ===');
+    console.log('👤 User ID from token:', req.user?._id || req.user?.id);
+    
+    // Récupérer seulement les équipes où l'utilisateur est membre
+    const teams = await Team.find({ 
+      members: req.user._id || req.user.id 
+    }).populate('members', 'name email avatar').lean();
+    
+    console.log('📊 Teams found for user:', teams.length);
     
     const teamsWithCounts = teams.map(t => ({
       ...t,
