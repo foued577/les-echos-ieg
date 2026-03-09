@@ -89,7 +89,14 @@ export const teamsAPI = {
   getAll: async () => {
     try {
       const response = await api.get('/teams');
-      // support si backend renvoie {teams:[...]} ou [...]
+      console.log('🔍 Teams API raw response:', response.data);
+      
+      // Backend renvoie {success: true, data: [...]}
+      if (response.data.success && Array.isArray(response.data.data)) {
+        return response.data.data.map(normalizeTeam);
+      }
+      
+      // Support si backend renvoie {teams:[...]} ou [...]
       const arr = response.data?.teams ?? response.data;
       return Array.isArray(arr) ? arr.map(normalizeTeam) : [];
     } catch (error) {
