@@ -165,13 +165,39 @@ const createContent = async (req, res) => {
 
     console.log('📝 Creating content with:', { title, type, team_ids, rubrique_id, tags, status });
 
+    // Parser team_ids et tags de manière sécurisée
+    let parsedTeamIds = [];
+    let parsedTags = [];
+
+    if (Array.isArray(team_ids)) {
+      parsedTeamIds = team_ids;
+    } else if (typeof team_ids === 'string' && team_ids.trim()) {
+      try {
+        parsedTeamIds = JSON.parse(team_ids);
+      } catch (error) {
+        console.log('⚠️ Invalid JSON in team_ids, using empty array');
+        parsedTeamIds = [];
+      }
+    }
+
+    if (Array.isArray(tags)) {
+      parsedTags = tags;
+    } else if (typeof tags === 'string' && tags.trim()) {
+      try {
+        parsedTags = JSON.parse(tags);
+      } catch (error) {
+        console.log('⚠️ Invalid JSON in tags, using empty array');
+        parsedTags = [];
+      }
+    }
+
     // Préparer l'objet de base
     const contentData = {
       title,
       type,
-      team_ids: team_ids ? JSON.parse(team_ids) : [],
+      team_ids: parsedTeamIds,
       rubrique_id,
-      tags: tags ? JSON.parse(tags) : [],
+      tags: parsedTags,
       author_id: req.user._id,
       status: status || 'draft'
     };
