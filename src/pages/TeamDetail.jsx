@@ -301,9 +301,10 @@ export default function TeamDetail() {
 
     // Download direct
     const a = document.createElement("a");
+    const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
     const fullUrl = fileUrl.startsWith("http") 
       ? fileUrl 
-      : `http://localhost:5000${fileUrl}`;
+      : `${API_URL}${fileUrl}`;
     a.href = fullUrl;
     a.download = content.file_name || content.title || "document";
     document.body.appendChild(a);
