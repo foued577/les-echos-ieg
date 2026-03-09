@@ -90,14 +90,8 @@ export default function Layout({ children, currentPageName }) {
         members: team.members
       })));
       
-      // Filtrer les équipes où l'utilisateur est membre
-      const userTeams = teamsArray.filter(team => {
-        return team.members && team.members.some(member => 
-          member._id === user?.id || member === user?.id || member === user?._id
-        );
-      });
-      
-      const normalizedTeams = userTeams.map(team => ({
+      // Plus de filtrage - le backend renvoie déjà les équipes de l'utilisateur
+      const normalizedTeams = teamsArray.map(team => ({
         ...team,
         id: team._id || team.id
       }));
