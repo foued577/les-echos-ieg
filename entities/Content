@@ -1,0 +1,88 @@
+{
+  "name": "Content",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Titre du contenu"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description du contenu"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "link",
+        "file",
+        "article"
+      ],
+      "description": "Type de contenu"
+    },
+    "url": {
+      "type": "string",
+      "description": "URL du lien"
+    },
+    "file_url": {
+      "type": "string",
+      "description": "URL du fichier upload\u00e9"
+    },
+    "article_content": {
+      "type": "string",
+      "description": "Contenu de l'article (HTML)"
+    },
+    "team_id": {
+      "type": "string",
+      "description": "ID de l'\u00e9quipe"
+    },
+    "category_id": {
+      "type": "string",
+      "description": "ID de la rubrique"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "brouillon",
+        "en_attente",
+        "approuve",
+        "refuse"
+      ],
+      "default": "brouillon",
+      "description": "Statut de mod\u00e9ration"
+    },
+    "author_email": {
+      "type": "string",
+      "description": "Email de l'auteur"
+    },
+    "author_name": {
+      "type": "string",
+      "description": "Nom de l'auteur"
+    },
+    "moderated_by": {
+      "type": "string",
+      "description": "Email du mod\u00e9rateur"
+    },
+    "moderation_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Date de mod\u00e9ration"
+    },
+    "moderation_comment": {
+      "type": "string",
+      "description": "Commentaire de mod\u00e9ration"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Tags du contenu"
+    }
+  },
+  "required": [
+    "title",
+    "type",
+    "team_id",
+    "status"
+  ]
+}

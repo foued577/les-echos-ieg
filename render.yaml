@@ -1,0 +1,36 @@
+services:
+  # Backend API Service
+  - type: web
+    name: les-echos-ieg-api
+    runtime: node
+    plan: free
+    rootDirectory: backend
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: FRONTEND_URL
+        value: https://les-echos-ieg.onrender.com
+
+  # Frontend Static Site
+  - type: web
+    name: les-echos-ieg
+    runtime: static
+    plan: free
+    rootDirectory: .
+    buildCommand: npm install && npm run build
+    publishDirectory: dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://les-echos-ieg-api.onrender.com/api
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

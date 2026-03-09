@@ -1,0 +1,30 @@
+{
+  "name": "Category",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Nom de la rubrique"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description de la rubrique"
+    },
+    "team_id": {
+      "type": "string",
+      "description": "ID de l'\u00e9quipe associ\u00e9e"
+    },
+    "color": {
+      "type": "string",
+      "description": "Couleur de la rubrique"
+    },
+    "icon": {
+      "type": "string",
+      "description": "Ic\u00f4ne de la rubrique"
+    }
+  },
+  "required": [
+    "name",
+    "team_id"
+  ]
+}

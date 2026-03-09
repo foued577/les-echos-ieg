@@ -1,0 +1,233 @@
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { createPageUrl } from './utils';
+import { teamsAPI } from '@/services/api';
+import { apiClient } from '@/lib/apiClient';
+import { useAuth } from '@/lib/AuthContext';
+import { 
+  Home,
+  Users2,
+  Layers,
+  Shield,
+  PenLine,
+  Menu,
+  X,
+  LogOut,
+  ChevronRight,
+  BookOpen,
+  FolderOpen
+} from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+
+export default function Layout({ children, currentPageName }) {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [teams, setTeams] = useState([]);
+  const [pendingCount, setPendingCount] = useState(0);
+  const { user, logout, isAuthenticated } = useAuth();
+
+  useEffect(() => {
+    console.log('🏗️ Layout mounted');
+    console.log('👤 Current user:', user);
+    console.log('🔐 Is authenticated:', isAuthenticated);
+    console.log('🔑 Token in localStorage:', !!localStorage.getItem('auth_token'));
+    
+    if (user) {
+      loadPendingCount();
+      loadTeams();
+    }
+  }, [user]);
+
+  // Refresh pending count when currentPage changes to Moderation
+  useEffect(() => {
+    if (user && currentPageName === 'Moderation') {
+      loadPendingCount();
+    }
+  }, [currentPageName, user]);
+
+  const loadPendingCount = async () => {
+    try {
+      console.log('🔍 Loading pending count...');
+      const { contentsAPI } = await import('@/services/api');
+      const response = await contentsAPI.getAll({ status: 'pending_review' });
+      
+      if (response.success) {
+        const count = response.data.length;
+        setPendingCount(count);
+        console.log('✅ Pending count loaded:', count);
+      } else {
+        setPendingCount(0);
+      }
+    } catch (error) {
+      console.error('💥 Error loading pending count:', error);
+      setPendingCount(0);
+    }
+  };
+
+  const loadTeams = async () => {
+    try {
+      console.log('🔍 Loading teams for Layout...');
+      const teamsResponse = await apiClient.get('/teams');
+      const teamsData = teamsResponse.data;
+      
+      // apiClient retourne directement les données
+      const teamsArray = Array.isArray(teamsData) ? teamsData : teamsData?.teams || [];
+      const normalizedTeams = teamsArray.map(team => ({
+        ...team,
+        id: team._id || team.id
+      }));
+      setTeams(normalizedTeams.slice(0, 5));
+      console.log('✅ Teams loaded for Layout:', normalizedTeams.length);
+    } catch (error) {
+      console.error('💥 Error loading teams for Layout:', error);
+    }
+  };
+
+  const isAdmin = user?.role === 'ADMIN' || user?.role === 'admin';
+  
+  console.log('Layout - Current user:', user);
+  console.log('Layout - User role:', user?.role);
+  console.log('Layout - Is admin:', isAdmin);
+  console.log('Layout - Is authenticated:', isAuthenticated);
+
+  const navigation = [
+    { name: 'Accueil', page: 'Dashboard', icon: Home },
+    { name: 'Équipes', page: 'Teams', icon: Users2 },
+    { name: 'Rubriques', page: 'Rubriques', icon: FolderOpen },
+    { name: 'Explorer', page: 'Explorer', icon: Layers },
+    ...(isAdmin ? [
+      { name: 'Administration', page: 'Admin', icon: Shield },
+      { name: 'Modération', page: 'Moderation', icon: Shield, badge: pendingCount }
+    ] : []),
+  ];
+
+  const getInitials = (name) => {
+    if (!name) return 'U';
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  };
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <header className="fixed top-0 left-0 right-0 h-16 bg-card/80 backdrop-blur-xl border-b border-border z-50">
+        <div className="h-full px-6 flex items-center justify-between max-w-screen-2xl mx-auto">
+          <div className="flex items-center gap-4">
+            <button
+              className="lg:hidden p-2.5 text-muted-foreground hover:text-foreground hover:bg-secondary rounded-xl transition-all duration-200"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            >
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+            <Link to={createPageUrl('Dashboard')} className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center shadow-sm border border-black/8 p-1.5">
+                <BookOpen className="w-5 h-5 text-white" />
+              </div>
+              <span className="font-sans text-xl font-semibold text-foreground hidden sm:block">Les Échos de IEG</span>
+            </Link>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Link to={createPageUrl('CreateContent')}>
+              <button className="apple-button-secondary flex items-center gap-2">
+                <PenLine className="w-4 h-4" />
+                <span className="hidden sm:inline">Proposer</span>
+              </button>
+            </Link>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-3 p-2 rounded-xl hover:bg-secondary transition-all duration-200">
+                  <Avatar className="h-9 w-9">
+                    <AvatarFallback className="bg-secondary text-foreground text-sm font-medium">
+                      {getInitials(user?.name)}
+                    </AvatarFallback>
+                  </Avatar>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-64 apple-card">
+                <div className="px-4 py-3">
+                  <p className="font-semibold text-sm text-foreground">{user?.name}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{user?.email}</p>
+                </div>
+                <DropdownMenuSeparator className="bg-border" />
+                <DropdownMenuItem onClick={() => logout()} className="text-muted-foreground hover:text-foreground transition-colors">
+                  <LogOut className="w-4 h-4 mr-3" />
+                  Déconnexion
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+      </header>
+
+      {/* Sidebar */}
+      <aside className={`fixed top-16 left-0 bottom-0 w-72 bg-sidebar-background border-r border-sidebar-border z-40 transform transition-transform duration-200 ease-in-out lg:translate-x-0 ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <nav className="p-4 space-y-2">
+          {navigation.map((item) => {
+            const isActive = currentPageName === item.page;
+            return (
+              <Link
+                key={item.page}
+                to={createPageUrl(item.page)}
+                onClick={() => setMobileMenuOpen(false)}
+                className={`apple-sidebar-item ${isActive ? 'active' : ''}`}
+              >
+                <item.icon className="w-5 h-5 text-muted-foreground" />
+                <span className="flex-1">{item.name}</span>
+                {item.badge > 0 && (
+                  <span className="apple-badge apple-badge-warning">
+                    {item.badge}
+                  </span>
+                )}
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* Workspaces */}
+        <div className="px-4 mt-8">
+          <p className="px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">Espaces</p>
+          <div className="space-y-1">
+            {teams.map((team) => (
+              <Link
+                key={team.id}
+                to={createPageUrl(`TeamDetail?id=${team._id}`)}
+                onClick={() => setMobileMenuOpen(false)}
+                className="apple-sidebar-item"
+              >
+                <div 
+                  className="w-2.5 h-2.5 rounded-full"
+                  style={{ backgroundColor: team.color || '#0071e3' }}
+                />
+                <span className="flex-1 truncate">{team.name}</span>
+                <ChevronRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+              </Link>
+            ))}
+          </div>
+        </div>
+      </aside>
+
+      {/* Mobile overlay */}
+      {mobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/20 z-30 lg:hidden backdrop-blur-sm"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* Main content */}
+      <main className="pt-16 lg:pl-72">
+        <div className="max-w-5xl mx-auto px-8 py-10">
+          {children}
+        </div>
+      </main>
+    </div>
+  );
+}

@@ -1,0 +1,33 @@
+{
+  "name": "TeamMember",
+  "type": "object",
+  "properties": {
+    "team_id": {
+      "type": "string",
+      "description": "ID de l'\u00e9quipe"
+    },
+    "user_email": {
+      "type": "string",
+      "description": "Email de l'utilisateur"
+    },
+    "user_name": {
+      "type": "string",
+      "description": "Nom de l'utilisateur"
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "admin",
+        "membre",
+        "lecteur"
+      ],
+      "default": "membre",
+      "description": "R\u00f4le dans l'\u00e9quipe"
+    }
+  },
+  "required": [
+    "team_id",
+    "user_email",
+    "role"
+  ]
+}
