@@ -1,6 +1,7 @@
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 const { body } = require('express-validator');
 const { getContents, getContentById, createContent, updateContent, deleteContent, getMyContents } = require('../controllers/contentController');
 const authMiddleware = require('../middleware/authMiddleware');
@@ -8,10 +9,17 @@ const roleMiddleware = require('../middleware/roleMiddleware');
 
 const router = express.Router();
 
+// S'assurer que le dossier uploads existe
+const uploadsDir = path.join(__dirname, '..', 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+  console.log('📁 Dossier uploads créé:', uploadsDir);
+}
+
 // Configuration de multer pour l'upload de fichiers
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'uploads/');
+    cb(null, uploadsDir);
   },
   filename: (req, file, cb) => {
     // Générer un nom de fichier unique avec timestamp
