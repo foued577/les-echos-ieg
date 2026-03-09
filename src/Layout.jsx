@@ -90,15 +90,7 @@ export default function Layout({ children, currentPageName }) {
       const teamsArray = Array.isArray(teamsData) ? teamsData : teamsData?.teams || [];
       
       console.log('📋 Teams array length:', teamsArray.length);
-      console.log('📋 Teams array structure:', teamsArray.map((team, index) => ({
-        index,
-        _id: team._id,
-        name: team.name,
-        hasMembers: !!team.members,
-        membersCount: team.members?.length || 0,
-        members: team.members,
-        color: team.color
-      })));
+      console.log('📋 Teams array:', teamsArray);
       
       // Plus de filtrage - le backend renvoie déjà les équipes de l'utilisateur
       const normalizedTeams = teamsArray.map(team => ({
@@ -106,7 +98,7 @@ export default function Layout({ children, currentPageName }) {
         id: team._id || team.id
       }));
       
-      console.log('🎯 Normalized teams:', normalizedTeams.map(t => ({ name: t.name, id: t.id })));
+      console.log('🎯 Normalized teams:', normalizedTeams);
       console.log('🎯 Setting teams state:', normalizedTeams.slice(0, 5));
       
       setTeams(normalizedTeams.slice(0, 5));
