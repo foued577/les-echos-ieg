@@ -73,21 +73,31 @@ export default function Layout({ children, currentPageName }) {
 
   const loadTeams = async () => {
     try {
-      console.log('🔍 Loading teams for Layout...');
+      console.log('🔍=== LOAD TEAMS START ===');
+      console.log('👤 User object:', user);
+      console.log('👤 User ID:', user?.id || user?._id);
+      console.log('🔐 Is authenticated:', isAuthenticated);
+      
+      console.log('🌐 Making API call to /teams...');
       const teamsResponse = await apiClient.get('/teams');
       const teamsData = teamsResponse.data;
       
       console.log('📦 Teams API raw response:', teamsData);
+      console.log('📦 Teams API response type:', typeof teamsData);
+      console.log('📦 Is array?', Array.isArray(teamsData));
       
       // apiClient retourne directement les données
       const teamsArray = Array.isArray(teamsData) ? teamsData : teamsData?.teams || [];
       
-      console.log('📋 Teams array structure:', teamsArray.map(team => ({
+      console.log('📋 Teams array length:', teamsArray.length);
+      console.log('📋 Teams array structure:', teamsArray.map((team, index) => ({
+        index,
         _id: team._id,
         name: team.name,
         hasMembers: !!team.members,
         membersCount: team.members?.length || 0,
-        members: team.members
+        members: team.members,
+        color: team.color
       })));
       
       // Plus de filtrage - le backend renvoie déjà les équipes de l'utilisateur
@@ -95,11 +105,20 @@ export default function Layout({ children, currentPageName }) {
         ...team,
         id: team._id || team.id
       }));
+      
+      console.log('🎯 Normalized teams:', normalizedTeams.map(t => ({ name: t.name, id: t.id })));
+      console.log('🎯 Setting teams state:', normalizedTeams.slice(0, 5));
+      
       setTeams(normalizedTeams.slice(0, 5));
       console.log('✅ Teams loaded for Layout:', normalizedTeams.length);
       console.log('👤 User teams:', normalizedTeams.map(t => ({ name: t.name, id: t.id })));
+      console.log('🔍=== LOAD TEAMS END ===');
     } catch (error) {
-      console.error('💥 Error loading teams for Layout:', error);
+      console.error('💥=== LOAD TEAMS ERROR ===');
+      console.error('💥 Error object:', error);
+      console.error('💥 Error message:', error.message);
+      console.error('💥 Error response:', error.response?.data);
+      console.error('💥 Error status:', error.response?.status);
     }
   };
 
