@@ -15,6 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { getFileUrl } from '../utils';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
@@ -65,7 +66,8 @@ export default function Kanban() {
     if (content.type === 'link' && content.url) {
       window.open(content.url, '_blank');
     } else if (content.type === 'file' && content.file_url) {
-      window.open(content.file_url, '_blank');
+      const fileUrl = getFileUrl(content.file_url);
+      window.open(fileUrl, '_blank');
     } else {
       setSelectedContent(content);
     }
@@ -234,7 +236,7 @@ export default function Kanban() {
                 )}
 
                 {selectedContent.type === 'file' && selectedContent.file_url && (
-                  <Button onClick={() => window.open(selectedContent.file_url, '_blank')} className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-md hover:shadow-lg transition-all">
+                  <Button onClick={() => window.open(getFileUrl(selectedContent.file_url), '_blank')} className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-md hover:shadow-lg transition-all">
                     Télécharger le fichier
                   </Button>
                 )}

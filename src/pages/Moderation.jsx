@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { teamsAPI, contentsAPI } from '@/services/api';
+import { teamsAPI, contentsAPI, rubriquesAPI } from '@/services/api';
+import { getFileUrl } from '../utils';
 import { useAuth } from '@/lib/AuthContext';
+import { toast } from 'sonner';
 import { CheckCircle, XCircle, Clock, FileText, Link as LinkIcon, File, ExternalLink, Eye, User, Calendar } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -211,7 +213,7 @@ export default function Moderation() {
                   </Button>
                 )}
                 {content.type === 'file' && content.file_url && (
-                  <Button variant="ghost" size="sm" onClick={() => window.open(content.file_url, '_blank')} className="text-slate-600">
+                  <Button variant="ghost" size="sm" onClick={() => window.open(getFileUrl(content.file_url), '_blank')} className="text-slate-600">
                     <ExternalLink className="w-4 h-4 mr-1" />
                     Télécharger
                   </Button>

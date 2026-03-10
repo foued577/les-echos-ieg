@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import { contentsAPI } from '@/services/api';
+import { getFileUrl } from '../utils';
 import { ArrowLeft, ExternalLink, Download, FileText, Link as LinkIcon, File } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { format } from 'date-fns';
@@ -60,7 +61,8 @@ export default function ContentDetail() {
 
   const handleDownloadFile = () => {
     if (content?.file_url) {
-      window.open(content.file_url, '_blank');
+      const fileUrl = getFileUrl(content.file_url);
+      window.open(fileUrl, '_blank');
     }
   };
 

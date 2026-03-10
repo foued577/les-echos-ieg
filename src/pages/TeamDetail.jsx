@@ -4,7 +4,7 @@ import { teamsAPI, contentsAPI } from '../services/api';
 import { apiClient } from '../lib/apiClient';
 import normalizeTeam from "@/services/api";
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { createPageUrl } from '../utils';
+import { createPageUrl, getFileUrl } from '../utils';
 import { 
   ArrowLeft, Users2, FolderOpen, Plus, Settings, UserPlus,
   MoreVertical, Trash2, FileText, Link as LinkIcon, File, ChevronRight
@@ -289,7 +289,7 @@ export default function TeamDetail() {
   }
 
   if (type === "file" || type === "fichier") {
-    const fileUrl = content.file_url || content.fileUrl || content.file_path;
+    const fileUrl = getFileUrl(content.file_url || content.fileUrl || content.file_path);
     console.log('📁 File URL:', fileUrl);
     console.log('📁 Content object:', content);
     

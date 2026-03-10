@@ -1,5 +1,13 @@
 import React from 'react';
-import { Link as LinkIcon, FileText, File, ExternalLink, MoreVertical, Eye } from 'lucide-react';
+import { getFileUrl } from '../../utils';
+import { 
+  Link as LinkIcon, 
+  FileText, 
+  File, 
+  ExternalLink, 
+  MoreVertical, 
+  Eye 
+} from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Button } from "@/components/ui/button";
@@ -24,7 +32,8 @@ export default function ContentCard({ content, category, onView, showActions = t
     if (content.type === 'link' && content.url) {
       window.open(content.url, '_blank');
     } else if (content.type === 'file' && content.file_url) {
-      window.open(content.file_url, '_blank');
+      const fileUrl = getFileUrl(content.file_url);
+      window.open(fileUrl, '_blank');
     } else if (onView) {
       onView(content);
     }
