@@ -169,6 +169,10 @@ export default function CreateContent() {
         };
 
         console.log('🔨 Creating content:', contentData);
+        console.log('📝 Form data type:', formData.type);
+        console.log('📝 Form data article_content:', formData.article_content);
+        console.log('📝 Form data url:', formData.url);
+        console.log('📝 Final content field:', contentData.content);
         
         response = await contentsAPI.create(contentData);
       }
