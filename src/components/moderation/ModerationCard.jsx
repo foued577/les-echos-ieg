@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { getFileUrl } from '../../utils';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Link as LinkIcon, FileText, File, CheckCircle, XCircle, ExternalLink, Eye, User, Calendar } from 'lucide-react';
@@ -97,7 +98,7 @@ export default function ModerationCard({ content, team, category, onApprove, onR
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  onClick={() => window.open(content.file_url, '_blank')}
+                  onClick={() => window.open(getFileUrl(content.file_url), '_blank')}
                   className="border-white/10 text-white hover:bg-white/5"
                 >
                   <ExternalLink className="w-4 h-4 mr-2" />
