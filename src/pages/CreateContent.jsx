@@ -383,7 +383,12 @@ export default function CreateContent() {
             <ReactQuill
               theme="snow"
               value={formData.article_content}
-              onChange={(content) => setFormData({ ...formData, article_content: content })}
+              onChange={(content) => {
+                console.log('📝 ReactQuill onChange called with:', content);
+                console.log('📝 Content length:', content?.length || 0);
+                console.log('📝 Content type:', typeof content);
+                setFormData({ ...formData, article_content: content });
+              }}
               className="bg-white rounded-lg"
             />
           </div>
