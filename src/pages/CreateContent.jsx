@@ -39,7 +39,7 @@ export default function CreateContent() {
     type: 'link',
     url: '',
     file_url: '',
-    article_content: '',
+    content: '',
     team_ids: [], // Support multiple teams
     category_id: '',
     tags: [],
@@ -160,7 +160,7 @@ export default function CreateContent() {
         // Pour les liens et articles, utiliser JSON normal
         const contentData = {
           title: formData.title,
-          content: formData.type === 'link' ? formData.url : formData.article_content,
+          content: formData.type === 'link' ? formData.url : formData.content,
           type: formData.type === 'link' ? 'lien' : 'article',
           team_ids: formData.team_ids || [],
           rubrique_id: formData.category_id || null,
@@ -170,11 +170,11 @@ export default function CreateContent() {
 
         console.log('🔨 Creating content:', contentData);
         console.log('📝 Form data type:', formData.type);
-        console.log('📝 Form data article_content:', formData.article_content);
+        console.log('📝 Form data content:', formData.content);
         console.log('📝 Form data url:', formData.url);
         console.log('📝 Final content field:', contentData.content);
         console.log('📝 Full formData object:', formData);
-        console.log('📝 Article content length:', formData.article_content?.length || 0);
+        console.log('📝 Article content length:', formData.content?.length || 0);
         
         response = await contentsAPI.create(contentData);
       }
@@ -382,12 +382,12 @@ export default function CreateContent() {
             <Label className="text-slate-700">Contenu *</Label>
             <ReactQuill
               theme="snow"
-              value={formData.article_content}
+              value={formData.content}
               onChange={(content) => {
                 console.log('📝 ReactQuill onChange called with:', content);
                 console.log('📝 Content length:', content?.length || 0);
                 console.log('📝 Content type:', typeof content);
-                setFormData({ ...formData, article_content: content });
+                setFormData({ ...formData, content: content });
               }}
               className="bg-white rounded-lg"
             />
