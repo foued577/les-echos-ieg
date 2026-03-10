@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { teamsAPI, contentsAPI } from '@/services/api';
 import { useAuth } from '@/lib/AuthContext';
+import { getFileUrl } from '../utils';
 import { Search, FileText, Link, File, Tag, Users } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -277,7 +278,7 @@ export default function Kanban() {
                     <div>
                       <h4 className="font-medium text-slate-900 mb-2">Fichier</h4>
                       <Button 
-                        onClick={() => window.open(selectedContent.file_url, '_blank')}
+                        onClick={() => window.open(getFileUrl(selectedContent.file_url), '_blank')}
                         className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-md hover:shadow-lg transition-all"
                       >
                         Télécharger le fichier
