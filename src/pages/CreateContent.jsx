@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 import { toast } from 'sonner';
 
 const typeConfig = {
@@ -121,6 +122,10 @@ export default function CreateContent() {
     setFormData({ ...formData, tags: formData.tags.filter(t => t !== tag) });
   };
 
+  const stripHtml = (html) => {
+    return html.replace(/<(.|\n)*?>/g, '').replace(/&nbsp;/g, ' ').trim();
+  };
+
   const handleSubmit = async (status) => {
     setSubmitting(true);
     
@@ -163,10 +168,26 @@ export default function CreateContent() {
         console.log('📝 formData.content value:', formData.content);
         console.log('📝 formData.content type:', typeof formData.content);
         console.log('📝 formData.content length:', formData.content?.length || 0);
-        
+
+        if (formData.type === 'article') {
+          const cleanContent = stripHtml(formData.content || '');
+          console.log('🧪 Clean article content:', cleanContent);
+
+          if (!cleanContent) {
+            setSubmitting(false);
+            toast.error('Le contenu de l\'article est requis');
+            return;
+          }
+        }
+
+        const finalContent =
+          formData.type === 'link'
+            ? formData.url
+            : (formData.content || '').trim();
+
         const contentData = {
           title: formData.title,
-          content: formData.type === 'link' ? formData.url : formData.content,
+          content: finalContent,
           type: formData.type === 'link' ? 'lien' : 'article',
           team_ids: formData.team_ids || [],
           rubrique_id: formData.category_id || null,
@@ -389,11 +410,12 @@ export default function CreateContent() {
             <ReactQuill
               theme="snow"
               value={formData.content}
-              onChange={(content) => {
-                console.log('📝 ReactQuill onChange called with:', content);
-                console.log('📝 Content length:', content?.length || 0);
-                console.log('📝 Content type:', typeof content);
-                setFormData({ ...formData, content: content });
+              onChange={(value) => {
+                console.log('📝 ReactQuill value:', value);
+                setFormData(prev => ({
+                  ...prev,
+                  content: value
+                }));
               }}
               className="bg-white rounded-lg"
             />
