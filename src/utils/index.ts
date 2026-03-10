@@ -11,19 +11,17 @@ export function getFileUrl(fileUrl: string | null | undefined): string | null {
         return fileUrl;
     }
     
-    // Si l'URL commence par /uploads, construire l'URL complète avec la base du backend sans /api
+    // Si l'URL commence par /uploads, construire l'URL complète
     if (fileUrl.startsWith('/uploads/')) {
-        const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-        
-        // En production, détecter automatiquement l'URL de base depuis l'URL courante
-        let backendBaseUrl = apiBaseUrl.replace('/api', '');
-        
-        // Si nous sommes en production sur Render et que l'URL par défaut est localhost
-        if (window.location.hostname !== 'localhost' && backendBaseUrl.includes('localhost')) {
-            // Utiliser l'origine de l'URL courante (https://les-echos-ieg.onrender.com)
-            backendBaseUrl = window.location.origin;
+        // En production, toujours utiliser l'origine de l'URL courante
+        // Cela évite les problèmes avec VITE_API_URL qui peut contenir /api
+        if (window.location.hostname !== 'localhost') {
+            return `${window.location.origin}${fileUrl}`;
         }
         
+        // En développement, utiliser VITE_API_URL ou localhost
+        const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+        const backendBaseUrl = apiBaseUrl.replace('/api', '');
         return `${backendBaseUrl}${fileUrl}`;
     }
     
