@@ -299,12 +299,13 @@ export default function TeamDetail() {
       return;
     }
 
-    // Download direct
+    // Download direct with getFileUrl
     const a = document.createElement("a");
-    const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
-    const fullUrl = fileUrl.startsWith("http") 
-      ? fileUrl 
-      : `${API_URL}${fileUrl}`;
+    const fullUrl = getFileUrl(fileUrl);
+    if (!fullUrl) {
+      console.error('❌ Invalid file URL');
+      return;
+    }
     a.href = fullUrl;
     a.download = content.file_name || content.title || "document";
     document.body.appendChild(a);
