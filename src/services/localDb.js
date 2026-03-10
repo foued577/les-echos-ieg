@@ -11,110 +11,15 @@ const STORAGE_KEYS = {
   CURRENT_USER: 'localdb_current_user'
 };
 
-// Initialize with fake data if empty
-const initializeData = () => {
-  if (!localStorage.getItem(STORAGE_KEYS.USERS)) {
-    const users = [
-      {
-        id: '1',
-        email: 'admin@example.com',
-        name: 'Admin User',
-        role: 'admin',
-        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      },
-      {
-        id: '2',
-        email: 'editor@example.com',
-        name: 'Editor User',
-        role: 'editor',
-        avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=32&h=32&fit=crop&crop=face',
-        created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       },
       {
         id: '3',
-        email: 'user@example.com',
-        name: 'Regular User',
-        role: 'user',
-        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=32&h=32&fit=crop&crop=face',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      },
-      {
-        id: '4',
-        email: 'yousfifouede@gmail.com',
-        name: 'Yousfi Foued',
-        role: 'admin',
-        password: 'admin123',
-        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }
-    ];
-    localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
-  }
-
-  if (!localStorage.getItem(STORAGE_KEYS.TEAMS)) {
-    const teams = [
-      {
-        id: '1',
-        name: 'Content Team',
-        description: 'Main content creation team',
-        members: ['1', '2'],
-        created_by: '1',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      },
-      {
-        id: '2',
-        name: 'Moderation Team',
-        description: 'Content moderation team',
-        members: ['1', '3'],
-        created_by: '1',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }
-    ];
-    localStorage.setItem(STORAGE_KEYS.TEAMS, JSON.stringify(teams));
-  }
-
-  if (!localStorage.getItem(STORAGE_KEYS.CONTENTS)) {
-    const contents = [
-      {
-        id: '1',
-        title: 'Getting Started Guide',
-        content: 'This is a comprehensive guide to get started with our platform...',
-        type: 'article',
-        status: 'published',
-        author_id: '2',
-        team_ids: ['1'], // Multiple teams support
-        tags: ['tutorial', 'guide'],
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      },
-      {
-        id: '2',
-        title: 'Community Guidelines',
-        content: 'Community guidelines and rules for respectful interaction...',
-        type: 'policy',
-        status: 'published',
-        author_id: '1',
-        team_ids: ['1', '2'], // Multiple teams
-        tags: ['policy', 'community'],
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      },
-      {
-        id: '3',
-        title: 'Draft Article',
-        content: 'This is a draft article that is still being worked on...',
-        type: 'article',
-        status: 'draft',
-        author_id: '3',
-        team_ids: ['2'], // Single team
-        tags: ['draft'],
+        name: 'Actualités',
+        description: 'Nouvelles et annonces',
+        team_ids: ['2'], 
+        color: '#16a34a',
+        created_by: '2',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }
@@ -538,38 +443,40 @@ const migrateToMultiTeams = () => {
   });
   
   if (contentsMigrated) {
-    setItems(STORAGE_KEYS.CONTENTS, updatedContents);
-    console.log('Contents migrated to multi-teams format');
-  }
-  
-  if (rubriquesMigrated || contentsMigrated) {
-    console.log('Migration completed successfully');
-  } else {
-    console.log('No migration needed - data already in multi-teams format');
-  }
-};
-
-// Run migration
-migrateToMultiTeams();
-
-// Export the main API object that mimics Base44 client structure
 export const localDb = {
-  users: usersApi,
-  teams: teamsApi,
-  rubriques: rubriquesApi,
-  contents: contentsApi,
-  kanban: kanbanApi,
-  moderation: moderationApi,
-  auth: authApi
+  users: { getAll: () => Promise.resolve([]) },
+  teams: { getAll: () => Promise.resolve([]) },
+  rubriques: { getAll: () => Promise.resolve([]) },
+  contents: { getAll: () => Promise.resolve([]) },
+  kanban: { getAll: () => Promise.resolve([]) },
+  moderation: { getAll: () => Promise.resolve([]) },
+  auth: { 
+    me: () => Promise.reject(new Error('Auth should use real API in production'))
+  },
+  integrations: {
+    Core: {
+      UploadFile: () => Promise.reject(new Error('Upload should use real API in production'))
+    }
+  }
 };
 
 // Helper function to inspect localStorage (for debugging)
 export const inspectLocalStorage = () => {
-  console.log('=== LOCAL STORAGE INSPECTION ===');
-  console.log('Users:', JSON.parse(localStorage.getItem('localdb_users') || '[]'));
-  console.log('Current user:', JSON.parse(localStorage.getItem('localdb_current_user') || 'null'));
-  console.log('All localStorage keys:', Object.keys(localStorage));
-  console.log('====================================');
+console.log('=== LOCAL STORAGE INSPECTION ===');
+console.log('Users:', JSON.parse(localStorage.getItem('localdb_users') || '[]'));
+console.log('Current user:', JSON.parse(localStorage.getItem('localdb_current_user') || 'null'));
+console.log('All localStorage keys:', Object.keys(localStorage));
+console.log('====================================');
+};
+
+// Clear all localDb data from localStorage
+export const clearAllLocalData = () => {
+console.log(' Clearing all localDb data from localStorage...');
+Object.values(STORAGE_KEYS).forEach(key => {
+localStorage.removeItem(key);
+console.log(` Removed ${key}`);
+});
+console.log(' All localDb data cleared');
 };
 
 export default localDb;
