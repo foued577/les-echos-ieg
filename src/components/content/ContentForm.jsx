@@ -48,7 +48,7 @@ export default function ContentForm({ teams, categories, onSubmit, isLoading }) 
     setUploading(true);
     setFileName(file.name);
     
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    const { file_url } = await contentsAPI.createWithFile({ file });
     setFormData({ ...formData, file_url });
     setUploading(false);
   };

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
-import { FileText, Link as LinkIcon, File, ExternalLink, ChevronDown } from 'lucide-react';
+import { teamsAPI, contentsAPI } from '@/services/api';
+import { useAuth } from '@/lib/AuthContext';
+import { getFileUrl } from '../utils';
+import { Search, FileText, Link as LinkIcon, File, Tag, Users, ExternalLink, ChevronDown } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -33,8 +35,8 @@ export default function Kanban() {
 
   const loadData = async () => {
     const [teamsData, contentsData] = await Promise.all([
-      base44.teams.getAll(),
-      base44.contents.getAll(),
+      teamsAPI.getAll(),
+      contentsAPI.getAll(),
     ]);
 
     setTeams(teamsData);
