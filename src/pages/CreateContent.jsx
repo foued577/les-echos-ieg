@@ -158,6 +158,12 @@ export default function CreateContent() {
         response = await contentsAPI.createWithFile(fd);
       } else {
         // Pour les liens et articles, utiliser JSON normal
+        console.log('📝=== BEFORE API CALL DEBUG ===');
+        console.log('📝 formData object:', JSON.stringify(formData, null, 2));
+        console.log('📝 formData.content value:', formData.content);
+        console.log('📝 formData.content type:', typeof formData.content);
+        console.log('📝 formData.content length:', formData.content?.length || 0);
+        
         const contentData = {
           title: formData.title,
           content: formData.type === 'link' ? formData.url : formData.content,
