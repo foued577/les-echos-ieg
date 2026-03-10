@@ -173,6 +173,8 @@ export default function CreateContent() {
         console.log('📝 Form data article_content:', formData.article_content);
         console.log('📝 Form data url:', formData.url);
         console.log('📝 Final content field:', contentData.content);
+        console.log('📝 Full formData object:', formData);
+        console.log('📝 Article content length:', formData.article_content?.length || 0);
         
         response = await contentsAPI.create(contentData);
       }
