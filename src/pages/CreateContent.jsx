@@ -154,6 +154,10 @@ export default function CreateContent() {
           throw new Error('Veuillez sélectionner un fichier');
         }
 
+        // Ajouter les champs manquants pour les fichiers
+        fd.append("file_name", formData.file_url?.name || formData.title);
+        fd.append("file_url", ""); // Sera rempli par le backend après upload
+
         console.log('🔨 Creating file content with FormData');
         console.log('📦 FormData contents:');
         for (let [key, value] of Array.from(fd.entries())) {
