@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/lib/AuthContext';
-import { teamsAPI, contentsAPI } from '../services/api';
+import { teamsAPI, contentsAPI, buildFileUrl } from '@/services/api';
 import { apiClient } from '../lib/apiClient';
 import normalizeTeam from "@/services/api";
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { createPageUrl, getFileUrl } from '../utils';
+import { createPageUrl } from '../utils';
 import { 
   ArrowLeft, Users2, FolderOpen, Plus, Settings, UserPlus,
   MoreVertical, Trash2, FileText, Link as LinkIcon, File, ChevronRight
@@ -297,12 +297,10 @@ export default function TeamDetail() {
       return;
     }
 
-    // Construire l'URL directe sans /api
-    const apiBaseUrl = import.meta.env.VITE_API_URL || 'https://les-echos-ieg.onrender.com/api';
-    const backendBaseUrl = apiBaseUrl.replace('/api', '');
-    const fileUrl = `${backendBaseUrl}${content.file_url}`;
+    // Construire l'URL du fichier avec buildFileUrl
+    const fileUrl = buildFileUrl(content.file_url);
     
-    console.log('📁 Direct file URL:', fileUrl);
+    console.log('📁 File URL:', fileUrl);
     console.log('📁 File name:', content.file_name || content.title);
 
     try {

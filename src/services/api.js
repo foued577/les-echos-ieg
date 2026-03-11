@@ -1,8 +1,19 @@
 import axios from 'axios';
 
+// Séparation des URLs pour API et fichiers
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+export const APP_BASE_URL = API_BASE_URL.replace(/\/api\/?$/, '');
+
+// Helper pour construire les URLs de fichiers
+export const buildFileUrl = (filePath) => {
+  if (!filePath) return '';
+  if (filePath.startsWith('http')) return filePath;
+  return `${APP_BASE_URL}${filePath.startsWith('/') ? filePath : `/${filePath}`}`;
+};
+
 // Créer une instance axios avec configuration de base
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },

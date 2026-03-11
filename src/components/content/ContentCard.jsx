@@ -1,5 +1,6 @@
 import React from 'react';
 import { getFileUrl } from '../../utils';
+import { buildFileUrl } from '@/services/api';
 import { 
   Link as LinkIcon, 
   FileText, 
@@ -32,10 +33,8 @@ export default function ContentCard({ content, category, onView, showActions = t
     if (content.type === 'link' && content.url) {
       window.open(content.url, '_blank');
     } else if (content.type === 'file' && content.file_url) {
-      // Téléchargement direct du fichier
-      const apiBaseUrl = import.meta.env.VITE_API_URL || 'https://les-echos-ieg.onrender.com/api';
-      const backendBaseUrl = apiBaseUrl.replace('/api', '');
-      const fileUrl = `${backendBaseUrl}${content.file_url}`;
+      // Téléchargement direct du fichier avec buildFileUrl
+      const fileUrl = buildFileUrl(content.file_url);
       
       const link = document.createElement('a');
       link.href = fileUrl;
