@@ -276,6 +276,7 @@ export default function TeamDetail() {
 
   const openContent = (content) => {
   console.log("OPEN CONTENT", content);
+  alert(`Contenu cliqué: ${content.title} - Type: ${content.type || content.content_type}`);
 
   const type = content.type || content.content_type;
 
