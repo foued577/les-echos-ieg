@@ -150,13 +150,13 @@ export default function CreateContent() {
           
         if (isBrowserFile) {
           fd.append("file", formData.file_url);
-        } else {
+        } else if (formData.file_url !== null) {
           throw new Error('Veuillez sélectionner un fichier');
         }
 
         console.log('🔨 Creating file content with FormData');
         console.log('📦 FormData contents:');
-        for (let [key, value] of fd.entries()) {
+        for (let [key, value] of Array.from(fd.entries())) {
           console.log(`  ${key}:`, value);
         }
         
