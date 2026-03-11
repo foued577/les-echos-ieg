@@ -98,7 +98,18 @@ export default function ModerationCard({ content, team, category, onApprove, onR
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  onClick={() => window.open(getFileUrl(content.file_url), '_blank')}
+                  onClick={() => {
+                    const apiBaseUrl = import.meta.env.VITE_API_URL || 'https://les-echos-ieg.onrender.com/api';
+                    const backendBaseUrl = apiBaseUrl.replace('/api', '');
+                    const fileUrl = `${backendBaseUrl}${content.file_url}`;
+                    
+                    const link = document.createElement('a');
+                    link.href = fileUrl;
+                    link.download = content.file_name || content.title || 'document';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                  }}
                   className="border-white/10 text-white hover:bg-white/5"
                 >
                   <ExternalLink className="w-4 h-4 mr-2" />

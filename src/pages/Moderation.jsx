@@ -213,7 +213,18 @@ export default function Moderation() {
                   </Button>
                 )}
                 {content.type === 'file' && content.file_url && (
-                  <Button variant="ghost" size="sm" onClick={() => window.open(getFileUrl(content.file_url), '_blank')} className="text-slate-600">
+                  <Button variant="ghost" size="sm" onClick={() => {
+                    const apiBaseUrl = import.meta.env.VITE_API_URL || 'https://les-echos-ieg.onrender.com/api';
+                    const backendBaseUrl = apiBaseUrl.replace('/api', '');
+                    const fileUrl = `${backendBaseUrl}${content.file_url}`;
+                    
+                    const link = document.createElement('a');
+                    link.href = fileUrl;
+                    link.download = content.file_name || content.title || 'document';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                  }} className="text-slate-600">
                     <ExternalLink className="w-4 h-4 mr-1" />
                     Télécharger
                   </Button>

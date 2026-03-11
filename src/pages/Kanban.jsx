@@ -110,8 +110,17 @@ export default function Kanban() {
     if (content.type === 'link' && content.url) {
       window.open(content.url, '_blank');
     } else if (content.type === 'file' && content.file_url) {
-      const fileUrl = getFileUrl(content.file_url);
-      window.open(fileUrl, '_blank');
+      // Téléchargement direct du fichier
+      const apiBaseUrl = import.meta.env.VITE_API_URL || 'https://les-echos-ieg.onrender.com/api';
+      const backendBaseUrl = apiBaseUrl.replace('/api', '');
+      const fileUrl = `${backendBaseUrl}${content.file_url}`;
+      
+      const link = document.createElement('a');
+      link.href = fileUrl;
+      link.download = content.file_name || content.title || 'document';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     } else {
       setSelectedContent(content);
     }
@@ -260,7 +269,18 @@ export default function Kanban() {
                 )}
 
                 {selectedContent.type === 'file' && selectedContent.file_url && (
-                  <Button onClick={() => window.open(getFileUrl(selectedContent.file_url), '_blank')} className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-md hover:shadow-lg transition-all">
+                  <Button onClick={() => {
+                    const apiBaseUrl = import.meta.env.VITE_API_URL || 'https://les-echos-ieg.onrender.com/api';
+                    const backendBaseUrl = apiBaseUrl.replace('/api', '');
+                    const fileUrl = `${backendBaseUrl}${selectedContent.file_url}`;
+                    
+                    const link = document.createElement('a');
+                    link.href = fileUrl;
+                    link.download = selectedContent.file_name || selectedContent.title || 'document';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                  }} className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-md hover:shadow-lg transition-all">
                     Télécharger le fichier
                   </Button>
                 )}

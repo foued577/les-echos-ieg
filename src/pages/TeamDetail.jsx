@@ -289,29 +289,34 @@ export default function TeamDetail() {
   }
 
   if (type === "file" || type === "fichier") {
-    const fileUrl = getFileUrl(content.file_url || content.fileUrl || content.file_path);
-    console.log('📁 File URL:', fileUrl);
-    console.log('📁 Content object:', content);
+    console.log('📁 File content clicked:', content);
     
-    if (!fileUrl) {
+    if (!content.file_url) {
       console.error("Missing file URL", content);
       alert("⚠️ Fichier non uploadé\n\nCe contenu de type 'fichier' n'a pas de fichier associé.\nLe fichier n'a probablement pas été correctement uploadé lors de la création.\n\nSolution: Recréer ce contenu en uploadant un vrai fichier.");
       return;
     }
 
-    // Download direct with getFileUrl
-    const a = document.createElement("a");
-    const fullUrl = getFileUrl(fileUrl);
-    if (!fullUrl) {
-      console.error('❌ Invalid file URL');
-      return;
+    // Construire l'URL directe sans /api
+    const apiBaseUrl = import.meta.env.VITE_API_URL || 'https://les-echos-ieg.onrender.com/api';
+    const backendBaseUrl = apiBaseUrl.replace('/api', '');
+    const fileUrl = `${backendBaseUrl}${content.file_url}`;
+    
+    console.log('📁 Direct file URL:', fileUrl);
+    console.log('📁 File name:', content.file_name || content.title);
+
+    try {
+      const link = document.createElement('a');
+      link.href = fileUrl;
+      link.download = content.file_name || content.title || 'document';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      console.log('📁 File download triggered successfully');
+    } catch (error) {
+      console.error('❌ File download failed:', error);
+      alert('❌ Erreur lors du téléchargement du fichier');
     }
-    a.href = fullUrl;
-    a.download = content.file_name || content.title || "document";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    console.log('📁 File download triggered:', fullUrl);
     return;
   }
 
