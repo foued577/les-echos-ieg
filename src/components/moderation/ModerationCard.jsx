@@ -1,8 +1,8 @@
 import React from 'react';
-import { getFileUrl } from '../../utils';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Link as LinkIcon, FileText, File, CheckCircle, XCircle, ExternalLink, Eye, User, Calendar } from 'lucide-react';
+import { contentsAPI, buildFileUrl } from '@/services/api';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import {
@@ -99,9 +99,7 @@ export default function ModerationCard({ content, team, category, onApprove, onR
                   variant="outline" 
                   size="sm" 
                   onClick={() => {
-                    const apiBaseUrl = import.meta.env.VITE_API_URL || 'https://les-echos-ieg.onrender.com/api';
-                    const backendBaseUrl = apiBaseUrl.replace('/api', '');
-                    const fileUrl = `${backendBaseUrl}${content.file_url}`;
+                    const fileUrl = buildFileUrl(content.file_url);
                     
                     const link = document.createElement('a');
                     link.href = fileUrl;

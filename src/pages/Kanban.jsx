@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { teamsAPI, contentsAPI } from '@/services/api';
+import { teamsAPI, contentsAPI, buildFileUrl } from '@/services/api';
 import { useAuth } from '@/lib/AuthContext';
 import { FileText, Link as LinkIcon, File, ExternalLink, Users, Calendar, Tag } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -110,10 +110,8 @@ export default function Kanban() {
     if (content.type === 'link' && content.url) {
       window.open(content.url, '_blank');
     } else if (content.type === 'file' && content.file_url) {
-      // Téléchargement direct du fichier
-      const apiBaseUrl = import.meta.env.VITE_API_URL || 'https://les-echos-ieg.onrender.com/api';
-      const backendBaseUrl = apiBaseUrl.replace('/api', '');
-      const fileUrl = `${backendBaseUrl}${content.file_url}`;
+      // Téléchargement direct du fichier avec buildFileUrl
+      const fileUrl = buildFileUrl(content.file_url);
       
       const link = document.createElement('a');
       link.href = fileUrl;
@@ -270,9 +268,7 @@ export default function Kanban() {
 
                 {selectedContent.type === 'file' && selectedContent.file_url && (
                   <Button onClick={() => {
-                    const apiBaseUrl = import.meta.env.VITE_API_URL || 'https://les-echos-ieg.onrender.com/api';
-                    const backendBaseUrl = apiBaseUrl.replace('/api', '');
-                    const fileUrl = `${backendBaseUrl}${selectedContent.file_url}`;
+                    const fileUrl = buildFileUrl(selectedContent.file_url);
                     
                     const link = document.createElement('a');
                     link.href = fileUrl;

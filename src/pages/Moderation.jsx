@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { teamsAPI, contentsAPI, rubriquesAPI } from '@/services/api';
+import { teamsAPI, contentsAPI, buildFileUrl } from '@/services/api';
 import { getFileUrl } from '../utils';
 import { useAuth } from '@/lib/AuthContext';
 import { toast } from 'sonner';
@@ -214,9 +214,7 @@ export default function Moderation() {
                 )}
                 {content.type === 'file' && content.file_url && (
                   <Button variant="ghost" size="sm" onClick={() => {
-                    const apiBaseUrl = import.meta.env.VITE_API_URL || 'https://les-echos-ieg.onrender.com/api';
-                    const backendBaseUrl = apiBaseUrl.replace('/api', '');
-                    const fileUrl = `${backendBaseUrl}${content.file_url}`;
+                    const fileUrl = buildFileUrl(content.file_url);
                     
                     const link = document.createElement('a');
                     link.href = fileUrl;

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
-import { contentsAPI } from '@/services/api';
+import { teamsAPI, contentsAPI, buildFileUrl } from '@/services/api';
 import { getFileUrl } from '../utils';
 import { ArrowLeft, ExternalLink, Download, FileText, Link as LinkIcon, File } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -61,10 +61,8 @@ export default function ContentDetail() {
 
   const handleDownloadFile = () => {
     if (content?.file_url) {
-      // Téléchargement direct du fichier
-      const apiBaseUrl = import.meta.env.VITE_API_URL || 'https://les-echos-ieg.onrender.com/api';
-      const backendBaseUrl = apiBaseUrl.replace('/api', '');
-      const fileUrl = `${backendBaseUrl}${content.file_url}`;
+      // Téléchargement direct du fichier avec buildFileUrl
+      const fileUrl = buildFileUrl(content.file_url);
       
       const link = document.createElement('a');
       link.href = fileUrl;

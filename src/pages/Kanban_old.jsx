@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { teamsAPI, contentsAPI } from '@/services/api';
+import { teamsAPI, contentsAPI, buildFileUrl } from '@/services/api';
 import { useAuth } from '@/lib/AuthContext';
 import { getFileUrl } from '../utils';
 import { Search, FileText, Link, File, Tag, Users } from 'lucide-react';
@@ -267,33 +267,10 @@ export default function Kanban() {
                         href={selectedContent.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-primary hover:underline break-all"
+                        className="text-blue-600 hover:text-blue-800 underline"
                       >
                         {selectedContent.url}
                       </a>
-                    </div>
-                  )}
-                  
-                  {selectedContent.type === 'file' && selectedContent.file_url && (
-                    <div>
-                      <h4 className="font-medium text-slate-900 mb-2">Fichier</h4>
-                      <Button 
-                        onClick={() => {
-                          const apiBaseUrl = import.meta.env.VITE_API_URL || 'https://les-echos-ieg.onrender.com/api';
-                          const backendBaseUrl = apiBaseUrl.replace('/api', '');
-                          const fileUrl = `${backendBaseUrl}${selectedContent.file_url}`;
-                          
-                          const link = document.createElement('a');
-                          link.href = fileUrl;
-                          link.download = selectedContent.file_name || selectedContent.title || 'document';
-                          document.body.appendChild(link);
-                          link.click();
-                          document.body.removeChild(link);
-                        }}
-                        className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-md hover:shadow-lg transition-all"
-                      >
-                        Télécharger le fichier
-                      </Button>
                     </div>
                   )}
                   
