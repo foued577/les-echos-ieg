@@ -12,6 +12,9 @@ export const buildFileUrl = (filePath) => {
   console.log('🔗 API_BASE_URL:', API_BASE_URL);
   console.log('🔗 APP_BASE_URL:', APP_BASE_URL);
   
+  // Debug visible avec alert
+  alert(`buildFileUrl appelé avec: ${filePath}`);
+  
   if (!filePath) {
     console.log('🔗 No file path provided');
     return '';
@@ -24,6 +27,10 @@ export const buildFileUrl = (filePath) => {
   const finalUrl = `${APP_BASE_URL}${filePath.startsWith('/') ? filePath : `/${filePath}`}`;
   console.log('🔗 buildFileUrl FINAL URL:', finalUrl);
   console.log('🔗=== buildFileUrl END ===');
+  
+  // Debug visible avec alert
+  alert(`URL finale: ${finalUrl}`);
+  
   return finalUrl;
 };
 
