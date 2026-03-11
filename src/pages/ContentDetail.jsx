@@ -61,8 +61,17 @@ export default function ContentDetail() {
 
   const handleDownloadFile = () => {
     if (content?.file_url) {
-      const fileUrl = getFileUrl(content.file_url);
-      window.open(fileUrl, '_blank');
+      // Téléchargement direct du fichier
+      const apiBaseUrl = import.meta.env.VITE_API_URL || 'https://les-echos-ieg.onrender.com/api';
+      const backendBaseUrl = apiBaseUrl.replace('/api', '');
+      const fileUrl = `${backendBaseUrl}${content.file_url}`;
+      
+      const link = document.createElement('a');
+      link.href = fileUrl;
+      link.download = content.file_name || content.title || 'document';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
   };
 

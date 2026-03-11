@@ -278,7 +278,18 @@ export default function Kanban() {
                     <div>
                       <h4 className="font-medium text-slate-900 mb-2">Fichier</h4>
                       <Button 
-                        onClick={() => window.open(getFileUrl(selectedContent.file_url), '_blank')}
+                        onClick={() => {
+                          const apiBaseUrl = import.meta.env.VITE_API_URL || 'https://les-echos-ieg.onrender.com/api';
+                          const backendBaseUrl = apiBaseUrl.replace('/api', '');
+                          const fileUrl = `${backendBaseUrl}${selectedContent.file_url}`;
+                          
+                          const link = document.createElement('a');
+                          link.href = fileUrl;
+                          link.download = selectedContent.file_name || selectedContent.title || 'document';
+                          document.body.appendChild(link);
+                          link.click();
+                          document.body.removeChild(link);
+                        }}
                         className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-md hover:shadow-lg transition-all"
                       >
                         Télécharger le fichier
