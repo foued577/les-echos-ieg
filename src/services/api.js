@@ -6,9 +6,15 @@ export const APP_BASE_URL = API_BASE_URL.replace(/\/api\/?$/, '');
 
 // Helper pour construire les URLs de fichiers
 export const buildFileUrl = (filePath) => {
+  console.log('🔗 buildFileUrl input:', filePath);
+  console.log('🔗 APP_BASE_URL:', APP_BASE_URL);
+  
   if (!filePath) return '';
   if (filePath.startsWith('http')) return filePath;
-  return `${APP_BASE_URL}${filePath.startsWith('/') ? filePath : `/${filePath}`}`;
+  
+  const finalUrl = `${APP_BASE_URL}${filePath.startsWith('/') ? filePath : `/${filePath}`}`;
+  console.log('🔗 buildFileUrl output:', finalUrl);
+  return finalUrl;
 };
 
 // Créer une instance axios avec configuration de base

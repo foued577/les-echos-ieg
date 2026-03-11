@@ -55,6 +55,8 @@ app.use(express.urlencoded({ extended: false }));
 
 // Fichiers statiques
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// Alias pour compatibilité avec les URLs existantes
+app.use('/api/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Routes
 app.use('/api/auth', require('./routes/authRoutes'));
