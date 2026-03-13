@@ -1,10 +1,16 @@
 import axios from 'axios';
 
 // Séparation des URLs pour API et fichiers
-const API_BASE_URL = import.meta.env.VITE_API_URL || 
+let API_BASE_URL = import.meta.env.VITE_API_URL || 
   (window.location.hostname.includes('les-echos-ieg.onrender.com') 
     ? 'https://les-echos-ieg-api.onrender.com/api'
     : 'http://localhost:5000/api');
+
+// FORCE le bon domaine en production (fallback ultime)
+if (window.location.hostname.includes('les-echos-ieg.onrender.com')) {
+  API_BASE_URL = 'https://les-echos-ieg-api.onrender.com/api';
+  console.log('🔧 FORCE API BASE URL TO:', API_BASE_URL);
+}
 
 // Force le bon domaine en production (patch temporaire)
 export const APP_BASE_URL = API_BASE_URL.replace(/\/api\/?$/, '') || 
