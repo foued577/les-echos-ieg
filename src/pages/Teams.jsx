@@ -41,7 +41,7 @@ export default function Teams() {
 
   const loadData = async () => {
     try {
-      console.log('🔍 Loading teams with counts...');
+      console.log('🔍 Loading teams...');
       const response = await teamsAPI.getAll();
       
       if (response.success) {
@@ -54,6 +54,8 @@ export default function Teams() {
     } catch (error) {
       console.error('💥 Error loading teams:', error);
       setTeams([]);
+    } finally {
+      setLoading(false);
     }
   };
 

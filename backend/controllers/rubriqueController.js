@@ -1,31 +1,26 @@
 const Rubrique = require('../models/Rubrique');
 const { validationResult } = require('express-validator');
 
-// Obtenir toutes les rubriques
 const getRubriques = async (req, res) => {
   try {
     console.log('📂=== GET RUBRIQUES START ===');
     console.log('📂 User role:', req.user?.role);
+    console.log('📂 User ID:', req.user?._id);
     
-    // Sécurité : filtrer par équipes autorisées pour les non-ADMIN
-    const isAdmin = req.user?.role === 'ADMIN';
+    const Rubrique = require('../models/Rubrique');
+    const Team = require('../models/Team');
+    const { validationResult } = require('express-validator');
+    
     let filter = {};
-    
-    if (!isAdmin) {
+
+    if (req.user.role !== 'ADMIN') {
       console.log('🔐 Applying team-based security filter for non-admin user');
       
-      // Récupérer les équipes de l'utilisateur
-      const Team = require('../models/Team');
-      const userId = req.user?._id || req.user?.id;
-      
-      const userTeams = await Team.find({ 
-        members: userId 
-      }).select('_id').lean();
-      
+      const userTeams = await Team.find({ members: req.user._id }).select('_id');
       const allowedTeamIds = userTeams.map(team => team._id.toString());
+      
       console.log('👥 User teams for rubriques:', allowedTeamIds);
       
-      // Filtrer les rubriques par équipes autorisées
       filter.team_ids = { $in: allowedTeamIds };
     } else {
       console.log('🔓 Admin user - no team filter for rubriques');
@@ -34,13 +29,12 @@ const getRubriques = async (req, res) => {
     const rubriques = await Rubrique.find(filter)
       .populate('created_by', 'name email avatar');
 
-    console.log('📂 Rubriques found:', rubriques.length);
-
-    // Convert team_ids to strings for frontend compatibility
     const formattedRubriques = rubriques.map(rubrique => ({
       ...rubrique.toObject(),
       team_ids: rubrique.team_ids.map(id => id.toString())
     }));
+
+    console.log('📂 Rubriques found:', formattedRubriques.length);
 
     res.status(200).json({
       success: true,
@@ -67,6 +61,29 @@ const getRubriqueById = async (req, res) => {
         success: false,
         message: 'Rubrique non trouvée'
       });
+    }
+
+    if (req.user.role !== 'ADMIN') {
+      console.log('🔐 Checking team access for rubrique');
+      
+      const Team = require('../models/Team');
+      const userTeams = await Team.find({ members: req.user._id }).select('_id');
+      const allowedTeamIds = userTeams.map(team => team._id.toString());
+
+      const hasAccess = rubrique.team_ids.some(teamId =>
+        allowedTeamIds.includes(teamId.toString())
+      );
+
+      console.log('👥 User teams:', allowedTeamIds);
+      console.log('📂 Rubrique teams:', rubrique.team_ids.map(id => id.toString()));
+      console.log('🔓 Has access:', hasAccess);
+
+      if (!hasAccess) {
+        return res.status(403).json({
+          success: false,
+          message: 'Non autorisé à accéder à cette rubrique'
+        });
+      }
     }
 
     // Convert team_ids to strings for frontend compatibility
