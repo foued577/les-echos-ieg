@@ -1,4 +1,5 @@
 import React from 'react';
+import DOMPurify from 'dompurify';
 import { FileText, User, Calendar, Clock, Eye, Bookmark, Share2, Heart, MessageCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -132,7 +133,9 @@ export default function ArticleDisplay({ content }) {
           {content.content ? (
             <div 
               className="article-content text-slate-700 leading-relaxed"
-              dangerouslySetInnerHTML={{ __html: content.content }}
+              dangerouslySetInnerHTML={{ 
+                __html: DOMPurify.sanitize(content.content) 
+              }}
               style={{
                 fontSize: '18px',
                 lineHeight: '1.8',
@@ -195,7 +198,7 @@ export default function ArticleDisplay({ content }) {
         )}
       </footer>
 
-      <style jsx>{`
+      <style>{`
         .article-content h1 {
           font-size: 2rem;
           font-weight: 700;
