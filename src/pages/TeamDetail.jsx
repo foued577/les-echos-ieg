@@ -188,8 +188,10 @@ export default function TeamDetail() {
       
       if (response.success) {
         toast.success('Contenu supprimé avec succès');
-        // Rafraîchir la liste des contenus
-        loadTeamData();
+        // Mettre à jour le state local immédiatement (meilleure UX)
+        setContents((prevContents) =>
+          prevContents.filter((content) => (content._id || content.id) !== contentId)
+        );
       } else {
         toast.error('Erreur lors de la suppression du contenu');
       }
