@@ -3,10 +3,11 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import { teamsAPI, contentsAPI, buildFileUrl } from '@/services/api';
 import { getFileUrl } from '../utils';
-import { ArrowLeft, ExternalLink, Download, FileText, Link as LinkIcon, File } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Download, FileText, Link as LinkIcon, File, Trash2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { toast } from 'sonner';
 import ArticleDisplay from '@/components/ArticleDisplay';
 
 export default function ContentDetail() {
@@ -74,6 +75,30 @@ export default function ContentDetail() {
     }
   };
 
+  const handleDeleteContent = async () => {
+    if (!window.confirm('Êtes-vous sûr de vouloir supprimer ce contenu ? Cette action est irréversible.')) {
+      return;
+    }
+
+    try {
+      console.log('🗑️=== DELETE CONTENT START ===');
+      console.log('🆔 Content ID:', id);
+      
+      const response = await contentsAPI.delete(id);
+      console.log('✅ Delete response:', response);
+      
+      if (response.success) {
+        toast.success('Contenu supprimé avec succès');
+        navigate(-1);
+      } else {
+        toast.error('Erreur lors de la suppression du contenu');
+      }
+    } catch (error) {
+      console.error('💥 Error deleting content:', error);
+      toast.error('Erreur lors de la suppression du contenu');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[300px]">
@@ -102,32 +127,44 @@ export default function ContentDetail() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          className="text-slate-500 hover:text-slate-900"
-          onClick={() => navigate(-1)}
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </Button>
-        <div className="w-12 h-12 rounded-lg bg-stone-100 flex items-center justify-center">
-          <Icon className="w-6 h-6 text-stone-500" />
-        </div>
-        <div className="flex-1">
-          <h1 className="font-serif text-2xl font-semibold text-slate-900">{content.title}</h1>
-          <div className="flex items-center gap-3 mt-1 text-sm text-slate-500">
-            <span>{content.author_id?.name || 'Auteur inconnu'}</span>
-            <span>•</span>
-            <span>{format(new Date(content.created_at), 'dd MMMM yyyy à HH:mm', { locale: fr })}</span>
-            {content.type && (
-              <>
-                <span>•</span>
-                <span className="capitalize">{content.type}</span>
-              </>
-            )}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="text-slate-500 hover:text-slate-900"
+            onClick={() => navigate(-1)}
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <div className="w-12 h-12 rounded-lg bg-stone-100 flex items-center justify-center">
+            <Icon className="w-6 h-6 text-stone-500" />
+          </div>
+          <div className="flex-1">
+            <h1 className="font-serif text-2xl font-semibold text-slate-900">{content.title}</h1>
+            <div className="flex items-center gap-3 mt-1 text-sm text-slate-500">
+              <span>{content.author_id?.name || 'Auteur inconnu'}</span>
+              <span>•</span>
+              <span>{format(new Date(content.created_at), 'dd MMMM yyyy à HH:mm', { locale: fr })}</span>
+              {content.type && (
+                <>
+                  <span>•</span>
+                  <span className="capitalize">{content.type}</span>
+                </>
+              )}
+            </div>
           </div>
         </div>
+        
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={handleDeleteContent}
+          className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 hover:border-red-300"
+        >
+          <Trash2 className="w-4 h-4 mr-2" />
+          Supprimer
+        </Button>
       </div>
 
       {/* Content based on type */}
