@@ -128,18 +128,13 @@ export default function ArticleDisplay({ content }) {
       </header>
 
       {/* Contenu de l'article */}
-      <div className="prose prose-lg prose-stone max-w-none">
+      <div className="max-w-none">
         <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-8 md:p-12">
           {content.content ? (
             <div 
-              className="article-content text-slate-700 leading-relaxed"
+              className="prose prose-lg prose-stone max-w-none article-content"
               dangerouslySetInnerHTML={{ 
                 __html: DOMPurify.sanitize(content.content) 
-              }}
-              style={{
-                fontSize: '18px',
-                lineHeight: '1.8',
-                color: '#334155'
               }}
             />
           ) : (
@@ -199,80 +194,110 @@ export default function ArticleDisplay({ content }) {
       </footer>
 
       <style>{`
-        .article-content h1 {
-          font-size: 2rem;
-          font-weight: 700;
-          margin: 2rem 0 1rem;
-          color: #1e293b;
-        }
-        
-        .article-content h2 {
-          font-size: 1.5rem;
-          font-weight: 600;
-          margin: 1.5rem 0 0.75rem;
+        .article-content {
+          font-size: 18px;
+          line-height: 1.8;
           color: #334155;
         }
         
+        .article-content h1 {
+          font-size: 2.5rem;
+          font-weight: 800;
+          margin: 2rem 0 1rem;
+          color: #1e293b;
+          line-height: 1.2;
+        }
+        
+        .article-content h2 {
+          font-size: 2rem;
+          font-weight: 700;
+          margin: 1.5rem 0 0.75rem;
+          color: #334155;
+          line-height: 1.3;
+        }
+        
         .article-content h3 {
-          font-size: 1.25rem;
+          font-size: 1.5rem;
           font-weight: 600;
           margin: 1.25rem 0 0.5rem;
           color: #475569;
+          line-height: 1.4;
         }
         
         .article-content p {
-          margin: 1rem 0;
+          margin: 1.25rem 0;
+          line-height: 1.8;
         }
         
         .article-content ul, .article-content ol {
-          margin: 1rem 0;
+          margin: 1.25rem 0;
           padding-left: 2rem;
         }
         
         .article-content li {
-          margin: 0.5rem 0;
+          margin: 0.75rem 0;
+          line-height: 1.7;
         }
         
         .article-content blockquote {
           border-left: 4px solid #e2e8f0;
-          padding-left: 1rem;
-          margin: 1.5rem 0;
+          padding-left: 1.5rem;
+          margin: 2rem 0;
           font-style: italic;
           color: #64748b;
+          background: #f8fafc;
+          padding: 1rem 1.5rem;
+          border-radius: 0.5rem;
         }
         
         .article-content code {
           background: #f1f5f9;
-          padding: 0.125rem 0.25rem;
-          border-radius: 0.25rem;
+          padding: 0.25rem 0.5rem;
+          border-radius: 0.375rem;
           font-size: 0.875rem;
           color: #e11d48;
+          font-weight: 500;
         }
         
         .article-content pre {
           background: #1e293b;
           color: #f1f5f9;
-          padding: 1rem;
-          border-radius: 0.5rem;
+          padding: 1.5rem;
+          border-radius: 0.75rem;
           overflow-x: auto;
-          margin: 1rem 0;
+          margin: 1.5rem 0;
+          font-size: 0.875rem;
+          line-height: 1.6;
         }
         
         .article-content img {
           max-width: 100%;
           height: auto;
-          border-radius: 0.5rem;
-          margin: 1.5rem 0;
+          border-radius: 0.75rem;
+          margin: 2rem 0;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
         
         .article-content a {
           color: #7c3aed;
           text-decoration: underline;
           font-weight: 500;
+          transition: color 0.2s;
         }
         
         .article-content a:hover {
           color: #6d28d9;
+          text-decoration: none;
+        }
+        
+        .article-content strong, .article-content b {
+          font-weight: 600;
+          color: #1e293b;
+        }
+        
+        .article-content em, .article-content i {
+          font-style: italic;
+          color: #475569;
         }
       `}</style>
     </article>
