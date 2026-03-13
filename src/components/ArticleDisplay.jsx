@@ -132,9 +132,20 @@ export default function ArticleDisplay({ content }) {
         <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-8 md:p-12">
           {content.content ? (
             <div 
-              className="prose prose-lg prose-stone max-w-none article-content"
-              dangerouslySetInnerHTML={{ 
-                __html: DOMPurify.sanitize(content.content) 
+              className="article-html max-w-none text-[16px] leading-8 text-gray-800
+                       [&_h1]:text-3xl [&_h1]:font-bold [&_h1]:mb-4 [&_h1]:mt-6
+                       [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:mb-3 [&_h2]:mt-5
+                       [&_h3]:text-xl [&_h3]:font-semibold [&_h3]:mb-2 [&_h3]:mt-4
+                       [&_p]:mb-4
+                       [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:mb-4
+                       [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:mb-4
+                       [&_li]:mb-1
+                       [&_a]:text-blue-600 [&_a]:underline
+                       [&_blockquote]:border-l-4 [&_blockquote]:border-gray-300
+                       [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-gray-600
+                       [&_img]:rounded-lg [&_img]:my-4"
+              dangerouslySetInnerHTML={{
+                __html: DOMPurify.sanitize(content.content || "")
               }}
             />
           ) : (
@@ -193,113 +204,6 @@ export default function ArticleDisplay({ content }) {
         )}
       </footer>
 
-      <style>{`
-        .article-content {
-          font-size: 18px;
-          line-height: 1.8;
-          color: #334155;
-        }
-        
-        .article-content h1 {
-          font-size: 2.5rem;
-          font-weight: 800;
-          margin: 2rem 0 1rem;
-          color: #1e293b;
-          line-height: 1.2;
-        }
-        
-        .article-content h2 {
-          font-size: 2rem;
-          font-weight: 700;
-          margin: 1.5rem 0 0.75rem;
-          color: #334155;
-          line-height: 1.3;
-        }
-        
-        .article-content h3 {
-          font-size: 1.5rem;
-          font-weight: 600;
-          margin: 1.25rem 0 0.5rem;
-          color: #475569;
-          line-height: 1.4;
-        }
-        
-        .article-content p {
-          margin: 1.25rem 0;
-          line-height: 1.8;
-        }
-        
-        .article-content ul, .article-content ol {
-          margin: 1.25rem 0;
-          padding-left: 2rem;
-        }
-        
-        .article-content li {
-          margin: 0.75rem 0;
-          line-height: 1.7;
-        }
-        
-        .article-content blockquote {
-          border-left: 4px solid #e2e8f0;
-          padding-left: 1.5rem;
-          margin: 2rem 0;
-          font-style: italic;
-          color: #64748b;
-          background: #f8fafc;
-          padding: 1rem 1.5rem;
-          border-radius: 0.5rem;
-        }
-        
-        .article-content code {
-          background: #f1f5f9;
-          padding: 0.25rem 0.5rem;
-          border-radius: 0.375rem;
-          font-size: 0.875rem;
-          color: #e11d48;
-          font-weight: 500;
-        }
-        
-        .article-content pre {
-          background: #1e293b;
-          color: #f1f5f9;
-          padding: 1.5rem;
-          border-radius: 0.75rem;
-          overflow-x: auto;
-          margin: 1.5rem 0;
-          font-size: 0.875rem;
-          line-height: 1.6;
-        }
-        
-        .article-content img {
-          max-width: 100%;
-          height: auto;
-          border-radius: 0.75rem;
-          margin: 2rem 0;
-          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-        
-        .article-content a {
-          color: #7c3aed;
-          text-decoration: underline;
-          font-weight: 500;
-          transition: color 0.2s;
-        }
-        
-        .article-content a:hover {
-          color: #6d28d9;
-          text-decoration: none;
-        }
-        
-        .article-content strong, .article-content b {
-          font-weight: 600;
-          color: #1e293b;
-        }
-        
-        .article-content em, .article-content i {
-          font-style: italic;
-          color: #475569;
-        }
-      `}</style>
-    </article>
+      </article>
   );
 }
