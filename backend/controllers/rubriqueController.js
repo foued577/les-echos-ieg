@@ -4,8 +4,37 @@ const { validationResult } = require('express-validator');
 // Obtenir toutes les rubriques
 const getRubriques = async (req, res) => {
   try {
-    const rubriques = await Rubrique.find({})
+    console.log('📂=== GET RUBRIQUES START ===');
+    console.log('📂 User role:', req.user?.role);
+    
+    // Sécurité : filtrer par équipes autorisées pour les non-ADMIN
+    const isAdmin = req.user?.role === 'ADMIN';
+    let filter = {};
+    
+    if (!isAdmin) {
+      console.log('🔐 Applying team-based security filter for non-admin user');
+      
+      // Récupérer les équipes de l'utilisateur
+      const Team = require('../models/Team');
+      const userId = req.user?._id || req.user?.id;
+      
+      const userTeams = await Team.find({ 
+        members: userId 
+      }).select('_id').lean();
+      
+      const allowedTeamIds = userTeams.map(team => team._id.toString());
+      console.log('👥 User teams for rubriques:', allowedTeamIds);
+      
+      // Filtrer les rubriques par équipes autorisées
+      filter.team_ids = { $in: allowedTeamIds };
+    } else {
+      console.log('🔓 Admin user - no team filter for rubriques');
+    }
+
+    const rubriques = await Rubrique.find(filter)
       .populate('created_by', 'name email avatar');
+
+    console.log('📂 Rubriques found:', rubriques.length);
 
     // Convert team_ids to strings for frontend compatibility
     const formattedRubriques = rubriques.map(rubrique => ({

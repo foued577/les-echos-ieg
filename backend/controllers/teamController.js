@@ -48,6 +48,7 @@ const getTeamById = async (req, res) => {
   try {
     console.log('🔍=== GET TEAM BY ID START ===');
     console.log('🆔 Team ID:', req.params.id);
+    console.log('👤 User role:', req.user?.role);
     
     const team = await Team.findById(req.params.id)
       .populate('members', 'name email avatar')
@@ -57,6 +58,24 @@ const getTeamById = async (req, res) => {
       return res.status(404).json({
         success: false,
         message: 'Équipe non trouvée'
+      });
+    }
+
+    // Vérifier si l'utilisateur est ADMIN ou membre de l'équipe
+    const userId = req.user?._id || req.user?.id;
+    const isAdmin = req.user?.role === 'ADMIN';
+    const isMember = team.members && team.members.some(member => 
+      (member._id || member.id || member).toString() === userId.toString()
+    );
+
+    console.log('👤 User ID:', userId);
+    console.log('🔐 Is admin:', isAdmin);
+    console.log('👥 Is member:', isMember);
+
+    if (!isAdmin && !isMember) {
+      return res.status(403).json({
+        success: false,
+        message: 'Non autorisé à accéder à cette équipe'
       });
     }
 

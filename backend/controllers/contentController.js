@@ -60,21 +60,58 @@ const getContents = async (req, res) => {
     console.log('📋=== GET CONTENTS START ===');
     console.log('📋 Query params:', { status, team_id, rubrique_id });
     console.log('📋 User from token:', req.user);
+    console.log('📋 User role:', req.user?.role);
     
-    // Construire le filtre
+    // Construire le filtre de base
     let filter = {};
     
     if (status) {
       filter.status = status;
     }
     
-    if (team_id) {
-      filter.team_ids = team_id;
-    }
-    
     if (rubrique_id) {
       filter.rubrique_id = rubrique_id;
     }
+
+    // Sécurité : filtrer par équipes autorisées pour les non-ADMIN
+    const isAdmin = req.user?.role === 'ADMIN';
+    
+    if (!isAdmin) {
+      console.log('🔐 Applying team-based security filter for non-admin user');
+      
+      // Récupérer les équipes de l'utilisateur
+      const Team = require('../models/Team');
+      const userId = req.user?._id || req.user?.id;
+      
+      const userTeams = await Team.find({ 
+        members: userId 
+      }).select('_id').lean();
+      
+      const allowedTeamIds = userTeams.map(team => team._id.toString());
+      console.log('👥 User teams:', allowedTeamIds);
+      
+      // Si team_id spécifié, vérifier l'accès
+      if (team_id) {
+        if (!allowedTeamIds.includes(team_id.toString())) {
+          return res.status(403).json({
+            success: false,
+            message: 'Non autorisé à accéder aux contenus de cette équipe'
+          });
+        }
+        filter.team_ids = team_id;
+      } else {
+        // Sinon, filtrer par toutes les équipes autorisées
+        filter.team_ids = { $in: allowedTeamIds };
+      }
+    } else {
+      console.log('🔓 Admin user - no team filter applied');
+      // ADMIN peut voir tout, mais respecte les autres filtres
+      if (team_id) {
+        filter.team_ids = team_id;
+      }
+    }
+
+    console.log('📋 Final filter:', filter);
 
     const contents = await Content.find(filter)
       .populate('author_id', 'name email avatar')
