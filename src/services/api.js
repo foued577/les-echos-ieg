@@ -10,6 +10,10 @@ let API_BASE_URL = import.meta.env.VITE_API_URL ||
 if (window.location.hostname.includes('les-echos-ieg.onrender.com')) {
   API_BASE_URL = 'https://les-echos-ieg-api.onrender.com/api';
   console.log('🔧 FORCE API BASE URL TO:', API_BASE_URL);
+  // Debug visible pour confirmer le déploiement
+  if (typeof alert !== 'undefined') {
+    alert('🔧 API URL FORCED TO: ' + API_BASE_URL);
+  }
 }
 
 // Force le bon domaine en production (patch temporaire)
