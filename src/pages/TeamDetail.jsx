@@ -35,6 +35,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { toast } from 'sonner';
 
 export default function TeamDetail() {
   const location = useLocation();
@@ -170,6 +171,31 @@ export default function TeamDetail() {
       console.error('💥 Error URL:', error?.config?.url);
       setTeam(null);
       setLoading(false);
+    }
+  };
+
+  const handleDeleteContent = async (contentId) => {
+    if (!window.confirm('Êtes-vous sûr de vouloir supprimer ce contenu ? Cette action est irréversible.')) {
+      return;
+    }
+
+    try {
+      console.log('🗑️=== DELETE CONTENT START ===');
+      console.log('🆔 Content ID:', contentId);
+      
+      const response = await contentsAPI.delete(contentId);
+      console.log('✅ Delete response:', response);
+      
+      if (response.success) {
+        toast.success('Contenu supprimé avec succès');
+        // Rafraîchir la liste des contenus
+        loadTeamData();
+      } else {
+        toast.error('Erreur lors de la suppression du contenu');
+      }
+    } catch (error) {
+      console.error('💥 Error deleting content:', error);
+      toast.error('Erreur lors de la suppression du contenu');
     }
   };
 
@@ -424,16 +450,34 @@ export default function TeamDetail() {
                       </div>
                     </div>
 
-                    <button
-                      type="button"
-                      className="p-2 rounded-lg hover:bg-gray-100 transition-colors flex-shrink-0"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        openContent(content);
-                      }}
-                    >
-                      <ChevronRight className="w-4 h-4 text-gray-400" />
-                    </button>
+                    <div className="flex items-center gap-2">
+                      {/* Bouton Supprimer pour ADMIN ou auteur */}
+                      {(user?.role === 'ADMIN' || user?._id === content.author_id?._id) && (
+                        <button
+                          type="button"
+                          className="p-2 rounded-lg hover:bg-red-50 transition-colors flex-shrink-0 text-red-500 hover:text-red-700"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteContent(content._id || content.id);
+                          }}
+                          title="Supprimer le contenu"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                      
+                      {/* Bouton Voir/Ouvrir */}
+                      <button
+                        type="button"
+                        className="p-2 rounded-lg hover:bg-gray-100 transition-colors flex-shrink-0"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openContent(content);
+                        }}
+                      >
+                        <ChevronRight className="w-4 h-4 text-gray-400" />
+                      </button>
+                    </div>
                   </div>
                 );
               })}
