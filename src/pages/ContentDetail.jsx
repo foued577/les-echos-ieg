@@ -7,6 +7,7 @@ import { ArrowLeft, ExternalLink, Download, FileText, Link as LinkIcon, File } f
 import { Button } from "@/components/ui/button";
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import ArticleDisplay from '@/components/ArticleDisplay';
 
 export default function ContentDetail() {
   const { user } = useAuth();
@@ -176,24 +177,7 @@ export default function ContentDetail() {
         )}
 
         {content.type === 'article' && (
-          <div className="space-y-4">
-            <div className="flex items-start gap-3">
-              <FileText className="w-5 h-5 text-purple-500 mt-1" />
-              <div className="flex-1">
-                <h3 className="font-medium text-slate-900 mb-2">Article</h3>
-                {content.description && (
-                  <p className="text-slate-600 mb-4">{content.description}</p>
-                )}
-              </div>
-            </div>
-            <div className="prose prose-stone max-w-none">
-              <div className="bg-stone-50 p-6 rounded-lg">
-                <p className="text-slate-700 whitespace-pre-wrap leading-relaxed">
-                  {content.content || 'Aucun contenu disponible'}
-                </p>
-              </div>
-            </div>
-          </div>
+          <ArticleDisplay content={content} />
         )}
 
         {/* Tags */}
