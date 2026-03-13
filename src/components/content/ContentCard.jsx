@@ -7,11 +7,14 @@ import {
   File, 
   ExternalLink, 
   MoreVertical, 
-  Eye 
+  Eye,
+  Trash2
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Button } from "@/components/ui/button";
+import { useAuth } from '@/lib/AuthContext';
+import { toast } from 'sonner';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,6 +29,7 @@ const typeConfig = {
 };
 
 export default function ContentCard({ content, category, onView, showActions = true }) {
+  const { user } = useAuth();
   const type = typeConfig[content.type] || typeConfig.article;
   const TypeIcon = type.icon;
 
@@ -46,6 +50,31 @@ export default function ContentCard({ content, category, onView, showActions = t
       onView(content);
     }
   };
+
+  const handleDelete = async (e) => {
+    e.stopPropagation();
+    
+    if (!window.confirm('Êtes-vous sûr de vouloir supprimer ce contenu ? Cette action est irréversible.')) {
+      return;
+    }
+
+    try {
+      const response = await contentsAPI.delete(content._id || content.id);
+      
+      if (response.success) {
+        toast.success('Contenu supprimé avec succès');
+        // Recharger la liste ou mettre à jour l'état
+        window.location.reload();
+      } else {
+        toast.error('Erreur lors de la suppression du contenu');
+      }
+    } catch (error) {
+      console.error('Erreur suppression contenu:', error);
+      toast.error('Erreur lors de la suppression du contenu');
+    }
+  };
+
+  const canDelete = user?.role === 'ADMIN' || user?._id === content.author_id?._id;
 
   return (
     <div className="glass-card rounded-xl p-4 border border-white/10 hover:border-purple-500/30 transition-all group cursor-pointer"
@@ -77,6 +106,12 @@ export default function ContentCard({ content, category, onView, showActions = t
                     {content.type === 'link' ? <ExternalLink className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
                     {content.type === 'link' ? 'Ouvrir le lien' : 'Voir le contenu'}
                   </DropdownMenuItem>
+                  {canDelete && (
+                    <DropdownMenuItem onClick={handleDelete} className="text-red-400 focus:bg-white/5 focus:text-red-600">
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Supprimer
+                    </DropdownMenuItem>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
