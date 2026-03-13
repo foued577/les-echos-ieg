@@ -26,9 +26,9 @@ const rubriqueValidation = [
     .withMessage('La couleur doit être un code hexadécimal valide')
 ];
 
-// Routes publiques (lecture)
-router.get('/', getRubriques);
-router.get('/:id', getRubriqueById);
+// Routes protégées (lecture) - nécessitent l'authentification
+router.get('/', authMiddleware, getRubriques);
+router.get('/:id', authMiddleware, getRubriqueById);
 
 // Routes protégées (écriture) - Admin et Editor
 router.post('/', authMiddleware, roleMiddleware('ADMIN', 'EDITOR'), rubriqueValidation, createRubrique);
