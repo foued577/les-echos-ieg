@@ -107,10 +107,6 @@ export default function Kanban() {
   };
 
   const handleContentClick = (content) => {
-    console.log('🖱️=== KANBAN CONTENT CLICK ===');
-    console.log('🖱️ Content clicked:', content);
-    alert(`KANBAN - Contenu cliqué: ${content.title}\n\nTous les champs:\n${JSON.stringify(content, null, 2)}`);
-    
     if (content.type === 'link' && content.url) {
       window.open(content.url, '_blank');
     } else if (content.type === 'file' && content.file_url) {

@@ -1,37 +1,14 @@
 import axios from 'axios';
 
 // Séparation des URLs pour API et fichiers
-const API_BASE_URL = import.meta.env.VITE_API_URL;
-// Forcer APP_BASE_URL à ne pas contenir /api pour les fichiers
-export const APP_BASE_URL = API_BASE_URL.replace(/\/api\/?$/, '') || 'https://les-echos-ieg.onrender.com';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+export const APP_BASE_URL = API_BASE_URL.replace(/\/api\/?$/, '');
 
 // Helper pour construire les URLs de fichiers
 export const buildFileUrl = (filePath) => {
-  console.log('🔗=== buildFileUrl START ===');
-  console.log('🔗 filePath input:', filePath);
-  console.log('🔗 API_BASE_URL:', API_BASE_URL);
-  console.log('🔗 APP_BASE_URL:', APP_BASE_URL);
-  
-  // Debug visible avec alert
-  alert(`buildFileUrl appelé avec: ${filePath}`);
-  
-  if (!filePath) {
-    console.log('🔗 No file path provided');
-    return '';
-  }
-  if (filePath.startsWith('http')) {
-    console.log('🔗 File path is already complete URL:', filePath);
-    return filePath;
-  }
-  
-  const finalUrl = `${APP_BASE_URL}${filePath.startsWith('/') ? filePath : `/${filePath}`}`;
-  console.log('🔗 buildFileUrl FINAL URL:', finalUrl);
-  console.log('🔗=== buildFileUrl END ===');
-  
-  // Debug visible avec alert
-  alert(`URL finale: ${finalUrl}`);
-  
-  return finalUrl;
+  if (!filePath) return '';
+  if (filePath.startsWith('http')) return filePath;
+  return `${APP_BASE_URL}${filePath.startsWith('/') ? filePath : `/${filePath}`}`;
 };
 
 // Créer une instance axios avec configuration de base

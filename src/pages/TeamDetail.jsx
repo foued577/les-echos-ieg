@@ -275,10 +275,7 @@ export default function TeamDetail() {
   };
 
   const openContent = (content) => {
-  console.log("OPEN CONTENT", content);
-  alert(`Contenu cliqué: ${content.title}\n\nTous les champs:\n${JSON.stringify(content, null, 2)}`);
-
-  const type = content.type || content.content_type;
+    const type = content.type || content.content_type;
 
   if (type === "link" || type === "lien") {
     const url = content.url || content.link || content.content;
