@@ -2,7 +2,11 @@ import axios from 'axios';
 
 // Séparation des URLs pour API et fichiers
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-export const APP_BASE_URL = API_BASE_URL.replace(/\/api\/?$/, '');
+// Force le bon domaine en production (patch temporaire)
+export const APP_BASE_URL = API_BASE_URL.replace(/\/api\/?$/, '') || 
+  (window.location.hostname.includes('les-echos-ieg.onrender.com') 
+    ? 'https://les-echos-ieg-api.onrender.com' 
+    : 'http://localhost:5000');
 
 // Helper pour construire les URLs de fichiers
 export const buildFileUrl = (filePath) => {
