@@ -218,10 +218,6 @@ export default function Layout({ children, currentPageName }) {
         <div className="px-4 mt-8">
           <p className="px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">Espaces</p>
           <div className="space-y-1">
-            {/* Debug temporaire */}
-            <div className="text-xs text-red-500 mb-2">
-              Debug: teams.length = {teams.length}
-            </div>
             {teams.map((team) => (
               <Link
                 key={team.id}
