@@ -6,7 +6,9 @@ const getTeams = async (req, res) => {
   try {
     console.log('🔍=== GET TEAMS START ===');
     const userId = req.user?._id || req.user?.id;
+    const userRole = req.user?.role;
     console.log('👤 User ID from token:', userId);
+    console.log('👤 User role:', userRole);
     console.log('👤 Full req.user object:', req.user);
     
     if (!userId) {
@@ -17,12 +19,22 @@ const getTeams = async (req, res) => {
       });
     }
     
-    // Récupérer seulement les équipes où l'utilisateur est membre
-    const teams = await Team.find({ 
-      members: userId
-    }).populate('members', 'name email avatar').lean();
+    let teams;
     
-    console.log('📊 Teams found for user:', teams.length);
+    // ADMIN peut voir toutes les équipes, utilisateur normal seulement ses équipes
+    if (userRole === 'ADMIN') {
+      console.log('🔓 Admin user - fetching all teams');
+      teams = await Team.find({})
+        .populate('members', 'name email avatar')
+        .lean();
+    } else {
+      console.log('🔐 Normal user - fetching user teams only');
+      teams = await Team.find({ 
+        members: userId
+      }).populate('members', 'name email avatar').lean();
+    }
+    
+    console.log('📊 Teams found:', teams.length);
     
     const teamsWithCounts = teams.map(t => ({
       ...t,

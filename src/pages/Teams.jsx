@@ -42,18 +42,18 @@ export default function Teams() {
   const loadData = async () => {
     try {
       console.log('🔍 Loading teams with counts...');
-      const response = await teamsAPI.getWithCounts();
+      const response = await teamsAPI.getAll();
       
       if (response.success) {
-        console.log('✅ Teams with counts loaded:', response.data);
+        console.log('✅ Teams loaded:', response.data);
         setTeams(response.data);
       } else {
         console.error('❌ Failed to load teams:', response);
+        setTeams([]);
       }
-      setLoading(false);
     } catch (error) {
       console.error('💥 Error loading teams:', error);
-      setLoading(false);
+      setTeams([]);
     }
   };
 

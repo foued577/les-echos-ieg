@@ -15,9 +15,24 @@ router.get('/test-summary', async (req, res) => {
   try {
     console.log('🔍=== TEST SUMMARY START ===');
     console.log('👤 Authenticated user:', req.user?.email);
+    console.log('👤 User role:', req.user?.role);
     
-    // Récupérer toutes les équipes
-    const teams = await Team.find({});
+    let teams;
+    
+    // Sécurité : filtrer par équipes autorisées pour les non-ADMIN
+    const isAdmin = req.user?.role === 'ADMIN';
+    
+    if (isAdmin) {
+      console.log('🔓 Admin user - fetching all teams');
+      teams = await Team.find({});
+    } else {
+      console.log('🔐 Normal user - fetching user teams only');
+      const userId = req.user?._id || req.user?.id;
+      teams = await Team.find({ 
+        members: userId 
+      });
+    }
+    
     console.log(`📊 Found ${teams.length} teams`);
     
     // Pour chaque équipe, compter les membres
