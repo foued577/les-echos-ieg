@@ -5,6 +5,7 @@ import { apiClient } from '../lib/apiClient';
 import normalizeTeam from "@/services/api";
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { createPageUrl } from '../utils';
+import DOMPurify from 'dompurify';
 import { 
   ArrowLeft, Users2, FolderOpen, Plus, Settings, UserPlus,
   MoreVertical, Trash2, FileText, Link as LinkIcon, File, ChevronRight
@@ -756,8 +757,19 @@ export default function TeamDetail() {
                 ✕
               </button>
             </div>
-            <div className="mt-4 whitespace-pre-wrap text-gray-700">
-              {selectedArticle.content || selectedArticle.body || "Article vide"}
+            <div className="mt-4">
+              {selectedArticle.type === 'article' ? (
+                <div
+                  className="prose max-w-none"
+                  dangerouslySetInnerHTML={{
+                    __html: DOMPurify.sanitize(selectedArticle.content || selectedArticle.body || '')
+                  }}
+                />
+              ) : (
+                <div className="whitespace-pre-wrap text-gray-700">
+                  {selectedArticle.content || selectedArticle.body || "Contenu vide"}
+                </div>
+              )}
             </div>
           </div>
         </div>
