@@ -285,8 +285,15 @@ const createContent = async (req, res) => {
 
     const newContent = await Content.create(contentData);
 
-    console.log('✅ Content created in database:', {
+    console.log('✅ Content created:', {
       id: newContent._id,
+      title: newContent.title,
+      type: newContent.type,
+      file_url: newContent.file_url,
+      cloudinary_public_id: newContent.cloudinary_public_id
+    });
+
+    console.log('📋 Content details for debug:', {
       title: newContent.title,
       type: newContent.type,
       file_url: newContent.file_url,
@@ -415,6 +422,8 @@ const deleteContent = async (req, res) => {
 
 const downloadContentFile = async (req, res) => {
   try {
+    console.log('⬇️ DOWNLOAD START, id =', req.params.id);
+
     const content = await Content.findById(req.params.id);
 
     if (!content) {
@@ -424,31 +433,58 @@ const downloadContentFile = async (req, res) => {
       });
     }
 
-    if (!content.cloudinary_public_id) {
-      return res.status(400).json({
-        success: false,
-        message: 'Aucun fichier Cloudinary associé'
+    console.log('⬇️ Content:', {
+      id: content._id,
+      title: content.title,
+      type: content.type,
+      file_url: content.file_url,
+      cloudinary_public_id: content.cloudinary_public_id,
+      file_name: content.file_name
+    });
+
+    // Cas 1 : Cloudinary avec public_id
+    if (content.cloudinary_public_id) {
+      const url = cloudinary.utils.private_download_url(
+        content.cloudinary_public_id,
+        null,
+        {
+          resource_type: 'raw',
+          type: 'upload',
+          attachment: true,
+          expires_at: Math.floor(Date.now() / 1000) + 60
+        }
+      );
+
+      return res.status(200).json({
+        success: true,
+        url
       });
     }
 
-    const downloadUrl = cloudinary.utils.private_download_url(
-      content.cloudinary_public_id,
-      null,
-      {
-        resource_type: 'raw',
-        type: 'upload',
-        attachment: true,
-        expires_at: Math.floor(Date.now() / 1000) + 60
-      }
-    );
+    // Cas 2 : URL Cloudinary déjà stockée
+    if (content.file_url && content.file_url.includes('res.cloudinary.com')) {
+      return res.status(200).json({
+        success: true,
+        url: content.file_url
+      });
+    }
 
-    return res.status(200).json({
-      success: true,
-      url: downloadUrl
+    // Cas 3 : ancien fichier local
+    if (content.file_url && content.file_url.startsWith('/uploads/')) {
+      return res.status(200).json({
+        success: true,
+        url: `${process.env.BACKEND_URL || 'https://les-echos-ieg.onrender.com'}${content.file_url}` 
+      });
+    }
+
+    return res.status(400).json({
+      success: false,
+      message: 'Aucun fichier téléchargeable associé à ce contenu'
     });
+
   } catch (error) {
     console.error('Erreur downloadContentFile:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: 'Erreur serveur'
     });
