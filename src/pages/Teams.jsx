@@ -42,17 +42,21 @@ export default function Teams() {
   const loadData = async () => {
     try {
       console.log('🔍 Loading teams...');
-      const response = await teamsAPI.getAll();
+      setLoading(true);
       
-      if (response.success) {
-        console.log('✅ Teams loaded:', response.data);
-        setTeams(response.data);
-      } else {
-        console.error('❌ Failed to load teams:', response);
-        setTeams([]);
-      }
+      const teamsData = await teamsAPI.getAll();
+      
+      const normalizedTeams = Array.isArray(teamsData)
+        ? teamsData.map((team) => ({
+            ...team,
+            id: team._id || team.id,
+          }))
+        : [];
+      
+      console.log('✅ Teams page loaded:', normalizedTeams);
+      setTeams(normalizedTeams);
     } catch (error) {
-      console.error('💥 Error loading teams:', error);
+      console.error('💥 Error loading teams page:', error);
       setTeams([]);
     } finally {
       setLoading(false);
@@ -226,6 +230,10 @@ export default function Teams() {
   const filteredTeams = teams.filter(t => 
     t.name.toLowerCase().includes(search.toLowerCase())
   );
+
+  // Debug temporaire
+  console.log('Teams state in Teams.jsx:', teams);
+  console.log('Filtered teams:', filteredTeams);
 
   if (loading) {
     return (
