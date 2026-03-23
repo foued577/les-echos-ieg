@@ -14,6 +14,7 @@ const storage = new CloudinaryStorage({
   params: {
     folder: 'les-echos-ieg-files',
     resource_type: 'auto',
+    type: 'upload', // ✅ Rend les fichiers publics (évite 401 Unauthorized)
     allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt']
   }
 });
