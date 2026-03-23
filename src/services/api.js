@@ -33,17 +33,15 @@ export const buildFileUrl = (filePath) => {
 export const buildDownloadUrl = (url) => {
   if (!url) return '';
 
-  // Forcer le téléchargement pour les fichiers Cloudinary
   if (url.includes('res.cloudinary.com')) {
-    // Uniquement transformer les URLs image/upload (PDFs, images)
+    // PDF (image)
     if (url.includes('/image/upload/')) {
       return url.replace('/image/upload/', '/image/upload/fl_attachment/');
     }
-    
-    // NE PAS transformer les URLs raw/upload (documents Word, Excel, etc.)
-    // Les fichiers raw ne supportent pas les transformations comme fl_attachment
+
+    // raw → PAS de fl_attachment
     if (url.includes('/raw/upload/')) {
-      return url; // Retourner l'URL brute pour les documents raw
+      return url;
     }
   }
 

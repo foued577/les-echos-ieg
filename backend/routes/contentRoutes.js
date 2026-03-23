@@ -1,26 +1,11 @@
 const express = require('express');
-const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
 const { body } = require('express-validator');
 const { getContents, getContentById, createContent, updateContent, deleteContent, getMyContents } = require('../controllers/contentController');
 const authMiddleware = require('../middleware/authMiddleware');
 const roleMiddleware = require('../middleware/roleMiddleware');
-const { storage } = require('../config/cloudinary');
+const upload = require('../middleware/uploadCloudinary');
 
 const router = express.Router();
-
-// Configuration de multer pour l'upload de fichiers avec Cloudinary
-const upload = multer({ 
-  storage: storage,
-  limits: {
-    fileSize: 10 * 1024 * 1024 // 10MB max
-  },
-  fileFilter: (req, file, cb) => {
-    // Accepter tous les types de fichiers pour l'instant
-    cb(null, true);
-  }
-});
 
 // Validation pour la création/mise à jour (modifiée pour les fichiers)
 const contentValidation = [
