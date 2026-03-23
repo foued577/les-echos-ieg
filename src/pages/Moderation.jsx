@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { teamsAPI, contentsAPI, buildFileUrl } from '@/services/api';
+import { teamsAPI, contentsAPI, buildFileUrl, buildDownloadUrl } from '@/services/api';
 import { getFileUrl } from '../utils';
 import { useAuth } from '@/lib/AuthContext';
 import { toast } from 'sonner';
@@ -214,9 +214,10 @@ export default function Moderation() {
                 {content.type === 'file' && content.file_url && (
                   <Button variant="ghost" size="sm" onClick={() => {
                     const fileUrl = buildFileUrl(content.file_url);
+                    const downloadUrl = buildDownloadUrl(fileUrl);
                     
                     const link = document.createElement('a');
-                    link.href = fileUrl;
+                    link.href = downloadUrl;
                     link.download = content.file_name || content.title || 'document';
                     document.body.appendChild(link);
                     link.click();

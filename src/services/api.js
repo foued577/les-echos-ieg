@@ -29,6 +29,18 @@ export const buildFileUrl = (filePath) => {
   return `${APP_BASE_URL}${filePath.startsWith('/') ? filePath : `/${filePath}`}`;
 };
 
+// Helper pour forcer le téléchargement des fichiers Cloudinary
+export const buildDownloadUrl = (url) => {
+  if (!url) return '';
+
+  // Forcer le téléchargement pour les fichiers Cloudinary
+  if (url.includes('res.cloudinary.com') && url.includes('/upload/')) {
+    return url.replace('/upload/', '/upload/fl_attachment/');
+  }
+
+  return url;
+};
+
 // Créer une instance axios avec configuration de base
 const api = axios.create({
   baseURL: API_BASE_URL,

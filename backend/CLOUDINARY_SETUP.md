@@ -7,6 +7,7 @@ Les fichiers uploadés étaient stockés localement sur le serveur Render et dis
 - Stockage des fichiers sur Cloudinary (persistant)
 - URLs Cloudinary sauvegardées en base de données
 - Debug complet pour diagnostiquer les uploads
+- Téléchargement forcé avec `fl_attachment` pour les PDF
 
 ## Variables d'environnement à configurer
 
@@ -44,9 +45,22 @@ CLOUDINARY_API_SECRET=votre_api_secret
 - Plus de stockage local sur le serveur
 
 ### Téléchargement
-- Le frontend utilise `buildFileUrl(content.file_url)`
-- Si l'URL est Cloudinary: utilisation directe
-- Si l'URL est locale: fallback vers le backend
+- Le frontend utilise `buildDownloadUrl(fileUrl)` pour les fichiers Cloudinary
+- Nouveauté: Ajout automatique de `fl_attachment` pour forcer le téléchargement
+- Si l'URL est Cloudinary: transformation `/upload/` → `/upload/fl_attachment/`
+- Si l'URL est locale: utilisation directe
+
+### Exemples d'URL
+
+#### URL Cloudinary standard (affichage)
+```
+https://res.cloudinary.com/dt0gn8fbc/image/upload/v1774264650/les-echos-ieg-files/document.pdf
+```
+
+#### URL Cloudinary avec téléchargement forcé
+```
+https://res.cloudinary.com/dt0gn8fbc/image/upload/fl_attachment/v1774264650/les-echos-ieg-files/document.pdf
+```
 
 ### Debug
 - Logs détaillés dans la console backend et frontend
@@ -59,12 +73,30 @@ CLOUDINARY_API_SECRET=votre_api_secret
 - `backend/routes/contentRoutes.js` - Storage Cloudinary
 - `backend/controllers/contentController.js` - URL Cloudinary
 - `backend/server.js` - Debug middleware
-- `src/pages/TeamDetail.jsx` - Debug frontend
+- `src/services/api.js` - Nouveau: `buildDownloadUrl()`
+- `src/pages/TeamDetail.jsx` - Debug frontend et téléchargement Cloudinary
+- `src/components/content/ContentCard.jsx` - Téléchargement Cloudinary
+- `src/pages/Kanban.jsx` - Téléchargement Cloudinary
+- `src/pages/KanbanOld.jsx` - Téléchargement Cloudinary
+- `src/pages/Moderation.jsx` - Téléchargement Cloudinary
+- `src/pages/ContentDetail.jsx` - Téléchargement Cloudinary
+- `src/components/moderation/ModerationCard.jsx` - Téléchargement Cloudinary
 
 ## Test
 
 1. Uploader un fichier de type "fichier"
 2. Vérifier les logs backend pour l'URL Cloudinary
 3. Vérifier en base que `file_url` contient l'URL Cloudinary
-4. Tester le téléchargement du fichier
+4. Tester le téléchargement du fichier (PDF doit se télécharger, pas s'afficher)
 5. Redémarrer le serveur et vérifier que l'accès fonctionne toujours
+
+## Problème spécifique résolu
+
+### Avant
+```
+PDF Cloudinary → Affichage dans l'onglet → Erreur "Échec de chargement du document PDF"
+```
+
+### Après
+```
+PDF Cloudinary → fl_attachment → Téléchargement direct → Fonctionne parfaitement

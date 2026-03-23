@@ -1,6 +1,6 @@
 import React from 'react';
 import { getFileUrl } from '../../utils';
-import { buildFileUrl } from '@/services/api';
+import { buildFileUrl, buildDownloadUrl } from '@/services/api';
 import { 
   Link as LinkIcon, 
   FileText, 
@@ -37,11 +37,12 @@ export default function ContentCard({ content, category, onView, showActions = t
     if (content.type === 'link' && content.url) {
       window.open(content.url, '_blank');
     } else if (content.type === 'file' && content.file_url) {
-      // Téléchargement direct du fichier avec buildFileUrl
+      // Téléchargement direct du fichier avec buildDownloadUrl pour Cloudinary
       const fileUrl = buildFileUrl(content.file_url);
+      const downloadUrl = buildDownloadUrl(fileUrl);
       
       const link = document.createElement('a');
-      link.href = fileUrl;
+      link.href = downloadUrl;
       link.download = content.file_name || content.title || 'document';
       document.body.appendChild(link);
       link.click();

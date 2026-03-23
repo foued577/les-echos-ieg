@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { teamsAPI, contentsAPI, buildFileUrl } from '@/services/api';
+import { teamsAPI, contentsAPI, buildFileUrl, buildDownloadUrl } from '@/services/api';
 import { useAuth } from '@/lib/AuthContext';
 import { Search, FileText, Link as LinkIcon, File, Tag, Users, ExternalLink, ChevronDown } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -66,11 +66,12 @@ export default function Kanban() {
     if (content.type === 'link' && content.url) {
       window.open(content.url, '_blank');
     } else if (content.type === 'file' && content.file_url) {
-      // Téléchargement direct du fichier avec buildFileUrl
+      // Téléchargement direct du fichier avec buildDownloadUrl pour Cloudinary
       const fileUrl = buildFileUrl(content.file_url);
+      const downloadUrl = buildDownloadUrl(fileUrl);
       
       const link = document.createElement('a');
-      link.href = fileUrl;
+      link.href = downloadUrl;
       link.download = content.file_name || content.title || 'document';
       document.body.appendChild(link);
       link.click();
@@ -248,9 +249,10 @@ export default function Kanban() {
                     <Button 
                       onClick={() => {
                         const fileUrl = buildFileUrl(selectedContent.file_url);
+                        const downloadUrl = buildDownloadUrl(fileUrl);
                         
                         const link = document.createElement('a');
-                        link.href = fileUrl;
+                        link.href = downloadUrl;
                         link.download = selectedContent.file_name || selectedContent.title || 'document';
                         document.body.appendChild(link);
                         link.click();

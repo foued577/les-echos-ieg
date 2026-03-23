@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
-import { teamsAPI, contentsAPI, buildFileUrl } from '@/services/api';
+import { teamsAPI, contentsAPI, buildFileUrl, buildDownloadUrl } from '@/services/api';
 import { getFileUrl } from '../utils';
 import { ArrowLeft, ExternalLink, Download, FileText, Link as LinkIcon, File, Trash2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -63,11 +63,12 @@ export default function ContentDetail() {
 
   const handleDownloadFile = () => {
     if (content?.file_url) {
-      // Téléchargement direct du fichier avec buildFileUrl
+      // Téléchargement direct du fichier avec buildDownloadUrl pour Cloudinary
       const fileUrl = buildFileUrl(content.file_url);
+      const downloadUrl = buildDownloadUrl(fileUrl);
       
       const link = document.createElement('a');
-      link.href = fileUrl;
+      link.href = downloadUrl;
       link.download = content.file_name || content.title || 'document';
       document.body.appendChild(link);
       link.click();

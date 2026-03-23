@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/lib/AuthContext';
-import { teamsAPI, contentsAPI, buildFileUrl } from '@/services/api';
+import { teamsAPI, contentsAPI, buildFileUrl, buildDownloadUrl } from '@/services/api';
 import { apiClient } from '../lib/apiClient';
 import normalizeTeam from "@/services/api";
 import { Link, useNavigate, useLocation } from 'react-router-dom';
@@ -327,16 +327,20 @@ export default function TeamDetail() {
     // Construire l'URL du fichier avec buildFileUrl
     const fileUrl = buildFileUrl(content.file_url);
     
+    // Forcer le téléchargement pour les fichiers Cloudinary
+    const downloadUrl = buildDownloadUrl(fileUrl);
+    
     console.log('📁 File handling details:');
     console.log('  Original file_url:', content.file_url);
     console.log('  Built fileUrl:', fileUrl);
+    console.log('  Download URL:', downloadUrl);
     console.log('  File name:', content.file_name || content.title);
     console.log('  Is Cloudinary URL:', content.file_url.includes('cloudinary'));
     console.log('  Is local /uploads/:', content.file_url.startsWith('/uploads/'));
 
     try {
       const link = document.createElement('a');
-      link.href = fileUrl;
+      link.href = downloadUrl;
       link.download = content.file_name || content.title || 'document';
       document.body.appendChild(link);
       link.click();
