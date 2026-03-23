@@ -14,11 +14,12 @@
 **Cause** : Fichiers uploadés avec `type: 'authenticated'` (privés)  
 **Solution** : `type: 'upload'` pour rendre les fichiers publics
 
-### 4. Erreur 401 sur fl_attachment ✅
-**Cause** : Cloudinary bloque les transformations non signées (Strict Transformations)  
+### 4. Erreur ERR_INVALID_RESPONSE sur raw/fl_attachment ✅
+**Cause** : PDFs uploadés en `raw` + transformation `fl_attachment` (non supporté)  
 **Solution** : 
-1. **Désactiver Strict Transformations** dans Cloudinary > Settings > Security
-2. **Uploader PDFs en `raw`** au lieu de `image`
+1. **Uploader PDFs en `image`** (pas `raw`)
+2. **Ne jamais transformer** les URLs `raw/upload/`
+3. **Activer PDF delivery** dans Cloudinary Security
 
 ## Solution implémentée
 - Stockage des fichiers sur Cloudinary (persistant)
@@ -64,8 +65,8 @@ CLOUDINARY_API_SECRET=votre_api_secret
 ### Téléchargement
 - Le frontend utilise `buildDownloadUrl(fileUrl)` pour les fichiers Cloudinary
 - Nouveauté: Ajout automatique de `fl_attachment` pour forcer le téléchargement
-- **PDFs/Documents** : Upload en `raw` → URLs `/raw/upload/` → `/raw/upload/fl_attachment/`
-- **Images** : Upload en `auto` → URLs `/image/upload/` → `/image/upload/fl_attachment/`
+- **PDFs/Images** : Upload en `image` → URLs `/image/upload/` → `/image/upload/fl_attachment/`
+- **Documents** : Upload en `raw` → URLs `/raw/upload/` → **pas de transformation** (URL brute)
 - **Important**: `type: 'upload'` rend les fichiers publics (évite 401)
 
 ### Configuration Cloudinary avancée
@@ -74,17 +75,30 @@ CLOUDINARY_API_SECRET=votre_api_secret
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: async (req, file) => {
-    const isPdf = file.mimetype === 'application/pdf';
-    const isDocument = ['application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 
-                       'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                       'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation'].includes(file.mimetype);
+    const path = require('path');
+    const ext = path.extname(file.originalname).toLowerCase();
+    
+    const isPdf = ext === '.pdf';
+    const isImage = ['.jpg', '.jpeg', '.png', '.gif', '.webp'].includes(ext);
+    const isDocument = ['.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.txt', '.zip'].includes(ext);
+    
+    const sanitizeFilename = (name) => {
+      return name
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '') // Enlève les accents
+        .replace(/[^a-zA-Z0-9-_]/g, '-') // Caractères autorisés
+        .replace(/-+/g, '-') // Évite les doubles tirets
+        .replace(/^-|-$/g, ''); // Enlève les tirets de début/fin
+    };
+    
+    const baseName = sanitizeFilename(path.basename(file.originalname, ext));
     
     return {
       folder: 'les-echos-ieg-files',
-      resource_type: isPdf || isDocument ? 'raw' : 'auto', // PDFs et documents en 'raw'
+      resource_type: isPdf || isImage ? 'image' : 'raw', // PDFs et images en 'image', autres en 'raw'
       type: 'upload', // ✅ PUBLIC
-      public_id: `${Date.now()}-${file.originalname.replace(/\s+/g, '-')}`,
-      allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt']
+      public_id: `${Date.now()}-${baseName}${ext}`,
+      allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'zip']
     };
   }
 });
@@ -95,13 +109,15 @@ const storage = new CloudinaryStorage({
 #### URL Cloudinary standard (affichage)
 ```
 Images: https://res.cloudinary.com/dt0gn8fbc/image/upload/v1774264650/les-echos-ieg-files/document.jpg
-PDFs:   https://res.cloudinary.com/dt0gn8fbc/raw/upload/v1774264650/les-echos-ieg-files/document.pdf
+PDFs:   https://res.cloudinary.com/dt0gn8fbc/image/upload/v1774264650/les-echos-ieg-files/document.pdf
+Docs:   https://res.cloudinary.com/dt0gn8fbc/raw/upload/v1774264650/les-echos-ieg-files/document.docx
 ```
 
 #### URL Cloudinary avec téléchargement forcé
 ```
 Images: https://res.cloudinary.com/dt0gn8fbc/image/upload/fl_attachment/v1774264650/les-echos-ieg-files/document.jpg
-PDFs:   https://res.cloudinary.com/dt0gn8fbc/raw/upload/fl_attachment/v1774264650/les-echos-ieg-files/document.pdf
+PDFs:   https://res.cloudinary.com/dt0gn8fbc/image/upload/fl_attachment/v1774264650/les-echos-ieg-files/document.pdf
+Docs:   https://res.cloudinary.com/dt0gn8fbc/raw/upload/v1774264650/les-echos-ieg-files/document.docx (pas de transformation)
 ```
 
 ### Debug
@@ -150,20 +166,25 @@ const storage = new CloudinaryStorage({
 });
 ```
 
-### Erreur 401 sur transformation fl_attachment
-**Symptôme** : L'URL `/image/upload/fl_attachment/` retourne 401  
-**Cause** : Cloudinary bloque les transformations non signées (Strict Transformations activé)  
+### Erreur ERR_INVALID_RESPONSE sur transformation fl_attachment
+**Symptôme** : L'URL `/raw/upload/fl_attachment/` retourne ERR_INVALID_RESPONSE  
+**Cause** : Les fichiers `raw` ne supportent pas les transformations comme `fl_attachment`  
 **Solution** : 
-1. **Dans Cloudinary Dashboard** :
-   - Settings → Security → Strict Transformations → **OFF**
-   - Ou : Product environment settings → Security → Transformations → **OFF**
-2. **Configuration backend** : Upload PDFs en `raw` (déjà fait)
-3. **URLs correctes** : Utiliser `/raw/upload/fl_attachment/` pour les PDFs
+1. **Configuration backend** : Upload PDFs en `image` (déjà fait)
+2. **buildDownloadUrl** : Ne jamais transformer les URLs `raw/upload/` (déjà fait)
+3. **Cloudinary Security** : Activer "Allow delivery of PDF and ZIP files"
+
+### Configuration Cloudinary Security
+**Dans Cloudinary Dashboard** :
+1. **Settings** → **Security**
+2. Chercher **"PDF and ZIP files delivery"**
+3. **Activer** "Allow delivery of PDF and ZIP files"
+4. **Save**
 
 ### Après correction
 1. Redéployer le backend
-2. **Re-uploader les fichiers** (les anciens resteront privés/incorrects)
-3. Tester avec un nouveau fichier
+2. **Re-uploader les PDFs** (les anciens resteront en `raw`)
+3. Tester avec un nouveau PDF (doit être en `/image/upload/fl_attachment/`)
 
 ## Problème spécifique résolu
 
@@ -174,4 +195,6 @@ PDF Cloudinary → Affichage dans l'onglet → Erreur "Échec de chargement du d
 
 ### Après
 ```
-PDF Cloudinary → fl_attachment → Téléchargement direct → Fonctionne parfaitement
+PDF Cloudinary → resource_type:'image' → /image/upload/fl_attachment/ → Téléchargement direct → Fonctionne parfaitement
+Documents Cloudinary → resource_type:'raw' → /raw/upload/ (pas de transformation) → Accès direct → Fonctionne parfaitement
+```

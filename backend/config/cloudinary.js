@@ -12,18 +12,32 @@ cloudinary.config({
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: async (req, file) => {
+    const path = require('path');
+    const ext = path.extname(file.originalname).toLowerCase();
+    
     // Déterminer le resource_type en fonction du type de fichier
-    const isPdf = file.mimetype === 'application/pdf';
-    const isDocument = ['application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 
-                       'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                       'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation'].includes(file.mimetype);
+    const isPdf = ext === '.pdf';
+    const isImage = ['.jpg', '.jpeg', '.png', '.gif', '.webp'].includes(ext);
+    const isDocument = ['.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.txt', '.zip'].includes(ext);
+    
+    // Fonction pour nettoyer le nom de fichier
+    const sanitizeFilename = (name) => {
+      return name
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '') // Enlève les accents
+        .replace(/[^a-zA-Z0-9-_]/g, '-') // Caractères autorisés
+        .replace(/-+/g, '-') // Évite les doubles tirets
+        .replace(/^-|-$/g, ''); // Enlève les tirets de début/fin
+    };
+    
+    const baseName = sanitizeFilename(path.basename(file.originalname, ext));
     
     return {
       folder: 'les-echos-ieg-files',
-      resource_type: isPdf || isDocument ? 'raw' : 'auto', // PDFs et documents en 'raw'
+      resource_type: isPdf || isImage ? 'image' : 'raw', // PDFs et images en 'image', autres documents en 'raw'
       type: 'upload', // ✅ Rend les fichiers publics (évite 401 Unauthorized)
-      public_id: `${Date.now()}-${file.originalname.replace(/\s+/g, '-')}`,
-      allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt']
+      public_id: `${Date.now()}-${baseName}${ext}`,
+      allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'zip']
     };
   }
 });
