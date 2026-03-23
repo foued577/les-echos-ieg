@@ -34,8 +34,13 @@ export const buildDownloadUrl = (url) => {
   if (!url) return '';
 
   // Forcer le téléchargement pour les fichiers Cloudinary
-  if (url.includes('res.cloudinary.com') && url.includes('/upload/')) {
-    return url.replace('/upload/', '/upload/fl_attachment/');
+  if (url.includes('res.cloudinary.com')) {
+    // Gérer les deux types d'upload : image/upload et raw/upload
+    if (url.includes('/raw/upload/')) {
+      return url.replace('/raw/upload/', '/raw/upload/fl_attachment/');
+    } else if (url.includes('/image/upload/') || url.includes('/upload/')) {
+      return url.replace('/upload/', '/upload/fl_attachment/');
+    }
   }
 
   return url;

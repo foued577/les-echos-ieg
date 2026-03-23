@@ -14,6 +14,12 @@
 **Cause** : Fichiers uploadés avec `type: 'authenticated'` (privés)  
 **Solution** : `type: 'upload'` pour rendre les fichiers publics
 
+### 4. Erreur 401 sur fl_attachment ✅
+**Cause** : Cloudinary bloque les transformations non signées (Strict Transformations)  
+**Solution** : 
+1. **Désactiver Strict Transformations** dans Cloudinary > Settings > Security
+2. **Uploader PDFs en `raw`** au lieu de `image`
+
 ## Solution implémentée
 - Stockage des fichiers sur Cloudinary (persistant)
 - URLs Cloudinary sauvegardées en base de données
@@ -58,20 +64,44 @@ CLOUDINARY_API_SECRET=votre_api_secret
 ### Téléchargement
 - Le frontend utilise `buildDownloadUrl(fileUrl)` pour les fichiers Cloudinary
 - Nouveauté: Ajout automatique de `fl_attachment` pour forcer le téléchargement
-- Si l'URL est Cloudinary: transformation `/upload/` → `/upload/fl_attachment/`
-- Si l'URL est locale: utilisation directe
+- **PDFs/Documents** : Upload en `raw` → URLs `/raw/upload/` → `/raw/upload/fl_attachment/`
+- **Images** : Upload en `auto` → URLs `/image/upload/` → `/image/upload/fl_attachment/`
 - **Important**: `type: 'upload'` rend les fichiers publics (évite 401)
+
+### Configuration Cloudinary avancée
+```javascript
+// backend/config/cloudinary.js
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: async (req, file) => {
+    const isPdf = file.mimetype === 'application/pdf';
+    const isDocument = ['application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 
+                       'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                       'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation'].includes(file.mimetype);
+    
+    return {
+      folder: 'les-echos-ieg-files',
+      resource_type: isPdf || isDocument ? 'raw' : 'auto', // PDFs et documents en 'raw'
+      type: 'upload', // ✅ PUBLIC
+      public_id: `${Date.now()}-${file.originalname.replace(/\s+/g, '-')}`,
+      allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt']
+    };
+  }
+});
+```
 
 ### Exemples d'URL
 
 #### URL Cloudinary standard (affichage)
 ```
-https://res.cloudinary.com/dt0gn8fbc/image/upload/v1774264650/les-echos-ieg-files/document.pdf
+Images: https://res.cloudinary.com/dt0gn8fbc/image/upload/v1774264650/les-echos-ieg-files/document.jpg
+PDFs:   https://res.cloudinary.com/dt0gn8fbc/raw/upload/v1774264650/les-echos-ieg-files/document.pdf
 ```
 
 #### URL Cloudinary avec téléchargement forcé
 ```
-https://res.cloudinary.com/dt0gn8fbc/image/upload/fl_attachment/v1774264650/les-echos-ieg-files/document.pdf
+Images: https://res.cloudinary.com/dt0gn8fbc/image/upload/fl_attachment/v1774264650/les-echos-ieg-files/document.jpg
+PDFs:   https://res.cloudinary.com/dt0gn8fbc/raw/upload/fl_attachment/v1774264650/les-echos-ieg-files/document.pdf
 ```
 
 ### Debug
@@ -120,9 +150,19 @@ const storage = new CloudinaryStorage({
 });
 ```
 
+### Erreur 401 sur transformation fl_attachment
+**Symptôme** : L'URL `/image/upload/fl_attachment/` retourne 401  
+**Cause** : Cloudinary bloque les transformations non signées (Strict Transformations activé)  
+**Solution** : 
+1. **Dans Cloudinary Dashboard** :
+   - Settings → Security → Strict Transformations → **OFF**
+   - Ou : Product environment settings → Security → Transformations → **OFF**
+2. **Configuration backend** : Upload PDFs en `raw` (déjà fait)
+3. **URLs correctes** : Utiliser `/raw/upload/fl_attachment/` pour les PDFs
+
 ### Après correction
 1. Redéployer le backend
-2. **Re-uploader les fichiers** (les anciens resteront privés)
+2. **Re-uploader les fichiers** (les anciens resteront privés/incorrects)
 3. Tester avec un nouveau fichier
 
 ## Problème spécifique résolu
