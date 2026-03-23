@@ -53,10 +53,62 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: false }));
 
-// Fichiers statiques
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// Fichiers statiques avec debug
+const fs = require('fs');
+
+// Debug middleware pour les uploads
+app.use('/uploads', (req, res, next) => {
+  const filePath = path.join(__dirname, 'uploads', req.path);
+  const exists = fs.existsSync(filePath);
+  console.log('🔍 File access debug:');
+  console.log('  URL:', req.originalUrl);
+  console.log('  Path:', req.path);
+  console.log('  Full path:', filePath);
+  console.log('  Exists:', exists);
+  
+  if (exists) {
+    next();
+  } else {
+    console.log('❌ File not found, returning 404');
+    res.status(404).json({
+      success: false,
+      message: 'Fichier non trouvé',
+      debug: {
+        url: req.originalUrl,
+        path: req.path,
+        fullPath: filePath,
+        exists: exists
+      }
+    });
+  }
+}, express.static(path.join(__dirname, 'uploads')));
+
 // Alias pour compatibilité avec les URLs existantes
-app.use('/api/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/api/uploads', (req, res, next) => {
+  const filePath = path.join(__dirname, 'uploads', req.path);
+  const exists = fs.existsSync(filePath);
+  console.log('🔍 API File access debug:');
+  console.log('  URL:', req.originalUrl);
+  console.log('  Path:', req.path);
+  console.log('  Full path:', filePath);
+  console.log('  Exists:', exists);
+  
+  if (exists) {
+    next();
+  } else {
+    console.log('❌ API File not found, returning 404');
+    res.status(404).json({
+      success: false,
+      message: 'Fichier non trouvé',
+      debug: {
+        url: req.originalUrl,
+        path: req.path,
+        fullPath: filePath,
+        exists: exists
+      }
+    });
+  }
+}, express.static(path.join(__dirname, 'uploads')));
 
 // Routes
 app.use('/api/auth', require('./routes/authRoutes'));

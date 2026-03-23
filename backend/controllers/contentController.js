@@ -185,6 +185,13 @@ const createContent = async (req, res) => {
     console.log('🔨=== CREATE CONTENT START ===');
     console.log('🔨 Request body:', req.body);
     console.log('🔨 Request file:', req.file);
+    console.log('🔨 File details:', req.file ? {
+      originalname: req.file.originalname,
+      mimetype: req.file.mimetype,
+      size: req.file.size,
+      path: req.file.path,
+      filename: req.file.filename
+    } : 'No file');
     console.log('🔨 User from token:', req.user);
     
     // Validation des entrées
@@ -250,13 +257,13 @@ const createContent = async (req, res) => {
         });
       }
 
-      // Ajouter les informations du fichier
-      contentData.file_url = `/uploads/${req.file.filename}`;
+      // Ajouter les informations du fichier avec URL Cloudinary
+      contentData.file_url = req.file.path; // URL Cloudinary
       contentData.file_name = req.file.originalname;
       contentData.mime_type = req.file.mimetype;
       contentData.content = req.file.originalname; // Nom du fichier comme content
       
-      console.log('📁 File uploaded:', {
+      console.log('📁 File uploaded to Cloudinary:', {
         file_url: contentData.file_url,
         file_name: contentData.file_name,
         mime_type: contentData.mime_type
@@ -275,7 +282,14 @@ const createContent = async (req, res) => {
 
     const newContent = await Content.create(contentData);
 
-    console.log('✅ Content created:', newContent._id);
+    console.log('✅ Content created in database:', {
+      id: newContent._id,
+      title: newContent.title,
+      type: newContent.type,
+      file_url: newContent.file_url,
+      file_name: newContent.file_name,
+      has_file: !!newContent.file_url
+    });
 
     const populatedContent = await Content.findById(newContent._id)
       .populate('author_id', 'name email avatar')

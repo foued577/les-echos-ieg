@@ -6,28 +6,11 @@ const { body } = require('express-validator');
 const { getContents, getContentById, createContent, updateContent, deleteContent, getMyContents } = require('../controllers/contentController');
 const authMiddleware = require('../middleware/authMiddleware');
 const roleMiddleware = require('../middleware/roleMiddleware');
+const { storage } = require('../config/cloudinary');
 
 const router = express.Router();
 
-// S'assurer que le dossier uploads existe
-const uploadsDir = path.join(__dirname, '..', 'uploads');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-  console.log('📁 Dossier uploads créé:', uploadsDir);
-}
-
-// Configuration de multer pour l'upload de fichiers
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadsDir);
-  },
-  filename: (req, file, cb) => {
-    // Générer un nom de fichier unique avec timestamp
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
-  }
-});
-
+// Configuration de multer pour l'upload de fichiers avec Cloudinary
 const upload = multer({ 
   storage: storage,
   limits: {

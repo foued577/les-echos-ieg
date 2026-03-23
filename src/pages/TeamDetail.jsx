@@ -327,8 +327,12 @@ export default function TeamDetail() {
     // Construire l'URL du fichier avec buildFileUrl
     const fileUrl = buildFileUrl(content.file_url);
     
-    console.log('📁 File URL:', fileUrl);
-    console.log('📁 File name:', content.file_name || content.title);
+    console.log('📁 File handling details:');
+    console.log('  Original file_url:', content.file_url);
+    console.log('  Built fileUrl:', fileUrl);
+    console.log('  File name:', content.file_name || content.title);
+    console.log('  Is Cloudinary URL:', content.file_url.includes('cloudinary'));
+    console.log('  Is local /uploads/:', content.file_url.startsWith('/uploads/'));
 
     try {
       const link = document.createElement('a');
