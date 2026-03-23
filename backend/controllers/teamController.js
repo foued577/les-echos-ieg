@@ -200,6 +200,8 @@ const updateTeam = async (req, res) => {
       });
     }
 
+    const { name, description, color, members } = req.body;
+
     const team = await Team.findById(req.params.id);
     
     if (!team) {
@@ -210,14 +212,27 @@ const updateTeam = async (req, res) => {
     }
 
     console.log('🎨 Current team color:', team.color);
-    console.log('🎨 New color from request:', req.body.color);
+    console.log('🎨 New color from request:', color);
+    console.log('👥 Current team members:', team.members);
+    console.log('👥 New members from request:', members);
 
-    const updatedTeam = await Team.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true
-    }).populate('members', 'name email avatar');
+    // Update team fields
+    team.name = name !== undefined ? name : team.name;
+    team.description = description !== undefined ? description : team.description;
+    team.color = color !== undefined ? color : team.color;
+
+    // Update members if provided
+    if (Array.isArray(members)) {
+      console.log('👥 Updating team members to:', members);
+      team.members = members;
+    }
+
+    await team.save();
+
+    const updatedTeam = await Team.findById(team._id).populate('members', 'name email avatar');
 
     console.log('✅ Team updated with color:', updatedTeam.color);
+    console.log('✅ Team updated members:', updatedTeam.members);
 
     res.status(200).json({
       success: true,

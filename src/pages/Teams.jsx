@@ -140,11 +140,20 @@ export default function Teams() {
       try {
         console.log('🔨 Updating team...');
         console.log('🎨 New color:', editTeam.color);
+        console.log('👥 Current team members:', teamMembers);
+        
+        // Extract member IDs from teamMembers
+        const memberIds = teamMembers.map(member => 
+          member.user_id?._id || member.user_id || member._id
+        ).filter(Boolean);
+        
+        console.log('👥 Member IDs to send:', memberIds);
         
         const teamResponse = await teamsAPI.update(editTeam.id, {
           name: editTeam.name,
           description: editTeam.description,
-          color: editTeam.color
+          color: editTeam.color,
+          members: memberIds
         });
 
         if (teamResponse.success) {
