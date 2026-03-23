@@ -1,6 +1,6 @@
 const express = require('express');
 const { body } = require('express-validator');
-const { getContents, getContentById, createContent, updateContent, deleteContent, getMyContents } = require('../controllers/contentController');
+const { getContents, getContentById, createContent, updateContent, deleteContent, getMyContents, downloadContentFile } = require('../controllers/contentController');
 const authMiddleware = require('../middleware/authMiddleware');
 const roleMiddleware = require('../middleware/roleMiddleware');
 const upload = require('../middleware/uploadCloudinary');
@@ -34,6 +34,7 @@ const contentValidation = [
 router.get('/mine', authMiddleware, getMyContents); // Must come BEFORE /:id
 router.get('/', authMiddleware, getContents); // ADD authMiddleware
 router.get('/:id', authMiddleware, getContentById); // ADD authMiddleware
+router.get('/:id/download', authMiddleware, downloadContentFile); // Download route
 
 // Route de création avec upload de fichier
 router.post('/', authMiddleware, upload.single('file'), contentValidation, createContent);

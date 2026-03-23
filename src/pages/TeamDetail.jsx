@@ -324,32 +324,25 @@ export default function TeamDetail() {
       return;
     }
 
-    // Construire l'URL du fichier avec buildFileUrl
-    const fileUrl = buildFileUrl(content.file_url);
-    
-    // Forcer le téléchargement pour les fichiers Cloudinary
-    const downloadUrl = buildDownloadUrl(fileUrl);
-    
-    console.log('📁 File handling details:');
-    console.log('  Original file_url:', content.file_url);
-    console.log('  Built fileUrl:', fileUrl);
-    console.log('  Download URL:', downloadUrl);
-    console.log('  File name:', content.file_name || content.title);
-    console.log('  Is Cloudinary URL:', content.file_url.includes('cloudinary'));
-    console.log('  Is local /uploads/:', content.file_url.startsWith('/uploads/'));
+    // Utiliser l'API backend pour générer l'URL de téléchargement
+    const handleFileDownload = async () => {
+      try {
+        const res = await contentsAPI.downloadFile(content._id || content.id);
+        
+        if (res.success && res.url) {
+          console.log('📁 Download URL generated:', res.url);
+          window.open(res.url, '_blank');
+        } else {
+          console.error('❌ Failed to get download URL:', res);
+          alert('❌ Erreur lors du téléchargement du fichier');
+        }
+      } catch (error) {
+        console.error('❌ File download error:', error);
+        alert('❌ Erreur lors du téléchargement du fichier');
+      }
+    };
 
-    try {
-      const link = document.createElement('a');
-      link.href = downloadUrl;
-      link.download = content.file_name || content.title || 'document';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      console.log('📁 File download triggered successfully');
-    } catch (error) {
-      console.error('❌ File download failed:', error);
-      alert('❌ Erreur lors du téléchargement du fichier');
-    }
+    handleFileDownload();
     return;
   }
 

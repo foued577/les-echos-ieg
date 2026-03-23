@@ -313,6 +313,11 @@ export const contentsAPI = {
   delete: async (id) => {
     const response = await api.delete(`/contents/${id}`);
     return response.data;
+  },
+  
+  downloadFile: async (id) => {
+    const response = await api.get(`/contents/${id}/download`);
+    return response.data;
   }
 };
 

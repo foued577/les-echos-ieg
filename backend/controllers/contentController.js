@@ -1,5 +1,6 @@
 const Content = require('../models/Content');
 const { validationResult } = require('express-validator');
+const cloudinary = require('../config/cloudinary');
 
 // Obtenir les contenus de l'utilisateur connecté
 const getMyContents = async (req, res) => {
@@ -261,12 +262,14 @@ const createContent = async (req, res) => {
       contentData.file_url = req.file.path; // URL Cloudinary
       contentData.file_name = req.file.originalname;
       contentData.mime_type = req.file.mimetype;
+      contentData.cloudinary_public_id = req.file.filename; // important
       contentData.content = req.file.originalname; // Nom du fichier comme content
       
       console.log('📁 File uploaded to Cloudinary:', {
         file_url: contentData.file_url,
         file_name: contentData.file_name,
-        mime_type: contentData.mime_type
+        mime_type: contentData.mime_type,
+        cloudinary_public_id: contentData.cloudinary_public_id
       });
     } else {
       // Pour les liens et articles, utiliser le content normal
@@ -410,11 +413,54 @@ const deleteContent = async (req, res) => {
   }
 };
 
+const downloadContentFile = async (req, res) => {
+  try {
+    const content = await Content.findById(req.params.id);
+
+    if (!content) {
+      return res.status(404).json({
+        success: false,
+        message: 'Contenu non trouvé'
+      });
+    }
+
+    if (!content.cloudinary_public_id) {
+      return res.status(400).json({
+        success: false,
+        message: 'Aucun fichier Cloudinary associé'
+      });
+    }
+
+    const downloadUrl = cloudinary.utils.private_download_url(
+      content.cloudinary_public_id,
+      null,
+      {
+        resource_type: 'raw',
+        type: 'upload',
+        attachment: true,
+        expires_at: Math.floor(Date.now() / 1000) + 60
+      }
+    );
+
+    return res.status(200).json({
+      success: true,
+      url: downloadUrl
+    });
+  } catch (error) {
+    console.error('Erreur downloadContentFile:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur serveur'
+    });
+  }
+};
+
 module.exports = {
   getContents,
   getContentById,
   createContent,
   updateContent,
   deleteContent,
-  getMyContents
+  getMyContents,
+  downloadContentFile
 };

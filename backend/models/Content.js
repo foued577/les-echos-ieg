@@ -28,6 +28,10 @@ const contentSchema = new mongoose.Schema({
     type: String,
     default: null
   },
+  cloudinary_public_id: {
+    type: String,
+    default: null
+  },
   status: {
     type: String,
     enum: ['draft', 'pending_review', 'approved', 'rejected'],
