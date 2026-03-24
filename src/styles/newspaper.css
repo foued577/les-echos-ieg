@@ -1,0 +1,212 @@
+/* Style Typographique - Journal Le Monde Inspired */
+
+/* Variables de polices */
+:root {
+  --font-editorial: 'Merriweather', 'Georgia', serif;
+  --font-headline: 'UnifrakturCook', 'Old English Text MT', serif;
+}
+
+/* Style de base pour les articles */
+.newspaper-article {
+  font-family: var(--font-editorial);
+  line-height: 1.6;
+  color: #111;
+  font-size: 17px;
+}
+
+/* Titres principaux - Style gothique journal */
+.newspaper-article h1,
+.newspaper-article h2,
+.newspaper-article h3 {
+  font-family: var(--font-headline);
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #000;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  line-height: 1.2;
+}
+
+.newspaper-article h1 {
+  font-size: 2.5rem;
+  text-align: center;
+  margin-bottom: 1.5rem;
+  border-bottom: 3px double #000;
+  padding-bottom: 1rem;
+}
+
+.newspaper-article h2 {
+  font-size: 2rem;
+  border-left: 4px solid #000;
+  padding-left: 1rem;
+}
+
+.newspaper-article h3 {
+  font-size: 1.5rem;
+  font-style: italic;
+}
+
+/* Paragraphes */
+.newspaper-article p {
+  margin-bottom: 1.2rem;
+  text-align: justify;
+  text-indent: 2rem;
+  font-size: 17px;
+  line-height: 1.6;
+}
+
+/* Premier paragraphe spécial */
+.newspaper-article p:first-of-type {
+  font-size: 1.1rem;
+  font-weight: 400;
+  text-indent: 0;
+  border-left: 3px solid #000;
+  padding-left: 1rem;
+  background: linear-gradient(to right, #f9f9f9 0%, transparent 100%);
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+/* Listes */
+.newspaper-article ul,
+.newspaper-article ol {
+  margin: 1.5rem 0;
+  padding-left: 2rem;
+}
+
+.newspaper-article li {
+  margin-bottom: 0.5rem;
+  line-height: 1.6;
+}
+
+/* Citations */
+.newspaper-article blockquote {
+  border-left: 4px solid #000;
+  padding: 1rem 1.5rem;
+  margin: 2rem 0;
+  background: #f8f8f8;
+  font-style: italic;
+  font-size: 1.1rem;
+}
+
+/* Liens */
+.newspaper-article a {
+  color: #0066cc;
+  text-decoration: underline;
+  font-weight: 500;
+}
+
+.newspaper-article a:hover {
+  color: #004499;
+  text-decoration: none;
+}
+
+/* Images */
+.newspaper-article img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin: 2rem 0;
+}
+
+/* Légendes d'images */
+.newspaper-article figcaption {
+  font-size: 0.9rem;
+  color: #666;
+  text-align: center;
+  margin-top: 0.5rem;
+  font-style: italic;
+}
+
+/* Tableaux */
+.newspaper-article table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 2rem 0;
+}
+
+.newspaper-article th,
+.newspaper-article td {
+  border: 1px solid #000;
+  padding: 0.75rem;
+  text-align: left;
+}
+
+.newspaper-article th {
+  background: #f0f0f0;
+  font-weight: 700;
+  font-family: var(--font-headline);
+}
+
+/* Séparateur */
+.newspaper-article hr {
+  border: none;
+  height: 2px;
+  background: linear-gradient(to right, transparent, #000, transparent);
+  margin: 3rem 0;
+}
+
+/* Code */
+.newspaper-article code {
+  background: #f5f5f5;
+  padding: 0.2rem 0.4rem;
+  border-radius: 3px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+}
+
+/* Strong/Bold */
+.newspaper-article strong,
+.newspaper-article b {
+  font-weight: 700;
+  color: #000;
+}
+
+/* Emphasis/Italic */
+.newspaper-article em,
+.newspaper-article i {
+  font-style: italic;
+  color: #222;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .newspaper-article {
+    font-size: 16px;
+  }
+  
+  .newspaper-article h1 {
+    font-size: 2rem;
+  }
+  
+  .newspaper-article h2 {
+    font-size: 1.5rem;
+  }
+  
+  .newspaper-article h3 {
+    font-size: 1.25rem;
+  }
+  
+  .newspaper-article p:first-of-type {
+    font-size: 1rem;
+  }
+  
+  .newspaper-article p {
+    text-indent: 1rem;
+  }
+}
+
+/* Print styles */
+@media print {
+  .newspaper-article {
+    font-size: 12pt;
+    line-height: 1.4;
+    color: #000;
+  }
+  
+  .newspaper-article a {
+    color: #000;
+    text-decoration: underline;
+  }
+}

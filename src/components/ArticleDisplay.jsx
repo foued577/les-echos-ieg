@@ -3,6 +3,7 @@ import DOMPurify from 'dompurify';
 import { FileText, User, Calendar, Clock, Eye, Bookmark, Share2, Heart, MessageCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import '../styles/newspaper.css';
 
 export default function ArticleDisplay({ content }) {
   const [isBookmarked, setIsBookmarked] = React.useState(false);
@@ -45,48 +46,62 @@ export default function ArticleDisplay({ content }) {
 
   return (
     <article className="max-w-4xl mx-auto">
-      {/* En-tête de l'article */}
+      {/* En-tête de l'article - Style Journal */}
       <header className="mb-8">
-        <div className="flex items-center gap-3 text-sm text-slate-600 mb-4">
-          <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full font-medium">
+        {/* Fil d'Ariane et métadonnées */}
+        <div className="flex items-center gap-3 text-sm text-slate-600 mb-6 border-b border-gray-300 pb-3">
+          <span className="px-3 py-1 bg-black text-white rounded font-medium tracking-wide uppercase text-xs">
             Article
           </span>
-          <span className="text-slate-400">•</span>
+          <span className="text-gray-500">•</span>
           <span className="flex items-center gap-1">
             <Calendar className="w-4 h-4" />
             {format(new Date(content.created_at), 'dd MMMM yyyy', { locale: fr })}
           </span>
-          <span className="text-slate-400">•</span>
+          <span className="text-gray-500">•</span>
           <span className="flex items-center gap-1">
             <Clock className="w-4 h-4" />
             {calculateReadingTime(content.content)} de lecture
           </span>
-          <span className="text-slate-400">•</span>
+          <span className="text-gray-500">•</span>
           <span className="flex items-center gap-1">
             <Eye className="w-4 h-4" />
             {views} vues
           </span>
         </div>
 
-        <h1 className="text-4xl md:text-5xl font-bold text-slate-900 leading-tight mb-6 font-serif">
-          {content.title}
-        </h1>
+        {/* Titre principal - Style gothique journal */}
+        <div className="text-center mb-8">
+          <h1 className="text-4xl md:text-6xl font-bold text-black leading-tight mb-4" 
+              style={{ fontFamily: "'UnifrakturCook', 'Old English Text MT', serif", letterSpacing: '2px' }}>
+            {content.title}
+          </h1>
+          
+          {/* Ligne décorative sous le titre */}
+          <div className="w-32 h-1 bg-black mx-auto mb-6"></div>
+          
+          {/* Sous-titre/chapô */}
+          {content.description && (
+            <p className="text-xl md:text-2xl leading-relaxed italic text-gray-700 max-w-3xl mx-auto" 
+               style={{ fontFamily: "'Merriweather', 'Georgia', serif" }}>
+              {content.description}
+            </p>
+          )}
+        </div>
 
-        {content.description && (
-          <p className="text-xl text-slate-600 leading-relaxed mb-6 font-light">
-            {content.description}
-          </p>
-        )}
-
-        {/* Métadonnées de l'auteur */}
-        <div className="flex items-center justify-between pb-6 border-b border-slate-200">
+        {/* Métadonnées de l'auteur - Style Journal */}
+        <div className="flex items-center justify-between pb-6 border-b-2 border-gray-400">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-semibold">
+            <div className="w-14 h-14 rounded-full bg-black text-white flex items-center justify-center font-bold text-lg"
+                 style={{ fontFamily: "'UnifrakturCook', 'Old English Text MT', serif" }}>
               {content.author_name?.charAt(0).toUpperCase() || 'A'}
             </div>
             <div>
-              <p className="font-medium text-slate-900">{content.author_name || 'Auteur'}</p>
-              <p className="text-sm text-slate-500">
+              <p className="font-bold text-black text-lg" 
+                 style={{ fontFamily: "'Merriweather', 'Georgia', serif" }}>
+                {content.author_name || 'Auteur'}
+              </p>
+              <p className="text-sm text-gray-600 italic">
                 Publié le {format(new Date(content.created_at), 'dd MMMM yyyy à HH:mm', { locale: fr })}
               </p>
             </div>
@@ -127,75 +142,71 @@ export default function ArticleDisplay({ content }) {
         </div>
       </header>
 
-      {/* Contenu de l'article */}
+      {/* Contenu de l'article - Style Journal */}
       <div className="max-w-none">
-        <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-8 md:p-12">
+        <div className="bg-white border-2 border-gray-300 shadow-lg p-8 md:p-16" 
+             style={{ fontFamily: "'Merriweather', 'Georgia', serif" }}>
           {content.content ? (
             <div 
-              className="article-html max-w-none text-[16px] leading-8 text-gray-800
-                       [&_h1]:text-3xl [&_h1]:font-bold [&_h1]:mb-4 [&_h1]:mt-6
-                       [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:mb-3 [&_h2]:mt-5
-                       [&_h3]:text-xl [&_h3]:font-semibold [&_h3]:mb-2 [&_h3]:mt-4
-                       [&_p]:mb-4
-                       [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:mb-4
-                       [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:mb-4
-                       [&_li]:mb-1
-                       [&_a]:text-blue-600 [&_a]:underline
-                       [&_blockquote]:border-l-4 [&_blockquote]:border-gray-300
-                       [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-gray-600
-                       [&_img]:rounded-lg [&_img]:my-4"
+              className="newspaper-article max-w-none text-black"
+              style={{ fontSize: '18px', lineHeight: '1.7' }}
               dangerouslySetInnerHTML={{
                 __html: DOMPurify.sanitize(content.content || "")
               }}
             />
           ) : (
             <div className="text-center py-12">
-              <FileText className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-              <p className="text-slate-500">Aucun contenu disponible pour cet article.</p>
+              <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <p className="text-gray-500 italic">Aucun contenu disponible pour cet article.</p>
             </div>
           )}
         </div>
       </div>
 
-      {/* Footer de l'article */}
-      <footer className="mt-12 pt-8 border-t border-slate-200">
-        <div className="flex items-center justify-between mb-6">
+      {/* Footer de l'article - Style Journal */}
+      <footer className="mt-16 pt-8 border-t-2 border-gray-400">
+        <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
             <button
               onClick={handleLike}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+              className={`flex items-center gap-2 px-4 py-2 rounded transition-colors ${
                 isLiked 
-                  ? 'bg-red-100 text-red-600 hover:bg-red-200' 
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  ? 'bg-red-100 text-red-700 hover:bg-red-200 border border-red-300' 
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
               }`}
             >
               <Heart className={`w-5 h-5 ${isLiked ? 'fill-current' : ''}`} />
               <span className="font-medium">{likes}</span>
-              <span>J'aime</span>
+              <span style={{ fontFamily: "'Merriweather', 'Georgia', serif" }}>J'aime</span>
             </button>
             
-            <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">
+            <button className="flex items-center gap-2 px-4 py-2 rounded bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors border border-gray-300">
               <MessageCircle className="w-5 h-5" />
-              <span>Commenter</span>
+              <span style={{ fontFamily: "'Merriweather', 'Georgia', serif" }}>Commenter</span>
             </button>
           </div>
 
           <button
             onClick={handleShare}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-600 text-white hover:bg-purple-700 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 rounded bg-black text-white hover:bg-gray-800 transition-colors"
           >
             <Share2 className="w-5 h-5" />
-            <span>Partager</span>
+            <span style={{ fontFamily: "'Merriweather', 'Georgia', serif" }}>Partager</span>
           </button>
         </div>
 
         {/* Tags */}
         {content.tags && content.tags.length > 0 && (
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 pt-6 border-t border-gray-200">
+            <span className="text-sm font-bold text-gray-600 mr-2" 
+                  style={{ fontFamily: "'Merriweather', 'Georgia', serif" }}>
+              Tags :
+            </span>
             {content.tags.map((tag, index) => (
               <span 
                 key={index}
-                className="px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-sm hover:bg-slate-200 transition-colors cursor-pointer"
+                className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-gray-200 transition-colors cursor-pointer border border-gray-300"
+                style={{ fontFamily: "'Merriweather', 'Georgia', serif" }}
               >
                 #{tag}
               </span>
