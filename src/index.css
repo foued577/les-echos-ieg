@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700&family=UnifrakturCook:wght@700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Merriweather:wght@300;400;700&family=Inter:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,75 +6,89 @@
 
 @layer base {
   :root {
-    /* Newspaper-style color palette */
+    /* Modern editorial color palette */
     --background: #ffffff;
-    --foreground: #111111;
+    --foreground: #1a1a1a;
     --card: #ffffff;
-    --card-foreground: #111111;
+    --card-foreground: #1a1a1a;
     --popover: #ffffff;
-    --popover-foreground: #111111;
-    --primary: #000000;
+    --popover-foreground: #1a1a1a;
+    --primary: #1a1a1a;
     --primary-foreground: #ffffff;
-    --secondary: #f5f5f5;
-    --secondary-foreground: #333333;
-    --muted: #f8f8f8;
-    --muted-foreground: #666666;
-    --accent: #000000;
+    --secondary: #f8f9fa;
+    --secondary-foreground: #495057;
+    --muted: #f1f3f4;
+    --muted-foreground: #6c757d;
+    --accent: #1a1a1a;
     --accent-foreground: #ffffff;
-    --destructive: #cc0000;
+    --destructive: #dc3545;
     --destructive-foreground: #ffffff;
-    --border: #cccccc;
+    --border: #dee2e6;
     --input: #ffffff;
-    --ring: #000000;
+    --ring: #1a1a1a;
     
-    /* Status colors - Newspaper style */
-    --success: #2d5016;
-    --success-bg: #f0f4f0;
-    --success-text: #2d5016;
-    --warning: #856404;
-    --warning-bg: #fffbeb;
+    /* Status colors - Professional */
+    --success: #28a745;
+    --success-bg: #f8fff9;
+    --success-text: #155724;
+    --warning: #ffc107;
+    --warning-bg: #fff8e1;
     --warning-text: #856404;
-    --error: #cc0000;
-    --error-bg: #fef2f2;
-    --error-text: #cc0000;
+    --error: #dc3545;
+    --error-bg: #fff5f5;
+    --error-text: #721c24;
     
     /* Sidebar */
-    --sidebar-background: #f8f8f8;
-    --sidebar-foreground: #111111;
-    --sidebar-primary: #000000;
+    --sidebar-background: #f8f9fa;
+    --sidebar-foreground: #1a1a1a;
+    --sidebar-primary: #1a1a1a;
     --sidebar-primary-foreground: #ffffff;
-    --sidebar-accent: #f5f5f5;
-    --sidebar-accent-foreground: #333333;
-    --sidebar-border: #cccccc;
-    --sidebar-ring: #000000;
+    --sidebar-accent: #f1f3f4;
+    --sidebar-accent-foreground: #495057;
+    --sidebar-border: #dee2e6;
+    --sidebar-ring: #1a1a1a;
     
-    /* Typography - Newspaper Global */
-    --font-primary: 'Merriweather', 'Georgia', serif;
-    --font-headline: 'UnifrakturCook', 'Old English Text MT', serif;
-    --font-mono: 'Courier New', monospace;
+    /* Professional Typography Hierarchy */
+    --font-branding: 'Playfair Display', 'Georgia', serif; /* For logo/main branding */
+    --font-headline: 'Merriweather', 'Georgia', serif; /* For page titles */
+    --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; /* For UI elements */
+    --font-mono: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
     --radius: 0.5rem;
     
     /* Line heights for readability */
     --line-height-tight: 1.2;
-    --line-height-normal: 1.6;
-    --line-height-relaxed: 1.8;
+    --line-height-normal: 1.5;
+    --line-height-relaxed: 1.7;
+    
+    /* Font sizes */
+    --text-xs: 0.75rem;
+    --text-sm: 0.875rem;
+    --text-base: 1rem;
+    --text-lg: 1.125rem;
+    --text-xl: 1.25rem;
+    --text-2xl: 1.5rem;
+    --text-3xl: 1.875rem;
+    --text-4xl: 2.25rem;
+    --text-5xl: 3rem;
   }
 }
 
 @layer base {
-  /* Force newspaper typography globally */
+  /* Clean professional base */
   html, body {
-    font-family: var(--font-primary) !important;
+    font-family: var(--font-body) !important;
     line-height: var(--line-height-normal) !important;
     color: var(--foreground) !important;
     background-color: var(--background) !important;
+    font-size: var(--text-base) !important;
   }
   
+  /* Inherit font family for all elements */
   * {
     font-family: inherit !important;
   }
   
-  /* Better text rendering */
+  /* Optimize text rendering */
   body {
     font-feature-settings: 'kern', 'liga', 'dlig';
     -webkit-font-smoothing: antialiased;
@@ -82,93 +96,111 @@
     text-rendering: optimizeLegibility;
   }
   
-  /* Global typography overrides */
-  h1, h2, h3, h4, h5, h6 {
+  /* Editorial headlines - Merriweather serif */
+  h1, h2, h3 {
     font-family: var(--font-headline) !important;
     font-weight: 700 !important;
-    letter-spacing: 0.5px !important;
-    color: #000000 !important;
+    color: #1a1a1a !important;
     line-height: var(--line-height-tight) !important;
-    margin-top: 1.5rem !important;
-    margin-bottom: 1rem !important;
+    letter-spacing: -0.02em !important;
   }
   
   h1 {
-    font-size: 2.5rem !important;
-    text-align: center !important;
-    border-bottom: 2px solid #000000 !important;
-    padding-bottom: 0.5rem !important;
+    font-size: var(--text-5xl) !important;
+    margin-top: 2rem !important;
+    margin-bottom: 1rem !important;
   }
   
   h2 {
-    font-size: 2rem !important;
-    border-left: 3px solid #000000 !important;
-    padding-left: 0.75rem !important;
+    font-size: var(--text-3xl) !important;
+    margin-top: 1.75rem !important;
+    margin-bottom: 0.75rem !important;
   }
   
   h3 {
-    font-size: 1.5rem !important;
-    font-style: italic !important;
+    font-size: var(--text-2xl) !important;
+    margin-top: 1.5rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+  
+  /* UI elements - Inter sans-serif */
+  h4, h5, h6 {
+    font-family: var(--font-body) !important;
+    font-weight: 600 !important;
+    color: #1a1a1a !important;
+    line-height: var(--line-height-normal) !important;
   }
   
   h4 {
-    font-size: 1.25rem !important;
+    font-size: var(--text-xl) !important;
+    margin-top: 1.25rem !important;
+    margin-bottom: 0.5rem !important;
   }
   
   h5 {
-    font-size: 1.125rem !important;
+    font-size: var(--text-lg) !important;
+    margin-top: 1rem !important;
+    margin-bottom: 0.5rem !important;
   }
   
   h6 {
-    font-size: 1rem !important;
+    font-size: var(--text-base) !important;
+    margin-top: 0.75rem !important;
+    margin-bottom: 0.25rem !important;
   }
   
-  /* Paragraphs */
+  /* Clean paragraphs */
   p {
-    margin-bottom: 1.2rem !important;
-    text-align: left !important;
+    font-family: var(--font-body) !important;
+    font-size: var(--text-base) !important;
     line-height: var(--line-height-normal) !important;
-    color: #111111 !important;
+    color: #333333 !important;
+    margin-bottom: 1rem !important;
   }
   
-  /* Links */
+  /* Professional links */
   a {
     color: #0066cc !important;
-    text-decoration: underline !important;
+    text-decoration: none !important;
     font-weight: 500 !important;
     transition: color 200ms ease-in-out !important;
   }
   
   a:hover {
     color: #004499 !important;
-    text-decoration: none !important;
+    text-decoration: underline !important;
   }
   
-  /* Lists */
+  /* Clean lists */
   ul, ol {
+    font-family: var(--font-body) !important;
     margin: 1rem 0 !important;
-    padding-left: 2rem !important;
+    padding-left: 1.5rem !important;
   }
   
   li {
-    margin-bottom: 0.5rem !important;
+    font-size: var(--text-base) !important;
     line-height: var(--line-height-normal) !important;
+    margin-bottom: 0.5rem !important;
   }
   
-  /* Blockquotes */
+  /* Professional blockquotes */
   blockquote {
-    border-left: 3px solid #000000 !important;
+    font-family: var(--font-headline) !important;
+    font-style: italic !important;
+    border-left: 3px solid #dee2e6 !important;
     padding: 1rem 1.5rem !important;
     margin: 1.5rem 0 !important;
-    background: #f8f8f8 !important;
-    font-style: italic !important;
-    color: #333333 !important;
+    background: #f8f9fa !important;
+    color: #495057 !important;
+    font-size: var(--text-lg) !important;
   }
   
-  /* Code */
+  /* Clean code */
   code {
     font-family: var(--font-mono) !important;
-    background: #f5f5f5 !important;
+    background: #f1f3f4 !important;
+    color: #c7254e !important;
     padding: 0.2rem 0.4rem !important;
     border-radius: 0.25rem !important;
     font-size: 0.875rem !important;
@@ -176,63 +208,74 @@
   
   pre {
     font-family: var(--font-mono) !important;
-    background: #f5f5f5 !important;
+    background: #f8f9fa !important;
+    border: 1px solid #dee2e6 !important;
     padding: 1rem !important;
     border-radius: 0.5rem !important;
     overflow-x: auto !important;
+    font-size: 0.875rem !important;
   }
   
-  /* Tables */
+  /* Professional tables */
   table {
+    font-family: var(--font-body) !important;
     width: 100% !important;
     border-collapse: collapse !important;
     margin: 1.5rem 0 !important;
+    font-size: var(--text-sm) !important;
   }
   
   th, td {
-    border: 1px solid #cccccc !important;
+    border: 1px solid #dee2e6 !important;
     padding: 0.75rem !important;
     text-align: left !important;
   }
   
   th {
-    background: #f0f0f0 !important;
-    font-family: var(--font-headline) !important;
-    font-weight: 700 !important;
+    background: #f8f9fa !important;
+    font-weight: 600 !important;
+    color: #1a1a1a !important;
   }
   
-  /* Strong/Bold */
+  /* Emphasis */
   strong, b {
-    font-weight: 700 !important;
-    color: #000000 !important;
+    font-weight: 600 !important;
+    color: #1a1a1a !important;
   }
   
-  /* Emphasis/Italic */
   em, i {
     font-style: italic !important;
-    color: #222222 !important;
+    color: #495057 !important;
   }
   
-  /* Headings override Tailwind */
+  /* Branding class - Playfair Display */
+  .branding {
+    font-family: var(--font-branding) !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.02em !important;
+    color: #1a1a1a !important;
+  }
+  
+  /* Override Tailwind colors for consistency */
   .text-slate-900,
   .text-gray-900,
   .text-black {
-    color: #000000 !important;
+    color: #1a1a1a !important;
   }
   
   .text-slate-600,
   .text-gray-600 {
-    color: #333333 !important;
+    color: #495057 !important;
   }
   
   .text-slate-500,
   .text-gray-500 {
-    color: #666666 !important;
+    color: #6c757d !important;
   }
   
   .text-slate-400,
   .text-gray-400 {
-    color: #999999 !important;
+    color: #adb5bd !important;
   }
   
   /* Custom scrollbar */
@@ -242,16 +285,16 @@
   }
   
   ::-webkit-scrollbar-track {
-    background: #f8f8f8;
+    background: #f8f9fa;
   }
   
   ::-webkit-scrollbar-thumb {
-    background: #cccccc;
+    background: #dee2e6;
     border-radius: 4px;
   }
   
   ::-webkit-scrollbar-thumb:hover {
-    background: #999999;
+    background: #adb5bd;
   }
 }
 
@@ -271,27 +314,33 @@
     transform: translateY(-2px) !important;
   }
   
-  /* Newspaper Button Primary */
-  .newspaper-button-primary {
+  /* Professional Button Primary */
+  .professional-button-primary {
     background: var(--primary) !important;
     color: var(--primary-foreground) !important;
-    border: 2px solid var(--primary) !important;
-    padding: 0.75rem 1.5rem !important;
+    border: 1px solid var(--primary) !important;
+    padding: 0.625rem 1.25rem !important;
     border-radius: var(--radius) !important;
-    font-family: var(--font-headline) !important;
-    font-weight: 700 !important;
-    letter-spacing: 0.5px !important;
-    transition: all 200ms ease-in-out !important;
+    font-family: var(--font-body) !important;
+    font-weight: 600 !important;
+    font-size: var(--text-sm) !important;
+    transition: all 150ms ease-in-out !important;
     cursor: pointer !important;
-    text-transform: uppercase !important;
-    font-size: 0.875rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
   }
   
-  .newspaper-button-primary:hover {
-    background: var(--card) !important;
-    color: var(--primary) !important;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2) !important;
+  .professional-button-primary:hover {
+    background: #2d2d2d !important;
+    border-color: #2d2d2d !important;
     transform: translateY(-1px) !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+  }
+  
+  .professional-button-primary:focus {
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(26, 26, 26, 0.2) !important;
   }
   
   /* Newspaper Button Secondary */
