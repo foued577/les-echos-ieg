@@ -6,61 +6,61 @@
 
 @layer base {
   :root {
-    /* Modern editorial color palette */
+    /* Premium editorial color palette - inspired by Financial Times */
     --background: #ffffff;
-    --foreground: #1a1a1a;
+    --foreground: #111111;
     --card: #ffffff;
-    --card-foreground: #1a1a1a;
+    --card-foreground: #111111;
     --popover: #ffffff;
-    --popover-foreground: #1a1a1a;
-    --primary: #1a1a1a;
+    --popover-foreground: #111111;
+    --primary: #1f3a5f;
     --primary-foreground: #ffffff;
-    --secondary: #f8f9fa;
-    --secondary-foreground: #495057;
-    --muted: #f1f3f4;
-    --muted-foreground: #6c757d;
-    --accent: #1a1a1a;
+    --secondary: #f8fafc;
+    --secondary-foreground: #475569;
+    --muted: #f1f5f9;
+    --muted-foreground: #64748b;
+    --accent: #1f3a5f;
     --accent-foreground: #ffffff;
-    --destructive: #dc3545;
+    --destructive: #dc2626;
     --destructive-foreground: #ffffff;
-    --border: #dee2e6;
+    --border: #e5e7eb;
     --input: #ffffff;
-    --ring: #1a1a1a;
+    --ring: #1f3a5f;
     
     /* Status colors - Professional */
-    --success: #28a745;
-    --success-bg: #f8fff9;
-    --success-text: #155724;
-    --warning: #ffc107;
-    --warning-bg: #fff8e1;
-    --warning-text: #856404;
-    --error: #dc3545;
-    --error-bg: #fff5f5;
-    --error-text: #721c24;
+    --success: #059669;
+    --success-bg: #f0fdf4;
+    --success-text: #166534;
+    --warning: #d97706;
+    --warning-bg: #fffbeb;
+    --warning-text: #92400e;
+    --error: #dc2626;
+    --error-bg: #fef2f2;
+    --error-text: #991b1b;
     
     /* Sidebar */
-    --sidebar-background: #f8f9fa;
-    --sidebar-foreground: #1a1a1a;
-    --sidebar-primary: #1a1a1a;
+    --sidebar-background: #f8fafc;
+    --sidebar-foreground: #111111;
+    --sidebar-primary: #1f3a5f;
     --sidebar-primary-foreground: #ffffff;
-    --sidebar-accent: #f1f3f4;
-    --sidebar-accent-foreground: #495057;
-    --sidebar-border: #dee2e6;
-    --sidebar-ring: #1a1a1a;
+    --sidebar-accent: #f1f5f9;
+    --sidebar-accent-foreground: #475569;
+    --sidebar-border: #e5e7eb;
+    --sidebar-ring: #1f3a5f;
     
     /* Professional Typography Hierarchy */
     --font-branding: 'Playfair Display', 'Georgia', serif; /* For logo/main branding */
     --font-headline: 'Merriweather', 'Georgia', serif; /* For page titles */
     --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; /* For UI elements */
     --font-mono: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
-    --radius: 0.5rem;
+    --radius: 0.375rem;
     
-    /* Line heights for readability */
+    /* Line heights for premium readability */
     --line-height-tight: 1.2;
-    --line-height-normal: 1.5;
-    --line-height-relaxed: 1.7;
+    --line-height-normal: 1.6;
+    --line-height-relaxed: 1.8;
     
-    /* Font sizes */
+    /* Premium font sizes */
     --text-xs: 0.75rem;
     --text-sm: 0.875rem;
     --text-base: 1rem;
@@ -158,16 +158,16 @@
     margin-bottom: 1rem !important;
   }
   
-  /* Professional links */
+  /* Premium editorial links with blue accent */
   a {
-    color: #0066cc !important;
+    color: var(--primary) !important;
     text-decoration: none !important;
     font-weight: 500 !important;
     transition: color 200ms ease-in-out !important;
   }
   
   a:hover {
-    color: #004499 !important;
+    color: #1e40af !important;
     text-decoration: underline !important;
   }
   
@@ -256,26 +256,26 @@
     color: #1a1a1a !important;
   }
   
-  /* Override Tailwind colors for consistency */
+  /* Override colors for premium editorial consistency */
   .text-slate-900,
   .text-gray-900,
   .text-black {
-    color: #1a1a1a !important;
+    color: var(--foreground) !important;
   }
   
   .text-slate-600,
   .text-gray-600 {
-    color: #495057 !important;
+    color: #64748b !important;
   }
   
   .text-slate-500,
   .text-gray-500 {
-    color: #6c757d !important;
+    color: var(--muted-foreground) !important;
   }
   
   .text-slate-400,
   .text-gray-400 {
-    color: #adb5bd !important;
+    color: #94a3b8 !important;
   }
   
   /* Custom scrollbar */
