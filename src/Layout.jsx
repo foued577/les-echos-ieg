@@ -247,8 +247,10 @@ export default function Layout({ children, currentPageName }) {
 
       {/* Main content */}
       <main className="pt-16 lg:pl-72">
-        <div className="max-w-5xl mx-auto px-8 py-10">
-          {children}
+        <div className="w-full px-6 py-8 lg:px-12 xl:px-16">
+          <div className="w-full max-w-none xl:max-w-[1800px] mx-auto">
+            {children}
+          </div>
         </div>
       </main>
     </div>
