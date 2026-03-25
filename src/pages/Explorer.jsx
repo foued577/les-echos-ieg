@@ -45,6 +45,7 @@ export default function Explorer() {
   const [search, setSearch] = useState('');
   const [selectedContent, setSelectedContent] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     if (user) {
@@ -57,10 +58,10 @@ export default function Explorer() {
       // Re-filter when team selection changes
       if (selectedTeam !== 'all') {
         const filteredRubriques = rubriques.filter(rubrique => 
-          rubrique.team_ids && rubrique.team_ids.includes(selectedTeam)
+          rubrique && rubrique.team_ids && rubrique.team_ids.includes(selectedTeam)
         );
         const filteredContents = contents.filter(content => 
-          content.team_ids && content.team_ids.includes(selectedTeam)
+          content && content.team_ids && content.team_ids.includes(selectedTeam)
         );
         console.log(`🔄 Filtered by team ${selectedTeam}:`, {
           rubriques: filteredRubriques.length,
@@ -73,6 +74,7 @@ export default function Explorer() {
   const loadData = async () => {
     try {
       console.log('🔍 Loading data for Explorer...');
+      setError(null);
       
       // Load all data in parallel
       const [teamsResponse, rubriquesResponse, contentsResponse] = await Promise.all([
@@ -88,8 +90,8 @@ export default function Explorer() {
       });
 
       // Process teams
-      if (teamsResponse.success) {
-        const normalizedTeams = teamsResponse.data.map(team => ({
+      if (teamsResponse.success && teamsResponse.data) {
+        const normalizedTeams = (teamsResponse.data || []).filter(Boolean).map(team => ({
           ...team,
           id: team._id || team.id
         }));
@@ -98,8 +100,8 @@ export default function Explorer() {
       }
 
       // Process rubriques
-      if (rubriquesResponse.success) {
-        const normalizedRubriques = rubriquesResponse.data.map(rubrique => ({
+      if (rubriquesResponse.success && rubriquesResponse.data) {
+        const normalizedRubriques = (rubriquesResponse.data || []).filter(Boolean).map(rubrique => ({
           ...rubrique,
           id: rubrique._id || rubrique.id
         }));
@@ -110,8 +112,8 @@ export default function Explorer() {
       }
 
       // Process contents
-      if (contentsResponse.success) {
-        const normalizedContents = contentsResponse.data.map(content => ({
+      if (contentsResponse.success && contentsResponse.data) {
+        const normalizedContents = (contentsResponse.data || []).filter(Boolean).map(content => ({
           ...content,
           id: content._id || content.id,
           team_ids: content.team_ids ? content.team_ids.map(id => id.toString()) : []
@@ -148,6 +150,7 @@ export default function Explorer() {
       setLoading(false);
     } catch (error) {
       console.error('💥 Error loading data for Explorer:', error);
+      setError(error.message || 'Erreur lors du chargement des données');
       setLoading(false);
     }
   };
@@ -157,11 +160,11 @@ export default function Explorer() {
     let filteredRubriques = [];
     
     if (selectedTeam === 'all') {
-      filteredRubriques = [...rubriques];
+      filteredRubriques = [...(rubriques || [])];
       
       // Add "Uncategorized" rubrique if there are contents without team_ids
-      const hasUncategorizedContents = contents.some(content => 
-        !content.team_ids || content.team_ids.length === 0
+      const hasUncategorizedContents = (contents || []).some(content => 
+        content && (!content.team_ids || content.team_ids.length === 0)
       );
       
       if (hasUncategorizedContents) {
@@ -174,8 +177,8 @@ export default function Explorer() {
         });
       }
     } else {
-      filteredRubriques = rubriques.filter(rubrique => 
-        rubrique.team_ids && rubrique.team_ids.includes(selectedTeam)
+      filteredRubriques = (rubriques || []).filter(rubrique => 
+        rubrique && rubrique.team_ids && rubrique.team_ids.includes(selectedTeam)
       );
     }
     
@@ -213,21 +216,23 @@ export default function Explorer() {
 
   const getFilteredContents = () => {
     if (selectedTeam === 'all') {
-      return contents;
+      return contents || [];
     }
-    return contents.filter(content => 
-      content.team_ids && content.team_ids.includes(selectedTeam)
+    return (contents || []).filter(content => 
+      content && content.team_ids && content.team_ids.includes(selectedTeam)
     );
   };
 
   const getContentsByRubrique = (rubriqueId) => {
     const filteredContents = getFilteredContents();
-    const rubrique = rubriques.find(r => r.id === rubriqueId);
+    const rubrique = (rubriques || []).find(r => r && r.id === rubriqueId);
     console.log(`🔍 Getting contents for rubrique: ${rubrique?.name} (${rubriqueId})`);
     
     const matchingContents = filteredContents.filter(content => {
-      const matchesSearch = content.title.toLowerCase().includes(search.toLowerCase()) ||
-                           (content.content && content.content.toLowerCase().includes(search.toLowerCase()));
+      if (!content) return false;
+      
+      const matchesSearch = (content.title || '').toLowerCase().includes((search || '').toLowerCase()) ||
+                           (content.content && content.content.toLowerCase().includes((search || '').toLowerCase()));
       
       // DEBUG: Log rubriqueId detection for first few items
       if (filteredContents.indexOf(content) < 3) {
@@ -246,7 +251,7 @@ export default function Explorer() {
       
       // If "All teams" selected, show contents without team_ids in "Uncategorized"
       if (selectedTeam === 'all' && (!content.team_ids || content.team_ids.length === 0)) {
-        return rubrique.name === "Non classés" && matchesSearch;
+        return rubrique && rubrique.name === "Non classés" && matchesSearch;
       }
       
       // Use robust rubriqueId detection and comparison
@@ -272,6 +277,28 @@ export default function Explorer() {
     );
   }
 
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center max-w-md">
+          <div className="text-red-500 mb-4">
+            <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-semibold text-foreground mb-2">Erreur de chargement</h3>
+          <p className="text-muted-foreground mb-4">{error}</p>
+          <button
+            onClick={loadData}
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+          >
+            Réessayer
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -293,9 +320,9 @@ export default function Explorer() {
             className="w-full p-2 border rounded-lg bg-card"
           >
             <option value="all">Toutes les équipes</option>
-            {teams.map((team) => (
+            {(teams || []).filter(Boolean).map((team) => (
               <option key={team.id} value={team.id}>
-                {team.name}
+                {team.name || 'Équipe sans nom'}
               </option>
             ))}
           </select>
@@ -314,7 +341,9 @@ export default function Explorer() {
 
       {/* Rubriques Columns */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {getFilteredRubriques().map((rubrique) => {
+        {getFilteredRubriques().filter(Boolean).map((rubrique) => {
+          if (!rubrique || !rubrique.id) return null;
+          
           const rubriqueContents = getContentsByRubrique(rubrique.id);
           
           return (
@@ -326,10 +355,10 @@ export default function Explorer() {
                     className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-semibold text-sm"
                     style={{ backgroundColor: rubrique.color || '#64748b' }}
                   >
-                    {rubrique.name?.slice(0, 2).toUpperCase()}
+                    {(rubrique.name || '').slice(0, 2).toUpperCase()}
                   </div>
                   <div>
-                    <h3 className="font-semibold text-foreground">{rubrique.name}</h3>
+                    <h3 className="font-semibold text-foreground">{rubrique.name || 'Rubrique sans nom'}</h3>
                     <p className="text-xs text-muted-foreground">
                       {rubriqueContents.length} contenu{rubriqueContents.length > 1 ? 's' : ''}
                     </p>
@@ -347,12 +376,14 @@ export default function Explorer() {
                     Aucun contenu dans cette rubrique
                   </p>
                 ) : (
-                  rubriqueContents.map((content) => {
+                  rubriqueContents.filter(Boolean).map((content) => {
+                    if (!content || !content.id) return null;
+                    
                     const Icon = getTypeIcon(content.type);
                     const handleContentClick = (content) => {
                       console.log('🔍=== CONTENT CLICK DEBUG ===');
                       console.log('Content clicked:', content);
-                      console.log('Content keys:', Object.keys(content));
+                      console.log('Content keys:', Object.keys(content || {}));
                       console.log('author_id:', content.author_id);
                       console.log('team_ids:', content.team_ids);
                       console.log('Content type:', typeof content);
@@ -369,11 +400,13 @@ export default function Explorer() {
                           <Icon className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-foreground truncate">
-                              {content.title}
+                              {content.title || 'Contenu sans titre'}
                             </p>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {format(new Date(content.created_at), 'dd MMM yyyy', { locale: fr })}
-                            </p>
+                            {content.created_at && (
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {format(new Date(content.created_at), 'dd MMM yyyy', { locale: fr })}
+                              </p>
+                            )}
                             {content.author_name && (
                               <p className="text-xs text-muted-foreground">
                                 par {content.author_name}
@@ -429,22 +462,24 @@ export default function Explorer() {
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 text-sm text-gray-500">
                     <User className="w-4 h-4" />
-                    {selectedContent.author_id?.name || 'Auteur inconnu'}
+                    {selectedContent.author_id?.name || selectedContent.author_name || 'Auteur inconnu'}
                   </div>
                   
-                  <div className="flex items-center gap-2 text-sm text-gray-500">
-                    <Calendar className="w-4 h-4" />
-                    {selectedContent.created_at && format(new Date(selectedContent.created_at), 'dd MMMM yyyy à HH:mm', { locale: fr })}
-                  </div>
+                  {selectedContent.created_at && (
+                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                      <Calendar className="w-4 h-4" />
+                      {format(new Date(selectedContent.created_at), 'dd MMMM yyyy à HH:mm', { locale: fr })}
+                    </div>
+                  )}
                   
                   <div className="flex items-center gap-2 text-sm text-gray-500">
                     <Tag className="w-4 h-4" />
                     {selectedContent.type || 'Type inconnu'}
                   </div>
                   
-                  {selectedContent.tags && selectedContent.tags.length > 0 && (
+                  {selectedContent.tags && Array.isArray(selectedContent.tags) && selectedContent.tags.length > 0 && (
                     <div className="flex flex-wrap gap-1">
-                      {selectedContent.tags.map((tag, index) => (
+                      {selectedContent.tags.filter(Boolean).map((tag, index) => (
                         <span key={index} className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-md">
                           {tag}
                         </span>
@@ -452,16 +487,20 @@ export default function Explorer() {
                     </div>
                   )}
                   
-                  {selectedContent.team_ids && selectedContent.team_ids.length > 0 && (
+                  {selectedContent.team_ids && Array.isArray(selectedContent.team_ids) && selectedContent.team_ids.length > 0 && (
                     <div className="flex items-center gap-2 text-sm text-gray-500">
                       <Users className="w-4 h-4" />
-                      {selectedContent.team_ids.map(team => team.name || team).join(', ')}
+                      {selectedContent.team_ids.map(team => 
+                        typeof team === 'object' ? (team.name || team) : team
+                      ).filter(Boolean).join(', ')}
                     </div>
                   )}
                   
-                  <div className="prose prose-sm max-w-none">
-                    <p className="text-gray-700">{selectedContent.content}</p>
-                  </div>
+                  {selectedContent.content && (
+                    <div className="prose prose-sm max-w-none">
+                      <p className="text-gray-700">{selectedContent.content}</p>
+                    </div>
+                  )}
                   
                   <div className="flex justify-end pt-4 border-t border-gray-200">
                     <button
