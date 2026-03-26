@@ -158,8 +158,8 @@ export default function Dashboard() {
     } catch (error) {
       console.error('💥 Error loading dashboard data:', error);
       setLoading(false);
-    }
-  };
+    } // Added closing parenthesis here
+  });
 
   const getTypeIcon = (type) => {
     switch(type) {
