@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/lib/AuthContext';
-import { contentsAPI, teamsAPI, rubriquesAPI } from '@/services/api';
+import { contentsAPI } from '@/services/api';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '../utils';
-import { Clock, CheckCircle, FileText, Link as LinkIcon, File, ChevronRight, PenLine, Folder, Tag } from 'lucide-react';
+import { Clock, FileText, Link as LinkIcon, File, PenLine } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -13,8 +13,6 @@ export default function Dashboard() {
   const [myContents, setMyContents] = useState([]);
   const [recentApproved, setRecentApproved] = useState([]);
   const [pendingContents, setPendingContents] = useState([]);
-  const [teams, setTeams] = useState([]);
-  const [rubriques, setRubriques] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0); // Force refresh key
 
@@ -38,216 +36,92 @@ export default function Dashboard() {
 
   const loadData = useCallback(async () => {
     try {
-      console.log('=== DASHBOARD LOAD START ===');
-      console.log(' Current user:', user);
-      console.log(' User ID:', user.id);
+      console.log('🔍=== DASHBOARD LOAD START ===');
+      console.log('👤 Current user:', user);
       console.log('🆔 User ID:', user.id);
       
-      const [myContentsResponse, pendingContentsResponse, approvedContentsResponse, teamsResponse, rubriquesResponse] = await Promise.all([
-        contentsAPI.getMy().catch(err => ({ success: false, error: err })), // Get ALL user contents
-        contentsAPI.getMy({ status: 'pending_review' }).catch(err => ({ success: false, error: err })), // Get pending user contents
+      // Use new dashboard endpoint with pre-filtered data
+      const [myContentsResponse, pendingContentsResponse, approvedContentsResponse] = await Promise.all([
+        contentsAPI.getDashboard().catch(err => ({ success: false, error: err })), // Get ALL user contents with relations
+        contentsAPI.getDashboard({ status: 'pending_review' }).catch(err => ({ success: false, error: err })), // Get pending user contents
         contentsAPI.getAll({ status: 'approved' }).catch(err => ({ success: false, error: err })), // Get ALL approved contents
-        teamsAPI.getAll().catch(err => ({ success: false, error: err })), // Get all teams
-        rubriquesAPI.getAll().catch(err => ({ success: false, error: err })) // Get all rubriques
       ]);
 
       const myContents = myContentsResponse.success ? myContentsResponse.data : [];
       const pendingContents = pendingContentsResponse.success ? pendingContentsResponse.data : [];
       const approvedContents = approvedContentsResponse.success ? approvedContentsResponse.data : [];
-      const teams = Array.isArray(teamsResponse) ? teamsResponse : []; // teamsAPI.getAll() returns array
-      const rubriques = rubriquesResponse.success ? rubriquesResponse.data : [];
 
-      console.log('📊=== RAW API RESPONSES ===');
-      console.log('📝 My Contents Raw:', myContents.length, myContents.map(c => ({
+      console.log('📊=== DASHBOARD API RESPONSES ===');
+      console.log('📝 My Contents from Dashboard API:', myContents.length, myContents.map(c => ({
         id: c._id,
         title: c.title,
         status: c.status,
-        team_ids: c.team_ids,
-        rubrique_id: c.rubrique_id,
-        author_id: c.author_id,
+        rubrique_name: c.rubrique_id?.name,
+        team_name: c.rubrique_id?.team_id?.name,
         created_at: c.created_at
       })));
-      console.log('⏳ Pending Contents Raw:', pendingContents.length, pendingContents.map(c => ({
+      console.log('⏳ Pending Contents from Dashboard API:', pendingContents.length, pendingContents.map(c => ({
         id: c._id,
         title: c.title,
         status: c.status,
-        team_ids: c.team_ids,
-        rubrique_id: c.rubrique_id,
-        author_id: c.author_id,
+        rubrique_name: c.rubrique_id?.name,
+        team_name: c.rubrique_id?.team_id?.name,
         created_at: c.created_at
       })));
       console.log('✅ Approved Contents Raw:', approvedContents.length, approvedContents.slice(0, 3).map(c => ({
         id: c._id,
         title: c.title,
         status: c.status,
-        team_ids: c.team_ids,
-        rubrique_id: c.rubrique_id,
-        author_id: c.author_id,
         created_at: c.created_at
       })));
-      console.log('👥 Teams Available:', teams.length, teams.map(t => ({ id: t._id, name: t.name })));
-      console.log('📁 Rubriques Available:', rubriques.length, rubriques.map(r => ({ id: r._id, name: r.name })));
 
       console.log('📊 Final counts:');
       console.log('  - My contents:', myContents.length);
       console.log('  - My pending contents:', pendingContents.length);
       console.log('  - ALL approved contents:', approvedContents.length);
-      console.log('  - Teams:', teams.length);
-      console.log('  - Rubriques:', rubriques.length);
       
-      // Normalize data with defensive filtering
-      console.log('🔍=== BEFORE FILTERING ===');
-      console.log('📝 My Contents Before Filter:', myContents.length, 'items');
+      // No filtering needed - backend already filtered valid content
+      console.log('🔍=== NO FRONTEND FILTERING NEEDED ===');
+      console.log('📝 My Contents (already filtered):', myContents.length, 'items');
       
       const normalizedMyContents = myContents
-        .filter(content => content && content._id) // Filter out null/undefined
+        .filter(content => content && content._id) // Filter out null/undefined only
         .map(content => ({
           ...content,
-          id: content._id || content.id,
-          team_ids: content.team_ids ? content.team_ids.map(id => id.toString()) : []
-        }))
-        .filter(content => {
-          // Very simple filtering - only filter truly orphaned content
-          // If no teams specified, it's valid
-          if (!content.team_ids || content.team_ids.length === 0) {
-            console.log('✅ PASS - No teams required:', content.title);
-            return true;
-          }
-          
-          // Check if at least one team exists - very permissive check
-          const hasValidTeam = content.team_ids.some(teamId => 
-            teams.some(team => team._id === teamId || team.id === teamId)
-          );
-          
-          // Rubrique is optional - don't filter if missing
-          const hasValidRubrique = !content.rubrique_id || 
-            rubriques.some(rubrique => rubrique._id === content.rubrique_id || rubrique.id === content.rubrique_id);
-          
-          console.log('🔍 FILTER CHECK:', {
-            title: content.title,
-            team_ids: content.team_ids,
-            rubrique_id: content.rubrique_id,
-            hasValidTeam,
-            hasValidRubrique,
-            availableTeams: teams.map(t => t._id),
-            availableRubriques: rubriques.map(r => r._id)
-          });
-          
-          // Only reject if team is explicitly invalid
-          if (!hasValidTeam) {
-            console.log('🚫 REJECTED - Invalid team:', content.title);
-            return false;
-          }
-          
-          // Always pass if team is valid, regardless of rubrique
-          console.log('✅ PASS - Valid content:', content.title);
-          return true;
-        });
-
-      console.log('🔍=== AFTER FILTERING ===');
-      console.log('📝 My Contents After Filter:', normalizedMyContents.length, 'items');
-      console.log('📝 Lost items:', myContents.length - normalizedMyContents.length);
+          id: content._id || content.id
+        }));
 
       const normalizedPending = pendingContents
-        .filter(content => content && content._id) // Filter out null/undefined
+        .filter(content => content && content._id) // Filter out null/undefined only
         .map(content => ({
           ...content,
-          id: content._id || content.id,
-          team_ids: content.team_ids ? content.team_ids.map(id => id.toString()) : []
-        }))
-        .filter(content => {
-          // Less strict filtering - only filter truly orphaned content
-          // If no teams specified, it's valid
-          if (!content.team_ids || content.team_ids.length === 0) {
-            return true;
-          }
-          
-          // Check if at least one team exists
-          const hasValidTeam = content.team_ids.some(teamId => 
-            teams.some(team => team._id === teamId || team.id === teamId)
-          );
-          
-          // Check if rubrique exists
-          const hasValidRubrique = !content.rubrique_id || 
-            rubriques.some(rubrique => rubrique._id === content.rubrique_id || rubrique.id === content.rubrique_id);
-          
-          if (!hasValidTeam) {
-            console.log('🚫 Dashboard filtering orphaned pending content (invalid team):', {
-              title: content.title,
-              team_ids: content.team_ids,
-              availableTeams: teams.map(t => t._id)
-            });
-          }
-          
-          if (!hasValidRubrique) {
-            console.log('🚫 Dashboard filtering orphaned pending content (invalid rubrique):', {
-              title: content.title,
-              rubrique_id: content.rubrique_id,
-              availableRubriques: rubriques.map(r => r._id)
-            });
-          }
-          
-          return hasValidTeam && hasValidRubrique;
-        });
+          id: content._id || content.id
+        }));
 
       const normalizedApproved = approvedContents
-        .filter(content => content && content._id) // Filter out null/undefined
+        .filter(content => content && content._id) // Filter out null/undefined only
         .map(content => ({
           ...content,
           id: content._id || content.id,
-          team_ids: content.team_ids ? content.team_ids.map(id => id.toString()) : [],
-          author_name: content.author_id?.name || 'Anonyme' // Ensure author_name is populated
-        }))
-        .filter(content => {
-          // Less strict filtering - only filter truly orphaned content
-          // If no teams specified, it's valid
-          if (!content.team_ids || content.team_ids.length === 0) {
-            return true;
-          }
-          
-          // Check if at least one team exists
-          const hasValidTeam = content.team_ids.some(teamId => 
-            teams.some(team => team._id === teamId || team.id === teamId)
-          );
-          
-          // Check if rubrique exists
-          const hasValidRubrique = !content.rubrique_id || 
-            rubriques.some(rubrique => rubrique._id === content.rubrique_id || rubrique.id === content.rubrique_id);
-          
-          if (!hasValidTeam) {
-            console.log('🚫 Dashboard filtering orphaned approved content (invalid team):', {
-              title: content.title,
-              team_ids: content.team_ids,
-              availableTeams: teams.map(t => t._id)
-            });
-          }
-          
-          if (!hasValidRubrique) {
-            console.log('🚫 Dashboard filtering orphaned approved content (invalid rubrique):', {
-              title: content.title,
-              rubrique_id: content.rubrique_id,
-              availableRubriques: rubriques.map(r => r._id)
-            });
-          }
-          
-          return hasValidTeam && hasValidRubrique;
-        });
+          author_name: content.author_id?.name || 'Anonyme'
+        }));
 
-      console.log('🔍 Sample approved content:', normalizedApproved[0]);
+      console.log('🔍=== FINAL RESULTS ===');
+      console.log('� My Contents Final:', normalizedMyContents.length, 'items');
+      console.log('⏳ Pending Contents Final:', normalizedPending.length, 'items');
+      console.log('✅ Approved Contents Final:', normalizedApproved.length, 'items');
 
       setMyContents(normalizedMyContents.slice(0, 5));
       setPendingContents(normalizedPending);
-      setRecentApproved(normalizedApproved); // Show all approved contents
-      setTeams(teams);
-      setRubriques(rubriques);
+      setRecentApproved(normalizedApproved);
       setLoading(false);
       
-      console.log('✅ Dashboard data loaded');
+      console.log('✅ Dashboard data loaded successfully');
     } catch (error) {
       console.error('💥 Error loading dashboard data:', error);
       setLoading(false);
-    } // Added closing parenthesis here
-  });
+    }
+  }, [user]);
 
   const getTypeIcon = (type) => {
     switch(type) {

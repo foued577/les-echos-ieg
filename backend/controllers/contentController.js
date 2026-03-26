@@ -2,6 +2,84 @@ const Content = require('../models/Content');
 const { validationResult } = require('express-validator');
 const cloudinary = require('../config/cloudinary');
 
+// Dashboard endpoint - Get user's valid proposals with complete relations
+const getDashboardContents = async (req, res) => {
+  try {
+    console.log('📊=== DASHBOARD CONTENTS START ===');
+    console.log('📊 User from token:', req.user);
+    console.log('📊 User ID:', req.user._id);
+    
+    const { status } = req.query;
+    
+    // Get contents with complete relations and proper filtering
+    let contents = await Content.find({ author_id: req.user._id })
+      .populate({
+        path: 'rubrique_id',
+        select: 'name description color team_id',
+        populate: {
+          path: 'team_id',
+          select: 'name',
+          match: { _id: { $exists: true } } // Only include existing teams
+        }
+      })
+      .populate('author_id', 'name email avatar')
+      .sort({ created_at: -1 });
+
+    console.log('📊 Raw contents found:', contents.length);
+    
+    // Filter to include only contents with valid rubrique and team
+    const validContents = contents.filter(content => {
+      // Content must have a rubrique
+      if (!content.rubrique_id) {
+        console.log('🚫 Dashboard filtering - No rubrique:', content.title);
+        return false;
+      }
+      
+      // Rubrique must have a valid team (populate already filtered non-existing teams)
+      if (!content.rubrique_id.team_id) {
+        console.log('🚫 Dashboard filtering - No valid team:', content.title);
+        return false;
+      }
+      
+      // Apply status filter if provided
+      if (status && content.status !== status) {
+        return false;
+      }
+      
+      console.log('✅ Dashboard valid content:', content.title);
+      return true;
+    });
+
+    console.log('📊 Valid dashboard contents:', validContents.length);
+    
+    // Log first few valid contents for debugging
+    validContents.slice(0, 3).forEach((content, index) => {
+      console.log(`📊 Dashboard Content ${index + 1}:`, {
+        id: content._id,
+        title: content.title,
+        status: content.status,
+        rubrique_id: content.rubrique_id?._id,
+        rubrique_name: content.rubrique_id?.name,
+        team_id: content.rubrique_id?.team_id?._id,
+        team_name: content.rubrique_id?.team_id?.name,
+        created_at: content.created_at
+      });
+    });
+
+    res.status(200).json({
+      success: true,
+      count: validContents.length,
+      data: validContents
+    });
+  } catch (error) {
+    console.error('Erreur getDashboardContents:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur serveur'
+    });
+  }
+};
+
 // Obtenir les contenus de l'utilisateur connecté
 const getMyContents = async (req, res) => {
   try {
@@ -548,5 +626,6 @@ module.exports = {
   updateContent,
   deleteContent,
   getMyContents,
-  downloadContentFile
+  downloadContentFile,
+  getDashboardContents
 };

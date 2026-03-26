@@ -274,6 +274,12 @@ export const rubriquesAPI = {
 
 // Contenus
 export const contentsAPI = {
+  getDashboard: async (filters = {}) => {
+    const params = new URLSearchParams(filters);
+    const response = await api.get(`/contents/dashboard?${params}`);
+    return response.data;
+  },
+  
   getAll: async (filters = {}) => {
     const params = new URLSearchParams(filters);
     const response = await api.get(`/contents?${params}`);

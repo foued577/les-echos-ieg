@@ -1,6 +1,6 @@
 const express = require('express');
 const { body } = require('express-validator');
-const { getContents, getContentById, createContent, updateContent, deleteContent, getMyContents, downloadContentFile } = require('../controllers/contentController');
+const { getContents, getContentById, createContent, updateContent, deleteContent, getMyContents, downloadContentFile, getDashboardContents } = require('../controllers/contentController');
 const authMiddleware = require('../middleware/authMiddleware');
 const roleMiddleware = require('../middleware/roleMiddleware');
 const upload = require('../middleware/uploadCloudinary');
@@ -31,6 +31,7 @@ const contentValidation = [
 ];
 
 // Routes publiques (lecture)
+router.get('/dashboard', authMiddleware, getDashboardContents); // New dashboard endpoint
 router.get('/mine', authMiddleware, getMyContents); // Must come BEFORE /:id
 router.get('/', authMiddleware, getContents); // ADD authMiddleware
 router.get('/:id', authMiddleware, getContentById); // ADD authMiddleware
