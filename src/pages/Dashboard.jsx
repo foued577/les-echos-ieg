@@ -59,23 +59,34 @@ export default function Dashboard() {
           team_ids: content.team_ids ? content.team_ids.map(id => id.toString()) : []
         }))
         .filter(content => {
-          // Additional defensive filtering for orphaned content
-          const hasValidTeam = !content.team_ids || content.team_ids.length === 0 || 
-            content.team_ids.some(teamId => teams.some(team => team._id === teamId));
-          const hasValidRubrique = content.rubrique_id && 
-            rubriques.some(rubrique => rubrique._id === content.rubrique_id);
+          // Less strict filtering - only filter truly orphaned content
+          // If no teams specified, it's valid
+          if (!content.team_ids || content.team_ids.length === 0) {
+            return true;
+          }
+          
+          // Check if at least one team exists
+          const hasValidTeam = content.team_ids.some(teamId => 
+            teams.some(team => team._id === teamId || team.id === teamId)
+          );
+          
+          // Check if rubrique exists
+          const hasValidRubrique = !content.rubrique_id || 
+            rubriques.some(rubrique => rubrique._id === content.rubrique_id || rubrique.id === content.rubrique_id);
           
           if (!hasValidTeam) {
             console.log('🚫 Dashboard filtering orphaned content (invalid team):', {
               title: content.title,
-              team_ids: content.team_ids
+              team_ids: content.team_ids,
+              availableTeams: teams.map(t => t._id)
             });
           }
           
           if (!hasValidRubrique) {
             console.log('🚫 Dashboard filtering orphaned content (invalid rubrique):', {
               title: content.title,
-              rubrique_id: content.rubrique_id
+              rubrique_id: content.rubrique_id,
+              availableRubriques: rubriques.map(r => r._id)
             });
           }
           
@@ -90,23 +101,34 @@ export default function Dashboard() {
           team_ids: content.team_ids ? content.team_ids.map(id => id.toString()) : []
         }))
         .filter(content => {
-          // Additional defensive filtering for orphaned content
-          const hasValidTeam = !content.team_ids || content.team_ids.length === 0 || 
-            content.team_ids.some(teamId => teams.some(team => team._id === teamId));
-          const hasValidRubrique = content.rubrique_id && 
-            rubriques.some(rubrique => rubrique._id === content.rubrique_id);
+          // Less strict filtering - only filter truly orphaned content
+          // If no teams specified, it's valid
+          if (!content.team_ids || content.team_ids.length === 0) {
+            return true;
+          }
+          
+          // Check if at least one team exists
+          const hasValidTeam = content.team_ids.some(teamId => 
+            teams.some(team => team._id === teamId || team.id === teamId)
+          );
+          
+          // Check if rubrique exists
+          const hasValidRubrique = !content.rubrique_id || 
+            rubriques.some(rubrique => rubrique._id === content.rubrique_id || rubrique.id === content.rubrique_id);
           
           if (!hasValidTeam) {
             console.log('🚫 Dashboard filtering orphaned pending content (invalid team):', {
               title: content.title,
-              team_ids: content.team_ids
+              team_ids: content.team_ids,
+              availableTeams: teams.map(t => t._id)
             });
           }
           
           if (!hasValidRubrique) {
             console.log('🚫 Dashboard filtering orphaned pending content (invalid rubrique):', {
               title: content.title,
-              rubrique_id: content.rubrique_id
+              rubrique_id: content.rubrique_id,
+              availableRubriques: rubriques.map(r => r._id)
             });
           }
           
@@ -122,23 +144,34 @@ export default function Dashboard() {
           author_name: content.author_id?.name || 'Anonyme' // Ensure author_name is populated
         }))
         .filter(content => {
-          // Additional defensive filtering for orphaned content
-          const hasValidTeam = !content.team_ids || content.team_ids.length === 0 || 
-            content.team_ids.some(teamId => teams.some(team => team._id === teamId));
-          const hasValidRubrique = content.rubrique_id && 
-            rubriques.some(rubrique => rubrique._id === content.rubrique_id);
+          // Less strict filtering - only filter truly orphaned content
+          // If no teams specified, it's valid
+          if (!content.team_ids || content.team_ids.length === 0) {
+            return true;
+          }
+          
+          // Check if at least one team exists
+          const hasValidTeam = content.team_ids.some(teamId => 
+            teams.some(team => team._id === teamId || team.id === teamId)
+          );
+          
+          // Check if rubrique exists
+          const hasValidRubrique = !content.rubrique_id || 
+            rubriques.some(rubrique => rubrique._id === content.rubrique_id || rubrique.id === content.rubrique_id);
           
           if (!hasValidTeam) {
             console.log('🚫 Dashboard filtering orphaned approved content (invalid team):', {
               title: content.title,
-              team_ids: content.team_ids
+              team_ids: content.team_ids,
+              availableTeams: teams.map(t => t._id)
             });
           }
           
           if (!hasValidRubrique) {
             console.log('🚫 Dashboard filtering orphaned approved content (invalid rubrique):', {
               title: content.title,
-              rubrique_id: content.rubrique_id
+              rubrique_id: content.rubrique_id,
+              availableRubriques: rubriques.map(r => r._id)
             });
           }
           

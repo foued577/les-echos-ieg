@@ -219,6 +219,12 @@ export default function CreateContent() {
           toast.success('Brouillon enregistré');
         }
         
+        // Force dashboard refresh to show new content
+        if (window.refreshDashboard) {
+          console.log('🔄 Triggering dashboard refresh after content creation');
+          window.refreshDashboard();
+        }
+        
         window.location.href = createPageUrl('Dashboard');
       } else {
         throw new Error(response.message || 'Erreur lors de la création');
