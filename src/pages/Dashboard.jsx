@@ -8,10 +8,6 @@ import { Button } from "@/components/ui/button";
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
-// Cache invalidation mechanism
-let dashboardCacheVersion = 0;
-const DASHBOARD_REFRESH_EVENT = 'dashboard-refresh';
-
 export default function Dashboard() {
   const { user } = useAuth();
   const [myContents, setMyContents] = useState([]);
@@ -20,37 +16,12 @@ export default function Dashboard() {
   const [teams, setTeams] = useState([]);
   const [rubriques, setRubriques] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [cacheVersion, setCacheVersion] = useState(0);
 
-  // Listen for dashboard refresh events
   useEffect(() => {
-    const handleRefresh = () => {
-      console.log('🔄 Dashboard refresh event received');
-      setCacheVersion(prev => prev + 1);
-    };
-
-    window.addEventListener(DASHBOARD_REFRESH_EVENT, handleRefresh);
-    return () => {
-      window.removeEventListener(DASHBOARD_REFRESH_EVENT, handleRefresh);
-    };
-  }, []);
-
-  // Export refresh function for external use
-  useEffect(() => {
-    (window as any).refreshDashboard = () => {
-      console.log('🔄 Manual dashboard refresh triggered');
-      dashboardCacheVersion++;
-      window.dispatchEvent(new CustomEvent(DASHBOARD_REFRESH_EVENT));
-    };
-  }, []);
-
-  // Reload data when cache version changes
-  useEffect(() => {
-    if (user && cacheVersion > 0) {
-      console.log('🔄 Reloading dashboard data due to cache invalidation');
+    if (user) {
       loadData();
     }
-  }, [cacheVersion, user]);
+  }, [user]);
 
   const loadData = useCallback(async () => {
     try {
