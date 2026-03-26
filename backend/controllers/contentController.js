@@ -26,11 +26,36 @@ const getMyContents = async (req, res) => {
       .populate('rubrique_id', 'name description color')
       .sort({ created_at: -1 });
 
-    console.log('👤 My contents found:', contents.length);
+    console.log('👤 Raw contents found:', contents.length);
     
-    // Log first few contents
-    contents.slice(0, 3).forEach((content, index) => {
-      console.log(`👤 My Content ${index + 1}:`, {
+    // Filtrage défensif pour exclure les contenus orphelins
+    const validContents = contents.filter(content => {
+      const hasValidTeam = !content.team_ids || content.team_ids.length === 0 || 
+        content.team_ids.some(team => team && team._id);
+      const hasValidRubrique = content.rubrique_id && content.rubrique_id._id;
+      
+      if (!hasValidTeam) {
+        console.log('🚫 Filtering orphaned content (invalid team):', {
+          title: content.title,
+          team_ids: content.team_ids
+        });
+      }
+      
+      if (!hasValidRubrique) {
+        console.log('🚫 Filtering orphaned content (invalid rubrique):', {
+          title: content.title,
+          rubrique_id: content.rubrique_id
+        });
+      }
+      
+      return hasValidTeam && hasValidRubrique;
+    });
+
+    console.log('👤 Valid contents after filtering:', validContents.length);
+    
+    // Log first few valid contents
+    validContents.slice(0, 3).forEach((content, index) => {
+      console.log(`👤 Valid Content ${index + 1}:`, {
         title: content.title,
         status: content.status,
         author_id: content.author_id,
@@ -41,8 +66,8 @@ const getMyContents = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      count: contents.length,
-      data: contents
+      count: validContents.length,
+      data: validContents
     });
   } catch (error) {
     console.error('Erreur getMyContents:', error);
@@ -120,11 +145,36 @@ const getContents = async (req, res) => {
       .populate('rubrique_id', 'name description color')
       .sort({ created_at: -1 });
 
-    console.log('📋 Contents found:', contents.length);
+    console.log('📋 Raw contents found:', contents.length);
     
-    // Log first few contents with ALL fields
-    contents.slice(0, 3).forEach((content, index) => {
-      console.log(`📋 Content ${index + 1}:`, {
+    // Filtrage défensif pour exclure les contenus orphelins
+    const validContents = contents.filter(content => {
+      const hasValidTeam = !content.team_ids || content.team_ids.length === 0 || 
+        content.team_ids.some(team => team && team._id);
+      const hasValidRubrique = content.rubrique_id && content.rubrique_id._id;
+      
+      if (!hasValidTeam) {
+        console.log('🚫 Filtering orphaned content (invalid team):', {
+          title: content.title,
+          team_ids: content.team_ids
+        });
+      }
+      
+      if (!hasValidRubrique) {
+        console.log('🚫 Filtering orphaned content (invalid rubrique):', {
+          title: content.title,
+          rubrique_id: content.rubrique_id
+        });
+      }
+      
+      return hasValidTeam && hasValidRubrique;
+    });
+
+    console.log('📋 Valid contents after filtering:', validContents.length);
+    
+    // Log first few valid contents with ALL fields
+    validContents.slice(0, 3).forEach((content, index) => {
+      console.log(`📋 Valid Content ${index + 1}:`, {
         title: content.title,
         status: content.status,
         author_id: content.author_id,
@@ -140,8 +190,8 @@ const getContents = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      count: contents.length,
-      data: contents
+      count: validContents.length,
+      data: validContents
     });
   } catch (error) {
     console.error('Erreur getContents:', error);

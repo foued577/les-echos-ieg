@@ -251,6 +251,9 @@ const updateTeam = async (req, res) => {
 // Supprimer une équipe
 const deleteTeam = async (req, res) => {
   try {
+    console.log('🗑️=== DELETE TEAM START ===');
+    console.log('🆔 Team ID:', req.params.id);
+    
     const team = await Team.findById(req.params.id);
     
     if (!team) {
@@ -260,11 +263,22 @@ const deleteTeam = async (req, res) => {
       });
     }
 
+    // Supprimer en cascade les contenus liés à cette équipe
+    const Content = require('../models/Content');
+    const deletedContents = await Content.deleteMany({ 
+      team_ids: req.params.id 
+    });
+    
+    console.log('🗑️ Deleted contents count:', deletedContents.deletedCount);
+
+    // Supprimer l'équipe
     await team.deleteOne();
+    
+    console.log('✅ Team and related contents deleted successfully');
 
     res.status(200).json({
       success: true,
-      message: 'Équipe supprimée avec succès'
+      message: `Équipe supprimée avec succès (${deletedContents.deletedCount} contenu(s) lié(s) supprimé(s))`
     });
   } catch (error) {
     console.error('Erreur deleteTeam:', error);

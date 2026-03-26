@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/lib/AuthContext';
 import { contentsAPI, teamsAPI, rubriquesAPI } from '@/services/api';
 import { Link } from 'react-router-dom';
@@ -8,6 +8,10 @@ import { Button } from "@/components/ui/button";
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
+// Cache invalidation mechanism
+let dashboardCacheVersion = 0;
+const DASHBOARD_REFRESH_EVENT = 'dashboard-refresh';
+
 export default function Dashboard() {
   const { user } = useAuth();
   const [myContents, setMyContents] = useState([]);
@@ -16,14 +20,39 @@ export default function Dashboard() {
   const [teams, setTeams] = useState([]);
   const [rubriques, setRubriques] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [cacheVersion, setCacheVersion] = useState(0);
 
+  // Listen for dashboard refresh events
   useEffect(() => {
-    if (user) {
+    const handleRefresh = () => {
+      console.log('🔄 Dashboard refresh event received');
+      setCacheVersion(prev => prev + 1);
+    };
+
+    window.addEventListener(DASHBOARD_REFRESH_EVENT, handleRefresh);
+    return () => {
+      window.removeEventListener(DASHBOARD_REFRESH_EVENT, handleRefresh);
+    };
+  }, []);
+
+  // Export refresh function for external use
+  useEffect(() => {
+    (window as any).refreshDashboard = () => {
+      console.log('🔄 Manual dashboard refresh triggered');
+      dashboardCacheVersion++;
+      window.dispatchEvent(new CustomEvent(DASHBOARD_REFRESH_EVENT));
+    };
+  }, []);
+
+  // Reload data when cache version changes
+  useEffect(() => {
+    if (user && cacheVersion > 0) {
+      console.log('🔄 Reloading dashboard data due to cache invalidation');
       loadData();
     }
-  }, [user]);
+  }, [cacheVersion, user]);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       console.log('🔍=== DASHBOARD LOAD START ===');
       console.log('👤 Current user:', user);
@@ -50,25 +79,100 @@ export default function Dashboard() {
       console.log('  - Teams:', teams.length);
       console.log('  - Rubriques:', rubriques.length);
       
-      // Normalize data
-      const normalizedMyContents = myContents.map(content => ({
-        ...content,
-        id: content._id || content.id,
-        team_ids: content.team_ids ? content.team_ids.map(id => id.toString()) : []
-      }));
+      // Normalize data with defensive filtering
+      const normalizedMyContents = myContents
+        .filter(content => content && content._id) // Filter out null/undefined
+        .map(content => ({
+          ...content,
+          id: content._id || content.id,
+          team_ids: content.team_ids ? content.team_ids.map(id => id.toString()) : []
+        }))
+        .filter(content => {
+          // Additional defensive filtering for orphaned content
+          const hasValidTeam = !content.team_ids || content.team_ids.length === 0 || 
+            content.team_ids.some(teamId => teams.some(team => team._id === teamId));
+          const hasValidRubrique = content.rubrique_id && 
+            rubriques.some(rubrique => rubrique._id === content.rubrique_id);
+          
+          if (!hasValidTeam) {
+            console.log('🚫 Dashboard filtering orphaned content (invalid team):', {
+              title: content.title,
+              team_ids: content.team_ids
+            });
+          }
+          
+          if (!hasValidRubrique) {
+            console.log('🚫 Dashboard filtering orphaned content (invalid rubrique):', {
+              title: content.title,
+              rubrique_id: content.rubrique_id
+            });
+          }
+          
+          return hasValidTeam && hasValidRubrique;
+        });
 
-      const normalizedPending = pendingContents.map(content => ({
-        ...content,
-        id: content._id || content.id,
-        team_ids: content.team_ids ? content.team_ids.map(id => id.toString()) : []
-      }));
+      const normalizedPending = pendingContents
+        .filter(content => content && content._id) // Filter out null/undefined
+        .map(content => ({
+          ...content,
+          id: content._id || content.id,
+          team_ids: content.team_ids ? content.team_ids.map(id => id.toString()) : []
+        }))
+        .filter(content => {
+          // Additional defensive filtering for orphaned content
+          const hasValidTeam = !content.team_ids || content.team_ids.length === 0 || 
+            content.team_ids.some(teamId => teams.some(team => team._id === teamId));
+          const hasValidRubrique = content.rubrique_id && 
+            rubriques.some(rubrique => rubrique._id === content.rubrique_id);
+          
+          if (!hasValidTeam) {
+            console.log('🚫 Dashboard filtering orphaned pending content (invalid team):', {
+              title: content.title,
+              team_ids: content.team_ids
+            });
+          }
+          
+          if (!hasValidRubrique) {
+            console.log('🚫 Dashboard filtering orphaned pending content (invalid rubrique):', {
+              title: content.title,
+              rubrique_id: content.rubrique_id
+            });
+          }
+          
+          return hasValidTeam && hasValidRubrique;
+        });
 
-      const normalizedApproved = approvedContents.map(content => ({
-        ...content,
-        id: content._id || content.id,
-        team_ids: content.team_ids ? content.team_ids.map(id => id.toString()) : [],
-        author_name: content.author_id?.name || 'Anonyme' // Ensure author_name is populated
-      }));
+      const normalizedApproved = approvedContents
+        .filter(content => content && content._id) // Filter out null/undefined
+        .map(content => ({
+          ...content,
+          id: content._id || content.id,
+          team_ids: content.team_ids ? content.team_ids.map(id => id.toString()) : [],
+          author_name: content.author_id?.name || 'Anonyme' // Ensure author_name is populated
+        }))
+        .filter(content => {
+          // Additional defensive filtering for orphaned content
+          const hasValidTeam = !content.team_ids || content.team_ids.length === 0 || 
+            content.team_ids.some(teamId => teams.some(team => team._id === teamId));
+          const hasValidRubrique = content.rubrique_id && 
+            rubriques.some(rubrique => rubrique._id === content.rubrique_id);
+          
+          if (!hasValidTeam) {
+            console.log('🚫 Dashboard filtering orphaned approved content (invalid team):', {
+              title: content.title,
+              team_ids: content.team_ids
+            });
+          }
+          
+          if (!hasValidRubrique) {
+            console.log('🚫 Dashboard filtering orphaned approved content (invalid rubrique):', {
+              title: content.title,
+              rubrique_id: content.rubrique_id
+            });
+          }
+          
+          return hasValidTeam && hasValidRubrique;
+        });
 
       console.log('🔍 Sample approved content:', normalizedApproved[0]);
 

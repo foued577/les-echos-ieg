@@ -98,8 +98,15 @@ export default function Teams() {
         loadData();
         // Show success message
         alert(`L'équipe "${teamToDelete.name}" a été supprimée avec succès.`);
+        
+        // Trigger dashboard refresh to clear orphaned content
+        if ((window as any).refreshDashboard) {
+          console.log('🔄 Triggering dashboard refresh after team deletion');
+          (window as any).refreshDashboard();
+        }
       } catch (error) {
         console.error('💥 Error deleting team:', error);
+        alert('Erreur lors de la suppression de l\'équipe.');
       }
     }
   };
