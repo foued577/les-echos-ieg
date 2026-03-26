@@ -15,11 +15,10 @@ const getDashboardContents = async (req, res) => {
     let contents = await Content.find({ author_id: req.user._id })
       .populate({
         path: 'rubrique_id',
-        select: 'name description color team_id',
+        select: 'name description color team_ids',
         populate: {
-          path: 'team_id',
-          select: 'name',
-          match: { _id: { $exists: true } } // Only include existing teams
+          path: 'team_ids',
+          select: 'name'
         }
       })
       .populate('author_id', 'name email avatar')
@@ -27,7 +26,7 @@ const getDashboardContents = async (req, res) => {
 
     console.log('📊 Raw contents found:', contents.length);
     
-    // Filter to include only contents with valid rubrique and team
+    // Filter to include only contents with valid rubrique and teams
     const validContents = contents.filter(content => {
       // Content must have a rubrique
       if (!content.rubrique_id) {
@@ -35,9 +34,16 @@ const getDashboardContents = async (req, res) => {
         return false;
       }
       
-      // Rubrique must have a valid team (populate already filtered non-existing teams)
-      if (!content.rubrique_id.team_id) {
-        console.log('🚫 Dashboard filtering - No valid team:', content.title);
+      // Rubrique must have valid teams (array with at least one team)
+      const hasValidTeams = Array.isArray(content.rubrique_id.team_ids) && 
+        content.rubrique_id.team_ids.length > 0 &&
+        content.rubrique_id.team_ids.some(team => team && team._id);
+      
+      if (!hasValidTeams) {
+        console.log('🚫 Dashboard filtering - No valid teams:', {
+          title: content.title,
+          team_ids: content.rubrique_id.team_ids
+        });
         return false;
       }
       
@@ -60,8 +66,7 @@ const getDashboardContents = async (req, res) => {
         status: content.status,
         rubrique_id: content.rubrique_id?._id,
         rubrique_name: content.rubrique_id?.name,
-        team_id: content.rubrique_id?.team_id?._id,
-        team_name: content.rubrique_id?.team_id?.name,
+        team_ids: content.rubrique_id?.team_ids?.map(t => ({ id: t._id, name: t.name })),
         created_at: content.created_at
       });
     });

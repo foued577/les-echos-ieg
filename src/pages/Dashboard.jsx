@@ -57,7 +57,7 @@ export default function Dashboard() {
         title: c.title,
         status: c.status,
         rubrique_name: c.rubrique_id?.name,
-        team_name: c.rubrique_id?.team_id?.name,
+        team_names: c.rubrique_id?.team_ids?.map(t => t.name).join(', ') || 'Aucune équipe',
         created_at: c.created_at
       })));
       console.log('⏳ Pending Contents from Dashboard API:', pendingContents.length, pendingContents.map(c => ({
@@ -65,7 +65,7 @@ export default function Dashboard() {
         title: c.title,
         status: c.status,
         rubrique_name: c.rubrique_id?.name,
-        team_name: c.rubrique_id?.team_id?.name,
+        team_names: c.rubrique_id?.team_ids?.map(t => t.name).join(', ') || 'Aucune équipe',
         created_at: c.created_at
       })));
       console.log('✅ Approved Contents Raw:', approvedContents.length, approvedContents.slice(0, 3).map(c => ({
