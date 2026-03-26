@@ -16,17 +16,31 @@ export default function Dashboard() {
   const [teams, setTeams] = useState([]);
   const [rubriques, setRubriques] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshKey, setRefreshKey] = useState(0); // Force refresh key
+
+  // Global refresh function for other components
+  useEffect(() => {
+    window.refreshDashboard = () => {
+      console.log(' Manual dashboard refresh triggered');
+      setRefreshKey(prev => prev + 1);
+    };
+    
+    return () => {
+      delete window.refreshDashboard;
+    };
+  }, []);
 
   useEffect(() => {
     if (user) {
       loadData();
     }
-  }, [user]);
+  }, [user, refreshKey]); // Add refreshKey dependency
 
   const loadData = useCallback(async () => {
     try {
-      console.log('🔍=== DASHBOARD LOAD START ===');
-      console.log('👤 Current user:', user);
+      console.log('=== DASHBOARD LOAD START ===');
+      console.log(' Current user:', user);
+      console.log(' User ID:', user.id);
       console.log('🆔 User ID:', user.id);
       
       const [myContentsResponse, pendingContentsResponse, approvedContentsResponse, teamsResponse, rubriquesResponse] = await Promise.all([
@@ -43,6 +57,37 @@ export default function Dashboard() {
       const teams = Array.isArray(teamsResponse) ? teamsResponse : []; // teamsAPI.getAll() returns array
       const rubriques = rubriquesResponse.success ? rubriquesResponse.data : [];
 
+      console.log('📊=== RAW API RESPONSES ===');
+      console.log('📝 My Contents Raw:', myContents.length, myContents.map(c => ({
+        id: c._id,
+        title: c.title,
+        status: c.status,
+        team_ids: c.team_ids,
+        rubrique_id: c.rubrique_id,
+        author_id: c.author_id,
+        created_at: c.created_at
+      })));
+      console.log('⏳ Pending Contents Raw:', pendingContents.length, pendingContents.map(c => ({
+        id: c._id,
+        title: c.title,
+        status: c.status,
+        team_ids: c.team_ids,
+        rubrique_id: c.rubrique_id,
+        author_id: c.author_id,
+        created_at: c.created_at
+      })));
+      console.log('✅ Approved Contents Raw:', approvedContents.length, approvedContents.slice(0, 3).map(c => ({
+        id: c._id,
+        title: c.title,
+        status: c.status,
+        team_ids: c.team_ids,
+        rubrique_id: c.rubrique_id,
+        author_id: c.author_id,
+        created_at: c.created_at
+      })));
+      console.log('👥 Teams Available:', teams.length, teams.map(t => ({ id: t._id, name: t.name })));
+      console.log('📁 Rubriques Available:', rubriques.length, rubriques.map(r => ({ id: r._id, name: r.name })));
+
       console.log('📊 Final counts:');
       console.log('  - My contents:', myContents.length);
       console.log('  - My pending contents:', pendingContents.length);
@@ -51,6 +96,9 @@ export default function Dashboard() {
       console.log('  - Rubriques:', rubriques.length);
       
       // Normalize data with defensive filtering
+      console.log('🔍=== BEFORE FILTERING ===');
+      console.log('📝 My Contents Before Filter:', myContents.length, 'items');
+      
       const normalizedMyContents = myContents
         .filter(content => content && content._id) // Filter out null/undefined
         .map(content => ({
@@ -59,39 +107,46 @@ export default function Dashboard() {
           team_ids: content.team_ids ? content.team_ids.map(id => id.toString()) : []
         }))
         .filter(content => {
-          // Less strict filtering - only filter truly orphaned content
+          // Very simple filtering - only filter truly orphaned content
           // If no teams specified, it's valid
           if (!content.team_ids || content.team_ids.length === 0) {
+            console.log('✅ PASS - No teams required:', content.title);
             return true;
           }
           
-          // Check if at least one team exists
+          // Check if at least one team exists - very permissive check
           const hasValidTeam = content.team_ids.some(teamId => 
             teams.some(team => team._id === teamId || team.id === teamId)
           );
           
-          // Check if rubrique exists
+          // Rubrique is optional - don't filter if missing
           const hasValidRubrique = !content.rubrique_id || 
             rubriques.some(rubrique => rubrique._id === content.rubrique_id || rubrique.id === content.rubrique_id);
           
+          console.log('🔍 FILTER CHECK:', {
+            title: content.title,
+            team_ids: content.team_ids,
+            rubrique_id: content.rubrique_id,
+            hasValidTeam,
+            hasValidRubrique,
+            availableTeams: teams.map(t => t._id),
+            availableRubriques: rubriques.map(r => r._id)
+          });
+          
+          // Only reject if team is explicitly invalid
           if (!hasValidTeam) {
-            console.log('🚫 Dashboard filtering orphaned content (invalid team):', {
-              title: content.title,
-              team_ids: content.team_ids,
-              availableTeams: teams.map(t => t._id)
-            });
+            console.log('🚫 REJECTED - Invalid team:', content.title);
+            return false;
           }
           
-          if (!hasValidRubrique) {
-            console.log('🚫 Dashboard filtering orphaned content (invalid rubrique):', {
-              title: content.title,
-              rubrique_id: content.rubrique_id,
-              availableRubriques: rubriques.map(r => r._id)
-            });
-          }
-          
-          return hasValidTeam && hasValidRubrique;
+          // Always pass if team is valid, regardless of rubrique
+          console.log('✅ PASS - Valid content:', content.title);
+          return true;
         });
+
+      console.log('🔍=== AFTER FILTERING ===');
+      console.log('📝 My Contents After Filter:', normalizedMyContents.length, 'items');
+      console.log('📝 Lost items:', myContents.length - normalizedMyContents.length);
 
       const normalizedPending = pendingContents
         .filter(content => content && content._id) // Filter out null/undefined
