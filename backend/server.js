@@ -118,6 +118,7 @@ app.use('/api/teams', require('./routes/teamStatsRoutes'));
 app.use('/api/test', require('./routes/testRoutes'));
 app.use('/api/rubriques', require('./routes/rubriqueRoutes'));
 app.use('/api/contents', require('./routes/contentRoutes'));
+app.use('/api/gazettes', require('./routes/gazetteRoutes'));
 
 // Route de test
 app.get('/', (req, res) => {
@@ -130,7 +131,8 @@ app.get('/', (req, res) => {
       users: '/api/users',
       teams: '/api/teams',
       rubriques: '/api/rubriques',
-      contents: '/api/contents'
+      contents: '/api/contents',
+      gazettes: '/api/gazettes'
     }
   });
 });

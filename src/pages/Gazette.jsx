@@ -20,6 +20,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { gazettesAPI } from '../services/api';
 
 export default function Gazette() {
   const [gazettes, setGazettes] = useState([]);
@@ -31,13 +32,48 @@ export default function Gazette() {
     loadGazettes();
   }, []);
 
+  useEffect(() => {
+    console.log('🔄 DEBUG: Filters changed, reloading gazettes:', { selectedStatus, searchTerm });
+    loadGazettes();
+  }, [selectedStatus, searchTerm]);
+
   const loadGazettes = async () => {
     try {
-      // Simuler loading pour l'instant
+      console.log('📋 DEBUG: Loading gazettes...');
+      
+      // Construire les filtres
+      const filters = {};
+      if (selectedStatus && selectedStatus !== 'all') {
+        filters.status = selectedStatus;
+      }
+      if (searchTerm && searchTerm.trim() !== '') {
+        filters.search = searchTerm.trim();
+      }
+
+      console.log('🔍 DEBUG: Using filters:', filters);
+
+      // Appeler l'API
+      const response = await gazettesAPI.getAll(filters);
+      
+      console.log('✅ DEBUG: Gazettes loaded:', response);
+      console.log('📊 DEBUG: Gazettes count:', response.data?.length || 0);
+
+      // Normaliser les données (gérer différents formats de réponse)
+      const gazettesData = response.data || response || [];
+      
+      setGazettes(gazettesData);
       setLoading(false);
+      
     } catch (error) {
-      console.error('Error loading gazettes:', error);
+      console.error('❌ ERROR: Failed to load gazettes:', error);
+      console.error('❌ ERROR Details:', error.response?.data || error.message);
+      
+      setGazettes([]);
       setLoading(false);
+      
+      // Afficher un message d'erreur
+      const errorMessage = error.response?.data?.message || error.message || 'Erreur lors du chargement';
+      alert(`Erreur: ${errorMessage}`);
     }
   };
 

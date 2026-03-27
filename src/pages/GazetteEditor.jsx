@@ -30,6 +30,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { gazettesAPI } from '../services/api';
 import PreviewGazette from '../components/PreviewGazette';
 
 // Block types
@@ -701,15 +702,45 @@ export default function GazetteEditor() {
   const saveGazette = async () => {
     setSaving(true);
     try {
-      // Save logic here
-      console.log('Saving gazette:', gazette);
-      setTimeout(() => {
+      console.log('🗞️ DEBUG: Saving gazette with payload:', gazette);
+      
+      // Validation basique
+      if (!gazette.title.trim()) {
+        alert('Le titre est requis');
         setSaving(false);
-        navigate('/gazette');
-      }, 1000);
-    } catch (error) {
-      console.error('Error saving gazette:', error);
+        return;
+      }
+
+      // Préparer le payload pour l'API
+      const payload = {
+        title: gazette.title.trim(),
+        description: gazette.description.trim(),
+        status: gazette.status,
+        blocks: gazette.blocks
+      };
+
+      console.log('📤 DEBUG: Sending payload to API:', payload);
+
+      // Appeler l'API de création
+      const response = await gazettesAPI.create(payload);
+      
+      console.log('✅ DEBUG: Gazette saved successfully:', response);
+      console.log('📋 DEBUG: Response data:', response.data);
+
       setSaving(false);
+      
+      // Rediriger vers la liste des gazettes
+      navigate('/gazette');
+      
+    } catch (error) {
+      console.error('❌ ERROR: Failed to save gazette:', error);
+      console.error('❌ ERROR Details:', error.response?.data || error.message);
+      
+      setSaving(false);
+      
+      // Afficher un message d'erreur clair
+      const errorMessage = error.response?.data?.message || error.message || 'Erreur lors de la sauvegarde';
+      alert(`Erreur: ${errorMessage}`);
     }
   };
 

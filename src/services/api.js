@@ -129,6 +129,35 @@ export const usersAPI = {
   }
 };
 
+// Gazettes API
+export const gazettesAPI = {
+  getAll: async (filters = {}) => {
+    const params = new URLSearchParams(filters);
+    const response = await api.get(`/gazettes?${params}`);
+    return response.data;
+  },
+  
+  getById: async (id) => {
+    const response = await api.get(`/gazettes/${id}`);
+    return response.data;
+  },
+  
+  create: async (gazetteData) => {
+    const response = await api.post('/gazettes', gazetteData);
+    return response.data;
+  },
+  
+  update: async (id, gazetteData) => {
+    const response = await api.put(`/gazettes/${id}`, gazetteData);
+    return response.data;
+  },
+  
+  delete: async (id) => {
+    const response = await api.delete(`/gazettes/${id}`);
+    return response.data;
+  }
+};
+
 // Normalisation des réponses API pour gérer différents formats
 export const normalizeTeam = (data) => data?.team ?? data; // support {team: {...}} ou {...}
 
