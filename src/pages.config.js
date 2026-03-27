@@ -57,10 +57,12 @@ import Rubriques from './pages/Rubriques';
 import Admin from './pages/Admin';
 import Explorer from './pages/Explorer';
 import ContentDetail from './pages/ContentDetail';
+import Gazette from './pages/Gazette';
+import GazetteEditor from './pages/GazetteEditor';
 import __Layout from './Layout.jsx';
 
 console.log('Pages config - Admin imported:', Admin);
-console.log('Pages config - All pages:', { Dashboard, Teams, TeamDetail, CreateContent, Moderation, Kanban, Rubriques, Admin, Explorer, ContentDetail });
+console.log('Pages config - All pages:', { Dashboard, Teams, TeamDetail, CreateContent, Moderation, Kanban, Rubriques, Admin, Explorer, ContentDetail, Gazette, GazetteEditor });
 
 export const PAGES = {
     "Dashboard": Dashboard,
@@ -73,6 +75,8 @@ export const PAGES = {
     "Admin": Admin,
     "Explorer": Explorer,
     "ContentDetail": ContentDetail,
+    "Gazette": Gazette,
+    "GazetteEditor": GazetteEditor,
 }
 
 export const pagesConfig = {

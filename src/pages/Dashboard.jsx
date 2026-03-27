@@ -18,7 +18,8 @@ import {
   ArrowUpRight,
   Activity,
   Calendar,
-  BarChart3
+  BarChart3,
+  Newspaper
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { format } from 'date-fns';
@@ -307,10 +308,10 @@ export default function Dashboard() {
           <h2 className="text-2xl font-serif text-gray-900 mb-6">Accès rapides</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <QuickAccessCard
-              icon={Eye}
-              title="Explorer"
-              description="Parcourir tous les contenus"
-              to={createPageUrl('Explorer')}
+              icon={Newspaper}
+              title="La Gazette d'Occitanie"
+              description="Créer votre magazine"
+              to={createPageUrl('Gazette')}
               color="blue"
             />
             <QuickAccessCard

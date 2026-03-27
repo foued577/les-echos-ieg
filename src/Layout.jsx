@@ -15,7 +15,8 @@ import {
   LogOut,
   ChevronRight,
   BookOpen,
-  FolderOpen
+  FolderOpen,
+  Newspaper
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import {
@@ -124,7 +125,7 @@ export default function Layout({ children, currentPageName }) {
     { name: 'Accueil', page: 'Dashboard', icon: Home },
     { name: 'Équipes', page: 'Teams', icon: Users2 },
     { name: 'Rubriques', page: 'Rubriques', icon: FolderOpen },
-    { name: 'Explorer', page: 'Explorer', icon: Layers },
+    { name: 'La Gazette d\'Occitanie', page: 'Gazette', icon: Newspaper },
     ...(isAdmin ? [
       { name: 'Administration', page: 'Admin', icon: Shield },
       { name: 'Modération', page: 'Moderation', icon: Shield, badge: pendingCount }
