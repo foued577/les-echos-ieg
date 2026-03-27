@@ -30,6 +30,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import PreviewGazette from '../components/PreviewGazette';
 
 // Block types
 const BLOCK_TYPES = {
@@ -630,6 +631,7 @@ export default function GazetteEditor() {
   });
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
 
   useEffect(() => {
     // Load gazette data if editing
@@ -712,8 +714,8 @@ export default function GazetteEditor() {
   };
 
   const previewGazette = () => {
-    // Preview logic
-    console.log('Preview gazette:', gazette);
+    console.log('🔍 DEBUG: Opening preview for gazette:', gazette);
+    setShowPreview(true);
   };
 
   return (
@@ -861,6 +863,16 @@ export default function GazetteEditor() {
           </div>
         </div>
       </div>
+
+      {/* Preview Modal */}
+      {showPreview && (
+        <PreviewGazette
+          title={gazette.title}
+          description={gazette.description}
+          blocks={gazette.blocks}
+          onClose={() => setShowPreview(false)}
+        />
+      )}
     </div>
   );
 }
