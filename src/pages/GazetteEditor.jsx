@@ -199,12 +199,61 @@ const BlockRenderer = ({ block, onUpdate, onRemove, onMoveUp, onMoveDown, isFirs
 
           {/* Block Content */}
           <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-            <Image className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600 mb-4">Zone pour image</p>
-            <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm">
-              <Plus className="w-4 h-4 mr-2 inline" />
-              Ajouter une image
-            </button>
+            {content ? (
+              // Image preview
+              <div className="relative">
+                <img 
+                  src={content} 
+                  alt="Image uploadée"
+                  className="max-w-full max-h-96 mx-auto rounded-lg shadow-md"
+                />
+                <button
+                  onClick={() => {
+                    setContent('');
+                    onUpdate(block.id, { ...block, content: '', file: null });
+                  }}
+                  className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              // Upload zone
+              <div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+
+                    console.log('🖼️ DEBUG: Image file selected:', file);
+                    
+                    // Create preview URL
+                    const imageUrl = URL.createObjectURL(file);
+                    console.log('🖼️ DEBUG: Image preview URL:', imageUrl);
+
+                    // Update block with image data
+                    setContent(imageUrl);
+                    onUpdate(block.id, { ...block, content: imageUrl, file });
+                  }}
+                  className="hidden"
+                  id={`image-upload-${block.id}`}
+                />
+                <Image className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-600 mb-4">Zone pour image</p>
+                <button 
+                  onClick={() => {
+                    console.log('🖼️ DEBUG: Clicking image upload button for block:', block.id);
+                    document.getElementById(`image-upload-${block.id}`)?.click();
+                  }}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm"
+                >
+                  <Plus className="w-4 h-4 mr-2 inline" />
+                  Ajouter une image
+                </button>
+              </div>
+            )}
           </div>
         </div>
       );
