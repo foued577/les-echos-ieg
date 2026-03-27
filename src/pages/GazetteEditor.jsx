@@ -53,10 +53,40 @@ const BlockRenderer = ({ block, onUpdate, onRemove, onMoveUp, onMoveDown, isFirs
     setIsEditing(false);
   };
 
-  const renderBlockContent = () => {
-    switch (block.type) {
-      case BLOCK_TYPES.TITLE:
-        return (
+  // Render content directly, not as a separate function
+  switch (block.type) {
+    case BLOCK_TYPES.TITLE:
+      return (
+        <div className="group relative bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow">
+          {/* Block Controls */}
+          <div className="absolute -left-12 top-4 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col gap-1">
+            <button
+              onClick={() => onMoveUp(block.id)}
+              disabled={isFirst}
+              className="p-1 bg-white border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+              </svg>
+            </button>
+            <button
+              onClick={() => onMoveDown(block.id)}
+              disabled={isLast}
+              className="p-1 bg-white border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            <button
+              onClick={() => onRemove(block.id)}
+              className="p-1 bg-white border border-red-200 rounded hover:bg-red-50 text-red-600"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Block Content */}
           <div className="relative">
             {isEditing ? (
               <input
@@ -78,10 +108,41 @@ const BlockRenderer = ({ block, onUpdate, onRemove, onMoveUp, onMoveDown, isFirs
               </h2>
             )}
           </div>
-        );
+        </div>
+      );
 
-      case BLOCK_TYPES.TEXT:
-        return (
+    case BLOCK_TYPES.TEXT:
+      return (
+        <div className="group relative bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow">
+          {/* Block Controls */}
+          <div className="absolute -left-12 top-4 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col gap-1">
+            <button
+              onClick={() => onMoveUp(block.id)}
+              disabled={isFirst}
+              className="p-1 bg-white border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+              </svg>
+            </button>
+            <button
+              onClick={() => onMoveDown(block.id)}
+              disabled={isLast}
+              className="p-1 bg-white border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            <button
+              onClick={() => onRemove(block.id)}
+              className="p-1 bg-white border border-red-200 rounded hover:bg-red-50 text-red-600"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Block Content */}
           <div className="relative">
             {isEditing ? (
               <textarea
@@ -102,10 +163,41 @@ const BlockRenderer = ({ block, onUpdate, onRemove, onMoveUp, onMoveDown, isFirs
               </div>
             )}
           </div>
-        );
+        </div>
+      );
 
-      case BLOCK_TYPES.IMAGE:
-        return (
+    case BLOCK_TYPES.IMAGE:
+      return (
+        <div className="group relative bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow">
+          {/* Block Controls */}
+          <div className="absolute -left-12 top-4 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col gap-1">
+            <button
+              onClick={() => onMoveUp(block.id)}
+              disabled={isFirst}
+              className="p-1 bg-white border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+              </svg>
+            </button>
+            <button
+              onClick={() => onMoveDown(block.id)}
+              disabled={isLast}
+              className="p-1 bg-white border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            <button
+              onClick={() => onRemove(block.id)}
+              className="p-1 bg-white border border-red-200 rounded hover:bg-red-50 text-red-600"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Block Content */}
           <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
             <Image className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-600 mb-4">Zone pour image</p>
@@ -114,10 +206,41 @@ const BlockRenderer = ({ block, onUpdate, onRemove, onMoveUp, onMoveDown, isFirs
               Ajouter une image
             </button>
           </div>
-        );
+        </div>
+      );
 
-      case BLOCK_TYPES.VIDEO:
-        return (
+    case BLOCK_TYPES.VIDEO:
+      return (
+        <div className="group relative bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow">
+          {/* Block Controls */}
+          <div className="absolute -left-12 top-4 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col gap-1">
+            <button
+              onClick={() => onMoveUp(block.id)}
+              disabled={isFirst}
+              className="p-1 bg-white border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+              </svg>
+            </button>
+            <button
+              onClick={() => onMoveDown(block.id)}
+              disabled={isLast}
+              className="p-1 bg-white border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            <button
+              onClick={() => onRemove(block.id)}
+              className="p-1 bg-white border border-red-200 rounded hover:bg-red-50 text-red-600"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Block Content */}
           <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
             <Video className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-600 mb-4">Zone pour vidéo</p>
@@ -126,10 +249,41 @@ const BlockRenderer = ({ block, onUpdate, onRemove, onMoveUp, onMoveDown, isFirs
               Ajouter une vidéo
             </button>
           </div>
-        );
+        </div>
+      );
 
-      case BLOCK_TYPES.LINK:
-        return (
+    case BLOCK_TYPES.LINK:
+      return (
+        <div className="group relative bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow">
+          {/* Block Controls */}
+          <div className="absolute -left-12 top-4 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col gap-1">
+            <button
+              onClick={() => onMoveUp(block.id)}
+              disabled={isFirst}
+              className="p-1 bg-white border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+              </svg>
+            </button>
+            <button
+              onClick={() => onMoveDown(block.id)}
+              disabled={isLast}
+              className="p-1 bg-white border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            <button
+              onClick={() => onRemove(block.id)}
+              className="p-1 bg-white border border-red-200 rounded hover:bg-red-50 text-red-600"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Block Content */}
           <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
             <LinkIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-600 mb-4">Zone pour lien</p>
@@ -138,10 +292,41 @@ const BlockRenderer = ({ block, onUpdate, onRemove, onMoveUp, onMoveDown, isFirs
               Ajouter un lien
             </button>
           </div>
-        );
+        </div>
+      );
 
-      case BLOCK_TYPES.SECTION:
-        return (
+    case BLOCK_TYPES.SECTION:
+      return (
+        <div className="group relative bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow">
+          {/* Block Controls */}
+          <div className="absolute -left-12 top-4 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col gap-1">
+            <button
+              onClick={() => onMoveUp(block.id)}
+              disabled={isFirst}
+              className="p-1 bg-white border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+              </svg>
+            </button>
+            <button
+              onClick={() => onMoveDown(block.id)}
+              disabled={isLast}
+              className="p-1 bg-white border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            <button
+              onClick={() => onRemove(block.id)}
+              className="p-1 bg-white border border-red-200 rounded hover:bg-red-50 text-red-600"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Block Content */}
           <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 p-6 rounded-lg">
             <div className="flex items-center gap-2 mb-2">
               <Layout className="w-5 h-5 text-blue-600" />
@@ -167,10 +352,41 @@ const BlockRenderer = ({ block, onUpdate, onRemove, onMoveUp, onMoveDown, isFirs
               </h3>
             )}
           </div>
-        );
+        </div>
+      );
 
-      case BLOCK_TYPES.QUOTE:
-        return (
+    case BLOCK_TYPES.QUOTE:
+      return (
+        <div className="group relative bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow">
+          {/* Block Controls */}
+          <div className="absolute -left-12 top-4 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col gap-1">
+            <button
+              onClick={() => onMoveUp(block.id)}
+              disabled={isFirst}
+              className="p-1 bg-white border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+              </svg>
+            </button>
+            <button
+              onClick={() => onMoveDown(block.id)}
+              disabled={isLast}
+              className="p-1 bg-white border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            <button
+              onClick={() => onRemove(block.id)}
+              className="p-1 bg-white border border-red-200 rounded hover:bg-red-50 text-red-600"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Block Content */}
           <div className="border-l-4 border-gray-300 pl-6 italic">
             {isEditing ? (
               <textarea
@@ -191,62 +407,85 @@ const BlockRenderer = ({ block, onUpdate, onRemove, onMoveUp, onMoveDown, isFirs
               </blockquote>
             )}
           </div>
-        );
+        </div>
+      );
 
-      case BLOCK_TYPES.SEPARATOR:
-        return (
+    case BLOCK_TYPES.SEPARATOR:
+      return (
+        <div className="group relative bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow">
+          {/* Block Controls */}
+          <div className="absolute -left-12 top-4 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col gap-1">
+            <button
+              onClick={() => onMoveUp(block.id)}
+              disabled={isFirst}
+              className="p-1 bg-white border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+              </svg>
+            </button>
+            <button
+              onClick={() => onMoveDown(block.id)}
+              disabled={isLast}
+              className="p-1 bg-white border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            <button
+              onClick={() => onRemove(block.id)}
+              className="p-1 bg-white border border-red-200 rounded hover:bg-red-50 text-red-600"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Block Content */}
           <div className="border-t border-gray-300 my-8">
             <div className="text-center text-sm text-gray-500 mt-2">Séparateur</div>
           </div>
-        );
+        </div>
+      );
 
-      default:
-        return null;
-    }
-  };
+    default:
+      return (
+        <div className="group relative bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow">
+          {/* Block Controls */}
+          <div className="absolute -left-12 top-4 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col gap-1">
+            <button
+              onClick={() => onMoveUp(block.id)}
+              disabled={isFirst}
+              className="p-1 bg-white border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+              </svg>
+            </button>
+            <button
+              onClick={() => onMoveDown(block.id)}
+              disabled={isLast}
+              className="p-1 bg-white border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            <button
+              onClick={() => onRemove(block.id)}
+              className="p-1 bg-white border border-red-200 rounded hover:bg-red-50 text-red-600"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
 
-  return (
-    <div className="group relative bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow">
-      {/* Block Controls */}
-      <div className="absolute -left-12 top-4 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col gap-1">
-        <button
-          onClick={() => onMoveUp(block.id)}
-          disabled={isFirst}
-          className="p-1 bg-white border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-          </svg>
-        </button>
-        <button
-          onClick={() => onMoveDown(block.id)}
-          disabled={isLast}
-          className="p-1 bg-white border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
-        </button>
-        <button
-          onClick={() => onRemove(block.id)}
-          className="p-1 bg-white border border-red-200 rounded hover:bg-red-50 text-red-600"
-        >
-          <Trash2 className="w-4 h-4" />
-        </button>
-      </div>
-
-      {/* Block Content */}
-      <BlockRenderer 
-        block={block} 
-        onUpdate={onUpdate}
-        onRemove={onRemove}
-        onMoveUp={onMoveUp}
-        onMoveDown={onMoveDown}
-        isFirst={isFirst}
-        isLast={isLast}
-      />
-    </div>
-  );
+          {/* Block Content */}
+          <div className="text-center text-gray-500">
+            <p>Type de bloc inconnu: {block.type}</p>
+          </div>
+        </div>
+      );
+  }
 };
 
 // Block Type Selector
@@ -267,7 +506,10 @@ const BlockTypeSelector = ({ onAddBlock }) => {
       {blockTypes.map(({ type, icon: Icon, label, color }) => (
         <button
           key={type}
-          onClick={() => onAddBlock(type)}
+          onClick={() => {
+            console.log('🔥 DEBUG: Clicked block type:', type);
+            onAddBlock(type);
+          }}
           className="flex flex-col items-center gap-2 p-3 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-blue-300 transition-colors"
         >
           <Icon className={`w-6 h-6 ${color}`} />
@@ -301,17 +543,26 @@ export default function GazetteEditor() {
   }, []);
 
   const addBlock = (type) => {
+    console.log('🔥 DEBUG: Adding block of type:', type);
+    console.log('🔥 DEBUG: Current blocks:', gazette.blocks);
+    
     const newBlock = {
-      id: Date.now().toString(),
+      id: crypto.randomUUID(),
       type,
       content: '',
       order: gazette.blocks.length
     };
     
-    setGazette(prev => ({
-      ...prev,
-      blocks: [...prev.blocks, newBlock]
-    }));
+    console.log('🔥 DEBUG: New block created:', newBlock);
+    
+    setGazette(prev => {
+      const updated = {
+        ...prev,
+        blocks: [...prev.blocks, newBlock]
+      };
+      console.log('🔥 DEBUG: Updated gazette state:', updated);
+      return updated;
+    });
   };
 
   const updateBlock = (blockId, updatedBlock) => {
