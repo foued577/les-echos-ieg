@@ -1,7 +1,161 @@
-import React from 'react';
-import { X, Eye, Download, Share2, Calendar, User } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, Eye, Download, Share2, Calendar, User, Check, AlertCircle } from 'lucide-react';
 
 const PreviewGazette = ({ title, description, blocks, onClose }) => {
+  const [shareStatus, setShareStatus] = useState('idle'); // idle, copying, success, error
+  const [exportStatus, setExportStatus] = useState('idle'); // idle, exporting, success, error
+
+  const handleExportPDF = async () => {
+    console.log('📄 DEBUG: Starting PDF export for gazette:', { title, blocksCount: blocks.length });
+    
+    try {
+      setExportStatus('exporting');
+      
+      // Check if gazette has content
+      if (!title && blocks.length === 0) {
+        console.log('📄 DEBUG: Gazette is empty, showing message');
+        setExportStatus('error');
+        setTimeout(() => setExportStatus('idle'), 3000);
+        return;
+      }
+
+      // Create a temporary print-friendly version
+      const printContent = document.createElement('div');
+      printContent.innerHTML = `
+        <style>
+          @media print {
+            body { font-family: 'Georgia', serif; line-height: 1.6; color: #333; }
+            h1 { font-size: 32pt; margin-bottom: 24pt; color: #000; }
+            h2 { font-size: 24pt; margin-bottom: 16pt; color: #000; }
+            p { font-size: 12pt; margin-bottom: 12pt; }
+            .meta { font-size: 10pt; color: #666; margin-bottom: 20pt; }
+            .separator { border-top: 1px solid #ccc; margin: 20pt 0; text-align: center; }
+            .separator::after { content: "• • •"; color: #666; font-size: 10pt; }
+            .quote { border-left: 3px solid #ccc; padding-left: 12pt; margin: 16pt 0; font-style: italic; }
+            .section { border-left: 4px solid #2563eb; padding-left: 20pt; margin: 20pt 0; }
+            img { max-width: 100%; height: auto; margin: 16pt 0; }
+            video { display: none; }
+            .video-placeholder { border: 1px dashed #ccc; padding: 20pt; text-align: center; color: #666; margin: 16pt 0; }
+            .link { color: #2563eb; text-decoration: underline; }
+            .empty { color: #999; font-style: italic; }
+            @page { margin: 2cm; }
+          }
+          @media screen {
+            .print-only { display: none; }
+          }
+        </style>
+        <div class="print-only">
+          <h1>${title || 'Gazette sans titre'}</h1>
+          <div class="meta">
+            <p>Publié le ${new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+            <p>La Gazette d'Occitanie</p>
+          </div>
+          ${description ? `<p>${description}</p>` : ''}
+          ${blocks.map(block => {
+            switch (block.type) {
+              case 'title':
+                return `<h1>${block.content || 'Titre'}</h1>`;
+              case 'text':
+                return block.content ? 
+                  `<p>${block.content.replace(/\n/g, '<br>')}</p>` : 
+                  `<p class="empty">Texte à ajouter...</p>`;
+              case 'image':
+                return block.content ? 
+                  `<img src="${block.content}" alt="Image" />` : 
+                  `<div class="empty">Image à ajouter</div>`;
+              case 'video':
+                return block.content ? 
+                  `<div class="video-placeholder">Vidéo disponible: ${block.content}</div>` : 
+                  `<div class="empty">Vidéo à ajouter</div>`;
+              case 'link':
+                return block.content ? 
+                  `<p class="link">${block.content}</p>` : 
+                  `<div class="empty">Lien à ajouter</div>`;
+              case 'section':
+                return `<div class="section">
+                  <h2>${block.content || 'Section'}</h2>
+                </div>`;
+              case 'quote':
+                return block.content ? 
+                  `<div class="quote">"${block.content}"</div>` : 
+                  `<div class="empty">"Citation à ajouter..."</div>`;
+              case 'separator':
+                return `<div class="separator"></div>`;
+              default:
+                return `<p class="empty">Type de bloc non reconnu: ${block.type}</p>`;
+            }
+          }).join('')}
+        </div>
+      `;
+
+      // Add to body, trigger print, then remove
+      document.body.appendChild(printContent);
+      
+      // Wait a moment for content to render
+      setTimeout(() => {
+        window.print();
+        document.body.removeChild(printContent);
+        setExportStatus('success');
+        setTimeout(() => setExportStatus('idle'), 2000);
+      }, 500);
+
+    } catch (error) {
+      console.error('📄 ERROR: PDF export failed:', error);
+      setExportStatus('error');
+      setTimeout(() => setExportStatus('idle'), 3000);
+    }
+  };
+
+  const handleShare = async () => {
+    console.log('🔗 DEBUG: Starting share for gazette:', { title, blocksCount: blocks.length });
+    
+    try {
+      setShareStatus('copying');
+      
+      // Check if gazette has content
+      if (!title && blocks.length === 0) {
+        console.log('🔗 DEBUG: Gazette is empty, showing message');
+        setShareStatus('error');
+        setTimeout(() => setShareStatus('idle'), 3000);
+        return;
+      }
+
+      // Create share URL (current page URL for now, could be updated to actual gazette URL)
+      const shareUrl = window.location.href;
+      const shareTitle = title || 'Gazette d\'Occitanie';
+      const shareText = description || `Découvrez ma gazette "${shareTitle}" sur La Gazette d'Occitanie`;
+
+      // Try native share API first
+      if (navigator.share) {
+        console.log('🔗 DEBUG: Using native share API');
+        try {
+          await navigator.share({
+            title: shareTitle,
+            text: shareText,
+            url: shareUrl
+          });
+          setShareStatus('success');
+          setTimeout(() => setShareStatus('idle'), 2000);
+        } catch (shareError) {
+          if (shareError.name !== 'AbortError') {
+            throw shareError;
+          }
+          setShareStatus('idle');
+        }
+      } else {
+        // Fallback to clipboard
+        console.log('🔗 DEBUG: Using clipboard fallback');
+        await navigator.clipboard.writeText(`${shareTitle}\n${shareText}\n${shareUrl}`);
+        setShareStatus('success');
+        setTimeout(() => setShareStatus('idle'), 2000);
+      }
+
+    } catch (error) {
+      console.error('🔗 ERROR: Share failed:', error);
+      setShareStatus('error');
+      setTimeout(() => setShareStatus('idle'), 3000);
+    }
+  };
   const renderBlockContent = (block) => {
     switch (block.type) {
       case 'title':
@@ -218,15 +372,105 @@ const PreviewGazette = ({ title, description, blocks, onClose }) => {
         <div className="flex items-center justify-between p-4 border-t border-gray-200 bg-gray-50">
           <div className="text-sm text-gray-500">
             {blocks.length} bloc{blocks.length > 1 ? 's' : ''}
+            {shareStatus === 'success' && (
+              <span className="ml-4 text-green-600 flex items-center gap-1">
+                <Check className="w-3 h-3" />
+                Lien copié
+              </span>
+            )}
+            {exportStatus === 'success' && (
+              <span className="ml-4 text-green-600 flex items-center gap-1">
+                <Check className="w-3 h-3" />
+                Exporté
+              </span>
+            )}
+            {shareStatus === 'error' && (
+              <span className="ml-4 text-red-600 flex items-center gap-1">
+                <AlertCircle className="w-3 h-3" />
+                Erreur partage
+              </span>
+            )}
+            {exportStatus === 'error' && (
+              <span className="ml-4 text-red-600 flex items-center gap-1">
+                <AlertCircle className="w-3 h-3" />
+                Erreur export
+              </span>
+            )}
           </div>
           <div className="flex gap-2">
-            <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-              <Download className="w-4 h-4" />
-              <span>Exporter PDF</span>
+            <button 
+              onClick={handleExportPDF}
+              disabled={exportStatus === 'exporting' || (!title && blocks.length === 0)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                exportStatus === 'exporting' 
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  : exportStatus === 'success'
+                  ? 'bg-green-600 text-white hover:bg-green-700'
+                  : exportStatus === 'error'
+                  ? 'bg-red-600 text-white hover:bg-red-700'
+                  : (!title && blocks.length === 0)
+                  ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                  : 'bg-blue-600 text-white hover:bg-blue-700'
+              }`}
+            >
+              {exportStatus === 'exporting' ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>Export...</span>
+                </>
+              ) : exportStatus === 'success' ? (
+                <>
+                  <Check className="w-4 h-4" />
+                  <span>Exporté</span>
+                </>
+              ) : exportStatus === 'error' ? (
+                <>
+                  <AlertCircle className="w-4 h-4" />
+                  <span>Réessayer</span>
+                </>
+              ) : (
+                <>
+                  <Download className="w-4 h-4" />
+                  <span>Exporter PDF</span>
+                </>
+              )}
             </button>
-            <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-              <Share2 className="w-4 h-4" />
-              <span>Partager</span>
+            <button 
+              onClick={handleShare}
+              disabled={shareStatus === 'copying' || (!title && blocks.length === 0)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                shareStatus === 'copying' 
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  : shareStatus === 'success'
+                  ? 'bg-green-600 text-white hover:bg-green-700'
+                  : shareStatus === 'error'
+                  ? 'bg-red-600 text-white hover:bg-red-700'
+                  : (!title && blocks.length === 0)
+                  ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                  : 'border border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              {shareStatus === 'copying' ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
+                  <span>Copie...</span>
+                </>
+              ) : shareStatus === 'success' ? (
+                <>
+                  <Check className="w-4 h-4" />
+                  <span>Copié</span>
+                </>
+              ) : shareStatus === 'error' ? (
+                <>
+                  <AlertCircle className="w-4 h-4" />
+                  <span>Réessayer</span>
+                </>
+              ) : (
+                <>
+                  <Share2 className="w-4 h-4" />
+                  <span>Partager</span>
+                </>
+              )}
             </button>
           </div>
         </div>
