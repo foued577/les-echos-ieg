@@ -8,7 +8,6 @@ const createGazette = async (req, res) => {
     
     const { title, description, status = 'draft', blocks = [] } = req.body;
     const userId = req.user.id;
-    const userTeams = req.user.teams || [];
 
     // Validation
     if (!title || title.trim() === '') {
@@ -28,7 +27,7 @@ const createGazette = async (req, res) => {
         order: index
       })),
       author_id: userId,
-      team_ids: userTeams
+      team_ids: []
     });
 
     const savedGazette = await gazette.save();
@@ -70,13 +69,11 @@ const getGazettes = async (req, res) => {
     console.log('📋 DEBUG: Loading gazettes for user:', req.user.id);
     
     const userId = req.user.id;
-    const userTeams = req.user.teams || [];
     const { status, search } = req.query;
 
     // Construire le filtre
     let filter = {
-      author_id: userId,
-      team_ids: { $in: userTeams }
+      author_id: userId
     };
 
     // Filtre par statut
@@ -128,12 +125,10 @@ const getGazetteById = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user.id;
-    const userTeams = req.user.teams || [];
 
     const gazette = await Gazette.findOne({
       _id: id,
-      author_id: userId,
-      team_ids: { $in: userTeams }
+      author_id: userId
     })
       .populate('author_id', 'name email')
       .populate('team_ids', 'name');
@@ -169,12 +164,10 @@ const updateGazette = async (req, res) => {
     const { id } = req.params;
     const { title, description, status, blocks } = req.body;
     const userId = req.user.id;
-    const userTeams = req.user.teams || [];
 
     const gazette = await Gazette.findOne({
       _id: id,
-      author_id: userId,
-      team_ids: { $in: userTeams }
+      author_id: userId
     });
 
     if (!gazette) {
@@ -231,12 +224,10 @@ const deleteGazette = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user.id;
-    const userTeams = req.user.teams || [];
 
     const gazette = await Gazette.findOne({
       _id: id,
-      author_id: userId,
-      team_ids: { $in: userTeams }
+      author_id: userId
     });
 
     if (!gazette) {

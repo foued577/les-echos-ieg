@@ -2,12 +2,12 @@ import axios from 'axios';
 
 // Séparation des URLs pour API et fichiers
 let API_BASE_URL = import.meta.env.VITE_API_URL || 
-  (window.location.hostname.includes('les-echos-ieg.onrender.com') 
+  (window.location.hostname.includes('les-echos-ieg-front.onrender.com') 
     ? 'https://les-echos-ieg-api.onrender.com/api'
     : 'http://localhost:5000/api');
 
 // FORCE le bon domaine en production (fallback ultime)
-if (window.location.hostname.includes('les-echos-ieg.onrender.com')) {
+if (window.location.hostname.includes('les-echos-ieg-front.onrender.com')) {
   API_BASE_URL = 'https://les-echos-ieg-api.onrender.com/api';
   console.log('🔧 FORCE API BASE URL TO:', API_BASE_URL);
   // Debug visible pour confirmer le déploiement
@@ -18,7 +18,7 @@ if (window.location.hostname.includes('les-echos-ieg.onrender.com')) {
 
 // Force le bon domaine en production (patch temporaire)
 export const APP_BASE_URL = API_BASE_URL.replace(/\/api\/?$/, '') || 
-  (window.location.hostname.includes('les-echos-ieg.onrender.com') 
+  (window.location.hostname.includes('les-echos-ieg-front.onrender.com') 
     ? 'https://les-echos-ieg-api.onrender.com' 
     : 'http://localhost:5000');
 
