@@ -27,21 +27,7 @@ connectDB();
 
 const app = express();
 
-// Middleware de sécurité
-app.use(helmet());
-
-// Middleware de rate limiting (désactivé pour le debug)
-// const limiter = rateLimit({
-//   windowMs: 15 * 60 * 1000, // 15 minutes
-//   max: 100, // Limiter chaque IP à 100 requêtes par windowMs
-//   message: {
-//     success: false,
-//     message: 'Trop de requêtes, veuillez réessayer plus tard'
-//   }
-// });
-// app.use('/api/', limiter);
-
-// Configuration CORS pour développement et production
+// Configuration CORS pour développement et production (AVANT helmet!)
 const allowedOrigins = [
   'https://les-echos-ieg-front.onrender.com',
   'http://localhost:5173',
@@ -60,6 +46,9 @@ app.use(cors({
 
 // Handle preflight requests
 app.options('*', cors());
+
+// Middleware de sécurité (APRÈS CORS)
+app.use(helmet());
 
 // Parsers
 app.use(express.json({ limit: '10mb' }));
