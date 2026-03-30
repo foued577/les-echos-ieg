@@ -27,66 +27,31 @@ connectDB();
 
 const app = express();
 
-// Configuration CORS - LE TOUT PREMIER MIDDLEWARE!
-const allowedOrigins = [
-  'https://les-echos-ieg-front.onrender.com',
-  'http://localhost:5173',
-  'http://localhost:3000'
-];
-
-console.log('🌐 CORS: Allowed origins:', allowedOrigins);
-
-// CORS AGGRESSIF - Force tous les headers
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  console.log('🔍 CORS MIDDLEWARE - Origin:', origin, 'Method:', req.method, 'Path:', req.path);
-  
-  // Ajouter manuellement les headers CORS
-  if (allowedOrigins.includes(origin) || !origin) {
-    res.header('Access-Control-Allow-Origin', origin || '*');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    res.header('Access-Control-Allow-Credentials', 'true');
-    console.log('✅ CORS MANUAL: Headers added for origin:', origin);
-  } else {
-    console.log('❌ CORS MANUAL: Origin not allowed:', origin);
-  }
-  
-  // Handle preflight
-  if (req.method === 'OPTIONS') {
-    console.log('🔧 PREFLIGHT: Sending OK response');
-    return res.status(200).send();
-  }
-  
-  next();
-});
-
-// CORS middleware additionnel
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) {
-      console.log('✅ CORS: Allowing origin:', origin);
-      return callback(null, true);
-    }
-    console.log('❌ CORS: Blocked for origin:', origin);
-    return callback(new Error(`CORS blocked for origin: ${origin}`));
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
-
-app.options('*', cors());
-
-// Debug middleware pour CORS
-app.use((req, res, next) => {
-  console.log('🔍 Request Debug - Origin:', req.headers.origin, 'Method:', req.method, 'Path:', req.path);
-  next();
-});
-
-// Middleware de sécurité (APRÈS CORS)
+// Middleware de sécurité
 app.use(helmet());
+
+// Middleware de rate limiting (désactivé pour le debug)
+// const limiter = rateLimit({
+//   windowMs: 15 * 60 * 1000, // 15 minutes
+//   max: 100, // Limiter chaque IP à 100 requêtes par windowMs
+//   message: {
+//     success: false,
+//     message: 'Trop de requêtes, veuillez réessayer plus tard'
+//   }
+// });
+// app.use('/api/', limiter);
+
+const allowedOrigin = 
+  process.env.FRONTEND_URL === 'https://les-echos-ieg-front.onrender.com' 
+    ? 'https://les-echos-ieg-front.onrender.com'
+    : process.env.FRONTEND_URL || 'http://localhost:5173';
+
+console.log('🌐 CORS: Allowed origin:', allowedOrigin);
+
+app.use(cors({
+  origin: allowedOrigin,
+  credentials: true
+}));
 
 // Parsers
 app.use(express.json({ limit: '10mb' }));
@@ -159,16 +124,6 @@ app.use('/api/rubriques', require('./routes/rubriqueRoutes'));
 app.use('/api/contents', require('./routes/contentRoutes'));
 app.use('/api/gazettes', require('./routes/gazetteRoutes'));
 
-// Route de test CORS
-app.get('/cors-test', (req, res) => {
-  res.json({
-    success: true,
-    message: '✅ CORS test successful!',
-    origin: req.headers.origin,
-    timestamp: new Date().toISOString()
-  });
-});
-
 // Route de test
 app.get('/', (req, res) => {
   res.json({
@@ -207,27 +162,10 @@ app.use((error, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 
-// Démarrage du serveur avec timeout
 const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Serveur démarré sur le port ${PORT}`);
   console.log(`🌍 Environnement: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`✅ Frontends autorisés: ${allowedOrigins.join(', ')}`);
-  
-  // Forcer le serveur à être prêt immédiatement
-  setTimeout(() => {
-    console.log('⚡ Serveur prêt à accepter les connexions');
-  }, 1000);
-});
-
-// Timeout de démarrage pour Render
-const startupTimeout = setTimeout(() => {
-  console.log('⚠️ Startup timeout - forcing server ready');
-  process.exit(0);
-}, 15000);
-
-server.on('listening', () => {
-  clearTimeout(startupTimeout);
-  console.log('🎯 Server listening successfully');
+  console.log(`✅ Frontend autorisé: ${allowedOrigin}`);
 });
 
 // Gestion gracieuse de l'arrêt
