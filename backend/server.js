@@ -36,16 +36,39 @@ const allowedOrigins = [
 
 console.log('🌐 CORS: Allowed origins:', allowedOrigins);
 
+// CORS AGGRESSIF - Force tous les headers
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  console.log('🔍 CORS MIDDLEWARE - Origin:', origin, 'Method:', req.method, 'Path:', req.path);
+  
+  // Ajouter manuellement les headers CORS
+  if (allowedOrigins.includes(origin) || !origin) {
+    res.header('Access-Control-Allow-Origin', origin || '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    console.log('✅ CORS MANUAL: Headers added for origin:', origin);
+  } else {
+    console.log('❌ CORS MANUAL: Origin not allowed:', origin);
+  }
+  
+  // Handle preflight
+  if (req.method === 'OPTIONS') {
+    console.log('🔧 PREFLIGHT: Sending OK response');
+    return res.status(200).send();
+  }
+  
+  next();
+});
+
+// CORS middleware additionnel
 app.use(cors({
   origin: function (origin, callback) {
-    // Allow requests with no origin (mobile apps, curl, etc.)
     if (!origin) return callback(null, true);
-    
     if (allowedOrigins.includes(origin)) {
       console.log('✅ CORS: Allowing origin:', origin);
       return callback(null, true);
     }
-    
     console.log('❌ CORS: Blocked for origin:', origin);
     return callback(new Error(`CORS blocked for origin: ${origin}`));
   },
