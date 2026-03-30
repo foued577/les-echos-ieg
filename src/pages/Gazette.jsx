@@ -39,41 +39,86 @@ export default function Gazette() {
 
   const loadGazettes = async () => {
     try {
-      console.log('📋 DEBUG: Loading gazettes...');
+      console.log('📋 DEBUG: Starting gazettes load...');
+      console.log('🔍 DEBUG: Current filters state:', { selectedStatus, searchTerm });
       
       // Construire les filtres
       const filters = {};
       if (selectedStatus && selectedStatus !== 'all') {
         filters.status = selectedStatus;
+        console.log('🔍 DEBUG: Adding status filter:', selectedStatus);
       }
       if (searchTerm && searchTerm.trim() !== '') {
         filters.search = searchTerm.trim();
+        console.log('🔍 DEBUG: Adding search filter:', searchTerm.trim());
       }
 
-      console.log('🔍 DEBUG: Using filters:', filters);
+      console.log('🔍 DEBUG: Final filters object:', filters);
 
       // Appeler l'API
-      const response = await gazettesAPI.getAll(filters);
+      console.log('📡 DEBUG: Calling gazettesAPI.getAll()...');
+      const apiResponse = await gazettesAPI.getAll(filters);
       
-      console.log('✅ DEBUG: Gazettes loaded:', response);
-      console.log('📊 DEBUG: Gazettes count:', response.data?.length || 0);
+      console.log('📡 DEBUG: Raw API response from service:', apiResponse);
+      console.log('📊 DEBUG: Response type:', typeof apiResponse);
+      console.log('📊 DEBUG: Response keys:', Object.keys(apiResponse || {}));
 
-      // Normaliser les données (gérer différents formats de réponse)
-      const gazettesData = response.data || response || [];
+      // Le backend retourne { message, data, count }
+      // Donc apiResponse devrait être { message, data, count }
+      let gazettesData = [];
       
+      if (apiResponse?.data && Array.isArray(apiResponse.data)) {
+        // Format attendu: { message, data: [...], count }
+        gazettesData = apiResponse.data;
+        console.log('📋 DEBUG: Using apiResponse.data, length:', gazettesData.length);
+      } else if (Array.isArray(apiResponse)) {
+        // Format fallback: direct array
+        gazettesData = apiResponse;
+        console.log('📋 DEBUG: Using direct array, length:', gazettesData.length);
+      } else {
+        console.warn('⚠️ WARNING: Unexpected response format:', apiResponse);
+        gazettesData = [];
+      }
+
+      console.log('📋 DEBUG: Final gazettes data:', gazettesData);
+      console.log('📊 DEBUG: Gazettes count:', gazettesData.length);
+      
+      // Log détaillé de chaque gazette
+      gazettesData.forEach((gazette, index) => {
+        console.log(`📰 GAZETTE ${index + 1}:`, {
+          id: gazette.id,
+          title: gazette.title,
+          status: gazette.status,
+          blocksCount: gazette.blocks?.length || 0,
+          createdAt: gazette.createdAt
+        });
+      });
+
+      // Vérifier le filtrage pour "Tous les statuts"
+      if (selectedStatus === 'all') {
+        console.log('✅ DEBUG: Filter is "all", showing all gazettes including drafts');
+      } else {
+        console.log('🔍 DEBUG: Filter applied, showing only:', selectedStatus);
+      }
+
       setGazettes(gazettesData);
       setLoading(false);
       
+      console.log('✅ DEBUG: Gazettes loaded and state updated successfully');
+      
     } catch (error) {
-      console.error('❌ ERROR: Failed to load gazettes:', error);
-      console.error('❌ ERROR Details:', error.response?.data || error.message);
+      console.error('❌ ERROR: Failed to load gazettes!');
+      console.error('❌ ERROR Details:', error);
+      console.error('❌ ERROR Response:', error.response?.data);
+      console.error('❌ ERROR Message:', error.message);
+      console.error('❌ ERROR Status:', error.response?.status);
       
       setGazettes([]);
       setLoading(false);
       
-      // Afficher un message d'erreur
+      // Afficher un message d'erreur très clair
       const errorMessage = error.response?.data?.message || error.message || 'Erreur lors du chargement';
-      alert(`Erreur: ${errorMessage}`);
+      alert(`Erreur de chargement: ${errorMessage}`);
     }
   };
 

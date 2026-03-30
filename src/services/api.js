@@ -132,28 +132,44 @@ export const usersAPI = {
 // Gazettes API
 export const gazettesAPI = {
   getAll: async (filters = {}) => {
+    console.log('📡 DEBUG: gazettesAPI.getAll called with filters:', filters);
     const params = new URLSearchParams(filters);
     const response = await api.get(`/gazettes?${params}`);
+    console.log('📡 DEBUG: gazettesAPI.getAll raw response:', response);
+    console.log('📡 DEBUG: gazettesAPI.getAll response.data:', response.data);
+    
+    // Retourner response.data directement (pas de double .data)
     return response.data;
   },
   
   getById: async (id) => {
+    console.log('📡 DEBUG: gazettesAPI.getById called with id:', id);
     const response = await api.get(`/gazettes/${id}`);
+    console.log('📡 DEBUG: gazettesAPI.getById response:', response.data);
     return response.data;
   },
   
   create: async (gazetteData) => {
+    console.log('📡 DEBUG: gazettesAPI.create called with data:', gazetteData);
     const response = await api.post('/gazettes', gazetteData);
+    console.log('📡 DEBUG: gazettesAPI.create response:', response);
+    console.log('📡 DEBUG: gazettesAPI.create response.data:', response.data);
+    
+    // Retourner response.data directement (pas de double .data)
     return response.data;
   },
   
   update: async (id, gazetteData) => {
+    console.log('📡 DEBUG: gazettesAPI.update called with id:', id, 'data:', gazetteData);
     const response = await api.put(`/gazettes/${id}`, gazetteData);
+    console.log('📡 DEBUG: gazettesAPI.update response:', response.data);
     return response.data;
   },
   
   delete: async (id) => {
+    console.log('📡 DEBUG: gazettesAPI.delete called with id:', id);
     const response = await api.delete(`/gazettes/${id}`);
+    console.log('📡 DEBUG: gazettesAPI.delete response:', response.data);
     return response.data;
   }
 };

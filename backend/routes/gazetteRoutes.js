@@ -9,7 +9,24 @@ const {
   deleteGazette
 } = require('../controllers/gazetteController');
 
-// Appliquer le middleware d'authentification à toutes les routes
+// Route de test pour vérifier que l'API fonctionne
+router.get('/test', (req, res) => {
+  console.log('🧪 DEBUG: Gazette API test route called');
+  res.json({
+    success: true,
+    message: '🗞️ Gazette API is working!',
+    timestamp: new Date().toISOString(),
+    endpoints: {
+      getAll: 'GET /api/gazettes',
+      getById: 'GET /api/gazettes/:id',
+      create: 'POST /api/gazettes',
+      update: 'PUT /api/gazettes/:id',
+      delete: 'DELETE /api/gazettes/:id'
+    }
+  });
+});
+
+// Appliquer le middleware d'authentification à toutes les routes SAUF test
 router.use(authMiddleware);
 
 // Routes
