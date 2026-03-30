@@ -155,18 +155,35 @@ export const gazettesAPI = {
     console.log('📡 DEBUG: gazettesAPI.create data keys:', Object.keys(gazetteData || {}));
     
     try {
+      console.log('📡 DEBUG: Making POST request to /gazettes...');
       const response = await api.post('/gazettes', gazetteData);
+      
       console.log('📡 DEBUG: gazettesAPI.create raw axios response:', response);
       console.log('📡 DEBUG: gazettesAPI.create response status:', response.status);
+      console.log('📡 DEBUG: gazettesAPI.create response.statusText:', response.statusText);
+      console.log('📡 DEBUG: gazettesAPI.create response.headers:', response.headers);
       console.log('📡 DEBUG: gazettesAPI.create response.data:', response.data);
       console.log('📡 DEBUG: gazettesAPI.create response.data type:', typeof response.data);
       console.log('📡 DEBUG: gazettesAPI.create response.data keys:', Object.keys(response.data || {}));
       
+      // Vérifier si response.data existe et est valide
+      if (!response.data) {
+        console.error('❌ ERROR: response.data is undefined or null');
+        console.error('❌ ERROR: Full response structure:', response);
+        throw new Error('API returned no data');
+      }
+      
       // Retourner response.data directement (pas de double .data)
+      console.log('✅ DEBUG: gazettesAPI.create returning response.data');
       return response.data;
     } catch (error) {
       console.error('❌ ERROR: gazettesAPI.create failed:', error);
+      console.error('❌ ERROR: gazettesAPI.create error message:', error.message);
       console.error('❌ ERROR: gazettesAPI.create error response:', error.response?.data);
+      console.error('❌ ERROR: gazettesAPI.create error status:', error.response?.status);
+      console.error('❌ ERROR: gazettesAPI.create error headers:', error.response?.headers);
+      
+      // Relancer l'erreur pour que le frontend puisse la gérer
       throw error;
     }
   },
