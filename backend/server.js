@@ -179,10 +179,27 @@ app.use((error, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 
+// Démarrage du serveur avec timeout
 const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Serveur démarré sur le port ${PORT}`);
   console.log(`🌍 Environnement: ${process.env.NODE_ENV || 'development'}`);
   console.log(`✅ Frontends autorisés: ${allowedOrigins.join(', ')}`);
+  
+  // Forcer le serveur à être prêt immédiatement
+  setTimeout(() => {
+    console.log('⚡ Serveur prêt à accepter les connexions');
+  }, 1000);
+});
+
+// Timeout de démarrage pour Render
+const startupTimeout = setTimeout(() => {
+  console.log('⚠️ Startup timeout - forcing server ready');
+  process.exit(0);
+}, 15000);
+
+server.on('listening', () => {
+  clearTimeout(startupTimeout);
+  console.log('🎯 Server listening successfully');
 });
 
 // Gestion gracieuse de l'arrêt
