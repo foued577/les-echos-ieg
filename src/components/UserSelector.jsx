@@ -23,9 +23,13 @@ const UserSelector = ({ selectedUsers = [], onUsersChange, disabled = false }) =
           ? 'https://les-echos-ieg.onrender.com/api'
           : 'http://localhost:5000/api');
 
+      const token = localStorage.getItem('auth_token');
+      console.log('TOKEN USED FOR USER SEARCH (debug):', token);
+      console.log('AUTH HEADER (debug):', `Bearer ${token}`);
+
       const response = await fetch(`${API_BASE_URL}/users/debug`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
@@ -70,9 +74,13 @@ const UserSelector = ({ selectedUsers = [], onUsersChange, disabled = false }) =
             ? 'https://les-echos-ieg.onrender.com/api'
             : 'http://localhost:5000/api');
 
+        const token = localStorage.getItem('auth_token');
+        console.log('TOKEN USED FOR USER SEARCH (debug):', token);
+        console.log('AUTH HEADER (debug):', `Bearer ${token}`);
+
         const response = await fetch(`${API_BASE_URL}/users/search?q=${encodeURIComponent(searchQuery)}`, {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
           }
         });
