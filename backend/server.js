@@ -28,6 +28,8 @@ connectDB();
 const app = express();
 
 // Configuration CORS - LE TOUT PREMIER MIDDLEWARE!
+const cors = require('cors');
+
 const allowedOrigins = [
   'https://les-echos-ieg-front.onrender.com',
   'http://localhost:5173',
@@ -37,23 +39,28 @@ const allowedOrigins = [
 console.log('🌐 CORS: Allowed origins:', allowedOrigins);
 
 app.use(cors({
-  origin: allowedOrigins,
+  origin: function (origin, callback) {
+    // Allow requests with no origin (mobile apps, curl, etc.)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.includes(origin)) {
+      console.log('✅ CORS: Allowing origin:', origin);
+      return callback(null, true);
+    }
+    
+    console.log('❌ CORS: Blocked for origin:', origin);
+    return callback(new Error(`CORS blocked for origin: ${origin}`));
+  },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// Handle preflight requests
 app.options('*', cors());
 
 // Debug middleware pour CORS
 app.use((req, res, next) => {
-  console.log('🌐 CORS Debug - Request headers:', {
-    origin: req.headers.origin,
-    method: req.method,
-    'Access-Control-Request-Method': req.headers['access-control-request-method'],
-    'Access-Control-Request-Headers': req.headers['access-control-request-headers']
-  });
+  console.log('🔍 Request Debug - Origin:', req.headers.origin, 'Method:', req.method, 'Path:', req.path);
   next();
 });
 
