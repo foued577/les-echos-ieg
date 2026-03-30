@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useParams, useLocation } from 'react-router-dom';
 import { createPageUrl } from '../utils';
 import { 
   ArrowLeft,
@@ -624,6 +624,8 @@ const BlockTypeSelector = ({ onAddBlock }) => {
 
 export default function GazetteEditor() {
   const navigate = useNavigate();
+  const { id } = useParams();
+  const location = useLocation();
   const [gazette, setGazette] = useState({
     title: '',
     description: '',
@@ -634,16 +636,37 @@ export default function GazetteEditor() {
   const [saving, setSaving] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
 
+  // Load existing gazette
+  const loadGazette = async (gazetteId) => {
+    try {
+      setLoading(true);
+      console.log('📡 DEBUG: Loading gazette:', gazetteId);
+      
+      const response = await gazettesAPI.getById(gazetteId);
+      console.log('📋 DEBUG: Gazette loaded:', response);
+      
+      if (response?.data) {
+        setGazette(response.data);
+      } else if (response) {
+        setGazette(response);
+      }
+    } catch (error) {
+      console.error('❌ Error loading gazette:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     // Load gazette data if editing
-    const urlParams = new URLSearchParams(window.location.search);
-    const gazetteId = urlParams.get('id');
+    const gazetteId = id || new URLSearchParams(location.search).get('id');
     
     if (gazetteId) {
       // Load existing gazette
       console.log('Loading gazette:', gazetteId);
+      loadGazette(gazetteId);
     }
-  }, []);
+  }, [id, location.search]);
 
   const addBlock = (type) => {
     console.log('🔥 DEBUG: Adding block of type:', type);

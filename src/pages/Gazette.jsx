@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '../utils';
 import { 
   Newspaper, 
@@ -38,6 +38,15 @@ export default function Gazette() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('all');
   const location = useLocation();
+  const navigate = useNavigate();
+
+  // Handle gazette click
+  const handleGazetteClick = (gazette) => {
+    const gazetteId = gazette.id || gazette._id;
+    if (gazetteId) {
+      navigate(`/gazette/${gazetteId}`);
+    }
+  };
 
   useEffect(() => {
     console.log('📋 DEBUG: Gazette page mounted, loading gazettes...');
@@ -266,14 +275,18 @@ export default function Gazette() {
         {filteredGazettes.length > 0 && (
           <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredGazettes.map((gazette) => (
-              <div key={gazette.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow">
+              <div 
+                key={gazette.id || gazette._id} 
+                className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
+                onClick={() => handleGazetteClick(gazette)}
+              >
                 {/* Cover Image */}
                 <div className="h-48 bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
                   <Newspaper className="w-16 h-16 text-blue-600" />
                 </div>
                 
                 {/* Content */}
-                <div className="p-6">
+                <div className="p-6" onClick={(e) => e.stopPropagation()}>
                   <div className="flex items-center justify-between mb-3">
                     <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(gazette.status)}`}>
                       {getStatusLabel(gazette.status)}
@@ -294,7 +307,7 @@ export default function Gazette() {
                   <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
                     <span className="flex items-center gap-1">
                       <FileText className="w-4 h-4" />
-                      {gazette.sections?.length || 0} sections
+                      {gazette.sections?.length || gazette.blocks?.length || 0} sections
                     </span>
                     <span className="flex items-center gap-1">
                       <Eye className="w-4 h-4" />
@@ -303,19 +316,29 @@ export default function Gazette() {
                   </div>
                   
                   <div className="flex gap-2">
-                    <Link to={createPageUrl(`GazetteEditor?id=${gazette.id}`)} className="flex-1">
-                      <Button variant="outline" className="w-full border-gray-300 text-gray-700 hover:bg-gray-50">
-                        <Edit className="w-4 h-4 mr-2" />
-                        Modifier
-                      </Button>
-                    </Link>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const gazetteId = gazette.id || gazette._id;
+                        navigate(`/gazette/${gazetteId}/edit`);
+                      }}
+                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      <Edit className="w-4 h-4 inline mr-2" />
+                      Modifier
+                    </button>
                     {gazette.status === 'published' && (
-                      <Link to={createPageUrl(`GazetteView?id=${gazette.id}`)} className="flex-1">
-                        <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
-                          <Eye className="w-4 h-4 mr-2" />
-                          Voir
-                        </Button>
-                      </Link>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const gazetteId = gazette.id || gazette._id;
+                          navigate(`/gazette/${gazetteId}`);
+                        }}
+                        className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                      >
+                        <Eye className="w-4 h-4 inline mr-2" />
+                        Voir
+                      </button>
                     )}
                   </div>
                 </div>

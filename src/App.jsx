@@ -11,6 +11,7 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import ContentDetail from './pages/ContentDetail';
+import GazetteEditor from './pages/GazetteEditor';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -66,6 +67,23 @@ const AuthenticatedApp = () => {
         <ProtectedRoute>
           <LayoutWrapper currentPageName="ContentDetail">
             <ContentDetail />
+          </LayoutWrapper>
+        </ProtectedRoute>
+      } />
+      
+      {/* Gazette detail and edit routes */}
+      <Route path="/gazette/:id" element={
+        <ProtectedRoute>
+          <LayoutWrapper currentPageName="GazetteEditor">
+            <GazetteEditor />
+          </LayoutWrapper>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/gazette/:id/edit" element={
+        <ProtectedRoute>
+          <LayoutWrapper currentPageName="GazetteEditor">
+            <GazetteEditor />
           </LayoutWrapper>
         </ProtectedRoute>
       } />
