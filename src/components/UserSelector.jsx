@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { X, Search, User } from 'lucide-react';
-import { gazettesAPI } from '../services/api';
 
 const UserSelector = ({ selectedUsers = [], onUsersChange, disabled = false }) => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -11,19 +10,52 @@ const UserSelector = ({ selectedUsers = [], onUsersChange, disabled = false }) =
   // Search users
   useEffect(() => {
     const searchUsers = async () => {
+      console.log('🔍 DEBUG: Search users called with query:', searchQuery);
+      
       if (searchQuery.trim().length < 2) {
+        console.log('🔍 DEBUG: Query too short, clearing results');
         setSearchResults([]);
         return;
       }
 
       setIsSearching(true);
       try {
-        const response = await gazettesAPI.searchUsers(searchQuery);
-        if (response.success && response.data) {
-          setSearchResults(response.data);
+        console.log('📡 DEBUG: Making API call to /users/search?q=', searchQuery);
+        
+        // Get the API base URL
+        const API_BASE_URL = import.meta.env.VITE_API_URL ||
+          (window.location.hostname.includes('les-echos-ieg-front.onrender.com')
+            ? 'https://les-echos-ieg.onrender.com/api'
+            : 'http://localhost:5000/api');
+
+        const response = await fetch(`${API_BASE_URL}/users/search?q=${encodeURIComponent(searchQuery)}`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        console.log('📡 DEBUG: API response status:', response.status);
+        console.log('📡 DEBUG: API response headers:', response.headers);
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('📡 DEBUG: API response data:', data);
+        console.log('📡 DEBUG: Users found:', data?.data?.length || 0);
+
+        if (data.success && data.data) {
+          console.log('✅ DEBUG: Setting search results:', data.data);
+          setSearchResults(data.data);
+        } else {
+          console.log('❌ DEBUG: No success or data in response');
+          setSearchResults([]);
         }
       } catch (error) {
-        console.error('Error searching users:', error);
+        console.error('❌ ERROR: Failed to search users:', error);
+        console.error('❌ ERROR: Error details:', error.message);
         setSearchResults([]);
       } finally {
         setIsSearching(false);
@@ -36,16 +68,26 @@ const UserSelector = ({ selectedUsers = [], onUsersChange, disabled = false }) =
 
   // Add user to selection
   const addUser = (user) => {
+    console.log('➕ DEBUG: Adding user to selection:', user);
+    
     if (!selectedUsers.find(u => u._id === user._id)) {
-      onUsersChange([...selectedUsers, user]);
+      const newSelection = [...selectedUsers, user];
+      console.log('✅ DEBUG: New user selection:', newSelection);
+      onUsersChange(newSelection);
+    } else {
+      console.log('⚠️ DEBUG: User already in selection');
     }
+    
     setSearchQuery('');
     setSearchResults([]);
   };
 
   // Remove user from selection
   const removeUser = (userId) => {
-    onUsersChange(selectedUsers.filter(u => u._id !== userId));
+    console.log('➖ DEBUG: Removing user from selection:', userId);
+    const newSelection = selectedUsers.filter(u => u._id !== userId);
+    console.log('✅ DEBUG: New user selection after removal:', newSelection);
+    onUsersChange(newSelection);
   };
 
   return (

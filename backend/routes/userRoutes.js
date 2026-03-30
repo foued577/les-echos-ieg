@@ -1,6 +1,6 @@
 const express = require('express');
 const { body } = require('express-validator');
-const { getUsers, getUserById, updateUser, deleteUser } = require('../controllers/userController');
+const { getUsers, getUserById, updateUser, deleteUser, searchUsers, debugUsers } = require('../controllers/userController');
 const authMiddleware = require('../middleware/authMiddleware');
 const roleMiddleware = require('../middleware/roleMiddleware');
 
@@ -28,6 +28,8 @@ const updateValidation = [
 
 // Routes protégées - Admin uniquement
 router.get('/', authMiddleware, roleMiddleware('ADMIN'), getUsers);
+router.get('/search', authMiddleware, searchUsers); // Must be before /:id
+router.get('/debug', authMiddleware, debugUsers); // Debug endpoint
 router.get('/:id', authMiddleware, roleMiddleware('ADMIN'), getUserById);
 router.put('/:id', authMiddleware, roleMiddleware('ADMIN'), updateValidation, updateUser);
 router.delete('/:id', authMiddleware, roleMiddleware('ADMIN'), deleteUser);

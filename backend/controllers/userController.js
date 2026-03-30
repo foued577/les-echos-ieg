@@ -112,9 +112,80 @@ const deleteUser = async (req, res) => {
   }
 };
 
+// Rechercher des utilisateurs (accessible à tous les utilisateurs authentifiés)
+const searchUsers = async (req, res) => {
+  try {
+    const { q } = req.query;
+    const userId = req.user.id;
+
+    console.log('🔍 DEBUG: Searching users with query:', q, 'by user:', userId);
+
+    if (!q || q.trim().length < 2) {
+      return res.status(400).json({
+        success: false,
+        message: 'La requête doit contenir au moins 2 caractères'
+      });
+    }
+
+    // Rechercher des utilisateurs (sauf soi-même)
+    const users = await User.find({
+      _id: { $ne: userId },
+      $or: [
+        { name: { $regex: q, $options: 'i' } },
+        { email: { $regex: q, $options: 'i' } }
+      ]
+    })
+    .select('name email')
+    .limit(10);
+
+    console.log('✅ DEBUG: Found users:', users.length);
+
+    res.status(200).json({
+      success: true,
+      message: 'Utilisateurs trouvés',
+      data: users
+    });
+
+  } catch (error) {
+    console.error('❌ ERROR: Failed to search users:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur lors de la recherche d\'utilisateurs'
+    });
+  }
+};
+
+// Debug endpoint pour vérifier les utilisateurs dans la base
+const debugUsers = async (req, res) => {
+  try {
+    console.log('🔍 DEBUG: Getting all users for debug');
+    
+    const allUsers = await User.find({}).select('name email role');
+    
+    console.log('✅ DEBUG: Total users in database:', allUsers.length);
+    console.log('📋 DEBUG: Users list:', allUsers);
+
+    res.status(200).json({
+      success: true,
+      message: 'Debug: Tous les utilisateurs',
+      count: allUsers.length,
+      data: allUsers
+    });
+
+  } catch (error) {
+    console.error('❌ ERROR: Failed to get debug users:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur lors du debug des utilisateurs'
+    });
+  }
+};
+
 module.exports = {
   getUsers,
   getUserById,
   updateUser,
-  deleteUser
+  deleteUser,
+  searchUsers,
+  debugUsers
 };
