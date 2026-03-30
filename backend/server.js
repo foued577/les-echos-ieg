@@ -31,9 +31,8 @@ const app = express();
 const allowedOrigins = [
   'https://les-echos-ieg-front.onrender.com',
   'http://localhost:5173',
-  'http://localhost:3000',
-  process.env.FRONTEND_URL
-].filter(Boolean); // Remove undefined values
+  'http://localhost:3000'
+];
 
 console.log('🌐 CORS: Allowed origins:', allowedOrigins);
 
@@ -46,6 +45,17 @@ app.use(cors({
 
 // Handle preflight requests
 app.options('*', cors());
+
+// Debug middleware pour CORS
+app.use((req, res, next) => {
+  console.log('🌐 CORS Debug - Request headers:', {
+    origin: req.headers.origin,
+    method: req.method,
+    'Access-Control-Request-Method': req.headers['access-control-request-method'],
+    'Access-Control-Request-Headers': req.headers['access-control-request-headers']
+  });
+  next();
+});
 
 // Middleware de sécurité (APRÈS CORS)
 app.use(helmet());
