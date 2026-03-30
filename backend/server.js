@@ -28,8 +28,6 @@ connectDB();
 const app = express();
 
 // Configuration CORS - LE TOUT PREMIER MIDDLEWARE!
-const cors = require('cors');
-
 const allowedOrigins = [
   'https://les-echos-ieg-front.onrender.com',
   'http://localhost:5173',
