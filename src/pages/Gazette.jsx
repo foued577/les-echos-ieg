@@ -40,6 +40,30 @@ export default function Gazette() {
   const location = useLocation();
   const navigate = useNavigate();
 
+  // Handle gazette deletion
+  const handleDeleteGazette = async (gazette, event) => {
+    event.stopPropagation();
+    
+    if (!window.confirm(`Êtes-vous sûr de vouloir supprimer la gazette "${gazette.title}" ?`)) {
+      return;
+    }
+
+    try {
+      const gazetteId = gazette.id || gazette._id;
+      console.log('🗑️ Deleting gazette:', gazetteId);
+      
+      await gazettesAPI.delete(gazetteId);
+      
+      // Update local state to remove the deleted gazette
+      setGazettes(prev => prev.filter(g => (g.id || g._id) !== gazetteId));
+      
+      console.log('✅ Gazette deleted successfully');
+    } catch (error) {
+      console.error('❌ Error deleting gazette:', error);
+      alert('Erreur lors de la suppression de la gazette');
+    }
+  };
+
   // Handle gazette click
   const handleGazetteClick = (gazette) => {
     const gazetteId = gazette.id || gazette._id;
@@ -340,6 +364,12 @@ export default function Gazette() {
                         Voir
                       </button>
                     )}
+                    <button
+                      onClick={(e) => handleDeleteGazette(gazette, e)}
+                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
               </div>

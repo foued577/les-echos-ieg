@@ -1,4 +1,5 @@
 const Gazette = require('../models/Gazette');
+const User = require('../models/User');
 const authMiddleware = require('../middleware/authMiddleware');
 
 // Créer une gazette
@@ -6,7 +7,7 @@ const createGazette = async (req, res) => {
   try {
     console.log('🗞️ DEBUG: Creating gazette with payload:', req.body);
     
-    const { title, description, status = 'draft', blocks = [] } = req.body;
+    const { title, description, status = 'draft', blocks = [], assigned_users = [] } = req.body;
     const userId = req.user.id;
 
     // Validation
@@ -27,7 +28,8 @@ const createGazette = async (req, res) => {
         order: index
       })),
       author_id: userId,
-      team_ids: []
+      team_ids: [],
+      assigned_users
     });
 
     const savedGazette = await gazette.save();
@@ -35,6 +37,7 @@ const createGazette = async (req, res) => {
     // Populate les références
     await savedGazette.populate([
       { path: 'author_id', select: 'name email' },
+      { path: 'assigned_users', select: 'name email' },
       { path: 'team_ids', select: 'name' }
     ]);
 
@@ -71,9 +74,12 @@ const getGazettes = async (req, res) => {
     const userId = req.user.id;
     const { status, search } = req.query;
 
-    // Construire le filtre
+    // Construire le filtre avec contrôle d'accès
     let filter = {
-      author_id: userId
+      $or: [
+        { author_id: userId },
+        { assigned_users: userId }
+      ]
     };
 
     // Filtre par statut
@@ -83,14 +89,21 @@ const getGazettes = async (req, res) => {
 
     // Recherche textuelle
     if (search && search.trim() !== '') {
-      filter.$or = [
-        { title: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } }
+      filter.$and = [
+        filter.$or ? { $or: filter.$or } : {},
+        {
+          $or: [
+            { title: { $regex: search, $options: 'i' } },
+            { description: { $regex: search, $options: 'i' } }
+          ]
+        }
       ];
+      delete filter.$or;
     }
 
     const gazettes = await Gazette.find(filter)
       .populate('author_id', 'name email')
+      .populate('assigned_users', 'name email')
       .populate('team_ids', 'name')
       .sort({ createdAt: -1 });
 
@@ -128,14 +141,18 @@ const getGazetteById = async (req, res) => {
 
     const gazette = await Gazette.findOne({
       _id: id,
-      author_id: userId
+      $or: [
+        { author_id: userId },
+        { assigned_users: userId }
+      ]
     })
       .populate('author_id', 'name email')
+      .populate('assigned_users', 'name email')
       .populate('team_ids', 'name');
 
     if (!gazette) {
       return res.status(404).json({
-        message: 'Gazette non trouvée',
+        message: 'Gazette non trouvée ou accès non autorisé',
         error: 'GAZETTE_NOT_FOUND'
       });
     }
@@ -162,18 +179,29 @@ const getGazetteById = async (req, res) => {
 const updateGazette = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, description, status, blocks } = req.body;
+    const { title, description, status, blocks, assigned_users } = req.body;
     const userId = req.user.id;
 
     const gazette = await Gazette.findOne({
       _id: id,
-      author_id: userId
+      $or: [
+        { author_id: userId },
+        { assigned_users: userId }
+      ]
     });
 
     if (!gazette) {
       return res.status(404).json({
-        message: 'Gazette non trouvée',
+        message: 'Gazette non trouvée ou accès non autorisé',
         error: 'GAZETTE_NOT_FOUND'
+      });
+    }
+
+    // Seul le créateur peut modifier les utilisateurs assignés
+    if (assigned_users && gazette.author_id.toString() !== userId) {
+      return res.status(403).json({
+        message: 'Seul le créateur peut modifier les utilisateurs assignés',
+        error: 'INSUFFICIENT_PERMISSIONS'
       });
     }
 
@@ -187,10 +215,14 @@ const updateGazette = async (req, res) => {
         order: index
       }));
     }
+    if (assigned_users !== undefined) {
+      gazette.assigned_users = assigned_users;
+    }
 
     const updatedGazette = await gazette.save();
     await updatedGazette.populate([
       { path: 'author_id', select: 'name email' },
+      { path: 'assigned_users', select: 'name email' },
       { path: 'team_ids', select: 'name' }
     ]);
 
@@ -254,10 +286,50 @@ const deleteGazette = async (req, res) => {
   }
 };
 
+// Rechercher des utilisateurs pour l'assignation
+const searchUsers = async (req, res) => {
+  try {
+    const { q } = req.query;
+    const userId = req.user.id;
+
+    if (!q || q.trim() === '') {
+      return res.status(400).json({
+        message: 'La requête de recherche est requise',
+        error: 'MISSING_QUERY'
+      });
+    }
+
+    // Rechercher des utilisateurs (sauf soi-même)
+    const users = await User.find({
+      _id: { $ne: userId },
+      $or: [
+        { name: { $regex: q, $options: 'i' } },
+        { email: { $regex: q, $options: 'i' } }
+      ]
+    })
+    .select('name email')
+    .limit(10);
+
+    res.json({
+      success: true,
+      message: 'Utilisateurs trouvés',
+      data: users
+    });
+
+  } catch (error) {
+    console.error('❌ ERROR: Failed to search users:', error);
+    res.status(500).json({
+      message: 'Erreur lors de la recherche d\'utilisateurs',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   createGazette,
   getGazettes,
   getGazetteById,
   updateGazette,
-  deleteGazette
+  deleteGazette,
+  searchUsers
 };

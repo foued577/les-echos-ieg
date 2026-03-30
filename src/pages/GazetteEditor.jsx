@@ -32,6 +32,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { gazettesAPI } from '../services/api';
 import PreviewGazette from '../components/PreviewGazette';
+import UserSelector from '../components/UserSelector';
 
 // Block types
 const BLOCK_TYPES = {
@@ -630,7 +631,8 @@ export default function GazetteEditor() {
     title: '',
     description: '',
     status: 'draft',
-    blocks: []
+    blocks: [],
+    assigned_users: []
   });
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -745,7 +747,8 @@ export default function GazetteEditor() {
         title: gazette.title.trim(),
         description: gazette.description.trim(),
         status: gazette.status || 'draft',
-        blocks: gazette.blocks || []
+        blocks: gazette.blocks || [],
+        assigned_users: gazette.assigned_users?.map(user => user._id) || []
       };
 
       console.log('📤 DEBUG: Sending payload to API:', JSON.stringify(payload, null, 2));
@@ -900,6 +903,13 @@ export default function GazetteEditor() {
                     placeholder="Décrivez votre gazette..."
                   />
                 </div>
+
+                {/* User Assignment */}
+                <UserSelector
+                  selectedUsers={gazette.assigned_users || []}
+                  onUsersChange={(users) => setGazette(prev => ({ ...prev, assigned_users: users }))}
+                  disabled={false}
+                />
               </div>
             </section>
 

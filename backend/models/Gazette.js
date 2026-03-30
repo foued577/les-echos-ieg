@@ -46,6 +46,10 @@ const GazetteSchema = new mongoose.Schema({
   team_ids: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Team'
+  }],
+  assigned_users: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
   }]
 }, {
   timestamps: true
@@ -55,6 +59,7 @@ const GazetteSchema = new mongoose.Schema({
 GazetteSchema.index({ title: 'text', description: 'text' });
 GazetteSchema.index({ author_id: 1 });
 GazetteSchema.index({ team_ids: 1 });
+GazetteSchema.index({ assigned_users: 1 });
 GazetteSchema.index({ status: 1 });
 GazetteSchema.index({ createdAt: -1 });
 

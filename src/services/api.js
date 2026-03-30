@@ -199,6 +199,13 @@ export const gazettesAPI = {
     const response = await api.delete(`/gazettes/${id}`);
     console.log('📡 DEBUG: gazettesAPI.delete response:', response.data);
     return response.data;
+  },
+  
+  searchUsers: async (query) => {
+    console.log('📡 DEBUG: gazettesAPI.searchUsers called with query:', query);
+    const response = await api.get(`/gazettes/users/search?q=${encodeURIComponent(query)}`);
+    console.log('📡 DEBUG: gazettesAPI.searchUsers response:', response.data);
+    return response.data;
   }
 };
 
