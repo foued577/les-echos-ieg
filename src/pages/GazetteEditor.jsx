@@ -728,35 +728,48 @@ export default function GazetteEditor() {
       console.log('📤 DEBUG: Sending payload to API:', JSON.stringify(payload, null, 2));
 
       // Appeler l'API de création
-      const savedGazette = await gazettesAPI.create(payload);
+      const response = await gazettesAPI.create(payload);
       
-      console.log('✅ DEBUG: Gazette saved successfully!');
-      console.log('📋 DEBUG: Saved gazette data:', JSON.stringify(savedGazette, null, 2));
-      console.log('📋 DEBUG: Saved gazette ID:', savedGazette?.data?.id || savedGazette?.id);
-      console.log('📋 DEBUG: Saved gazette title:', savedGazette?.data?.title || savedGazette?.title);
-
-      // Validation critique : vérifier que la sauvegarde a réellement fonctionné
-      if (!savedGazette || !savedGazette.data) {
-        throw new Error('La gazette n\'a pas été sauvegardée - réponse invalide');
-      }
-
-      // Le backend normalise maintenant avec { success, data }
-      const gazetteData = savedGazette.data || savedGazette;
-      const gazetteId = gazetteData.id;
-      const gazetteTitle = gazetteData.title;
-
+      console.log('📡 DEBUG: Raw API response from create:', response);
+      console.log('� DEBUG: Response type:', typeof response);
+      console.log('� DEBUG: Response keys:', Object.keys(response || {}));
+      
+      // Extraire la gazette sauvegardée de manière robuste
+      const savedGazette = response?.data ?? response;
+      
+      console.log('📋 DEBUG: Extracted gazette object:', savedGazette);
+      console.log('📋 DEBUG: Gazette object keys:', Object.keys(savedGazette || {}));
+      
+      // Chercher un ID valide dans toutes les positions possibles
+      const gazetteId = 
+        savedGazette?.id ??
+        savedGazette?._id ??
+        savedGazette?.data?.id ??
+        savedGazette?.data?._id;
+      
+      console.log('🔍 DEBUG: Gazette ID found:', gazetteId);
+      console.log('🔍 DEBUG: ID checks:', {
+        'savedGazette.id': savedGazette?.id,
+        'savedGazette._id': savedGazette?._id,
+        'savedGazette.data.id': savedGazette?.data?.id,
+        'savedGazette.data._id': savedGazette?.data?._id
+      });
+      
+      // VALIDATION STRICTE : ID obligatoire pour continuer
       if (!gazetteId) {
-        throw new Error('La gazette n\'a pas d\'ID après sauvegarde');
+        console.error('❌ ERROR: No valid ID found in response');
+        console.error('❌ ERROR: Full response structure:', JSON.stringify(response, null, 2));
+        throw new Error("La gazette n'a pas d'ID après sauvegarde");
       }
 
-      console.log('🎉 SUCCESS: Gazette created with ID:', gazetteId);
-      console.log('🎉 SUCCESS: Gazette title:', gazetteTitle);
+      console.log('🎉 SUCCESS: Gazette created with valid ID:', gazetteId);
+      console.log('🎉 SUCCESS: Gazette title:', savedGazette?.title || savedGazette?.data?.title);
 
       setSaving(false);
       
-      // Rediriger vers la liste des gazettes SEULEMENT après confirmation
-      console.log('🔄 DEBUG: Redirecting to /gazette...');
-      navigate('/gazette');
+      // REDIRECTION SEULEMENT après validation réussie
+      console.log('🔄 DEBUG: Save successful, redirecting to /gazette...');
+      navigate('/gazette', { state: { refresh: true } });
       
     } catch (error) {
       console.error('❌ ERROR: Failed to save gazette!');

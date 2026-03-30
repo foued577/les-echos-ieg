@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { createPageUrl } from '../utils';
 import { 
   Newspaper, 
@@ -27,8 +27,10 @@ export default function Gazette() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('all');
+  const location = useLocation();
 
   useEffect(() => {
+    console.log('📋 DEBUG: Gazette page mounted, loading gazettes...');
     loadGazettes();
   }, []);
 
@@ -36,6 +38,16 @@ export default function Gazette() {
     console.log('🔄 DEBUG: Filters changed, reloading gazettes:', { selectedStatus, searchTerm });
     loadGazettes();
   }, [selectedStatus, searchTerm]);
+
+  // Recharger si on vient de créer une gazette (refresh state)
+  useEffect(() => {
+    if (location.state?.refresh) {
+      console.log('🔄 DEBUG: Navigation refresh detected, reloading gazettes...');
+      loadGazettes();
+      // Nettoyer le state pour éviter les rechargements multiples
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   const loadGazettes = async () => {
     try {
@@ -87,6 +99,7 @@ export default function Gazette() {
       gazettesData.forEach((gazette, index) => {
         console.log(`📰 GAZETTE ${index + 1}:`, {
           id: gazette.id,
+          _id: gazette._id,
           title: gazette.title,
           status: gazette.status,
           blocksCount: gazette.blocks?.length || 0,

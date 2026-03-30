@@ -151,12 +151,24 @@ export const gazettesAPI = {
   
   create: async (gazetteData) => {
     console.log('📡 DEBUG: gazettesAPI.create called with data:', gazetteData);
-    const response = await api.post('/gazettes', gazetteData);
-    console.log('📡 DEBUG: gazettesAPI.create response:', response);
-    console.log('📡 DEBUG: gazettesAPI.create response.data:', response.data);
+    console.log('📡 DEBUG: gazettesAPI.create data type:', typeof gazetteData);
+    console.log('📡 DEBUG: gazettesAPI.create data keys:', Object.keys(gazetteData || {}));
     
-    // Retourner response.data directement (pas de double .data)
-    return response.data;
+    try {
+      const response = await api.post('/gazettes', gazetteData);
+      console.log('📡 DEBUG: gazettesAPI.create raw axios response:', response);
+      console.log('📡 DEBUG: gazettesAPI.create response status:', response.status);
+      console.log('📡 DEBUG: gazettesAPI.create response.data:', response.data);
+      console.log('📡 DEBUG: gazettesAPI.create response.data type:', typeof response.data);
+      console.log('📡 DEBUG: gazettesAPI.create response.data keys:', Object.keys(response.data || {}));
+      
+      // Retourner response.data directement (pas de double .data)
+      return response.data;
+    } catch (error) {
+      console.error('❌ ERROR: gazettesAPI.create failed:', error);
+      console.error('❌ ERROR: gazettesAPI.create error response:', error.response?.data);
+      throw error;
+    }
   },
   
   update: async (id, gazetteData) => {
