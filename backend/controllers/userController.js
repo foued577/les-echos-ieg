@@ -127,30 +127,53 @@ const searchUsers = async (req, res) => {
       });
     }
 
-    // Rechercher des utilisateurs (sauf soi-même)
+    // DEBUG: Temporarily disable user exclusion for testing
+    console.log('🔍 DEBUG: User exclusion DISABLED for testing');
+
+    // Rechercher des utilisateurs sur TOUS les champs possibles
     const users = await User.find({
-      _id: { $ne: userId },
+      // _id: { $ne: userId }, // TEMPORARILY COMMENTED FOR DEBUG
       $or: [
         { name: { $regex: q, $options: 'i' } },
-        { email: { $regex: q, $options: 'i' } }
+        { email: { $regex: q, $options: 'i' } },
+        { firstName: { $regex: q, $options: 'i' } },
+        { lastName: { $regex: q, $options: 'i' } },
+        { fullName: { $regex: q, $options: 'i' } },
+        { username: { $regex: q, $options: 'i' } }
       ]
     })
-    .select('name email')
-    .limit(10);
+    .select('name email firstName lastName fullName username')
+    .limit(20); // Increased limit for debugging
 
     console.log('✅ DEBUG: Found users:', users.length);
+    console.log('📋 DEBUG: User details:', users.map(u => ({
+      _id: u._id,
+      name: u.name,
+      email: u.email,
+      firstName: u.firstName,
+      lastName: u.lastName,
+      fullName: u.fullName,
+      username: u.username
+    })));
 
     res.status(200).json({
       success: true,
       message: 'Utilisateurs trouvés',
-      data: users
+      data: users,
+      debug: {
+        query: q,
+        userId: userId,
+        userExclusion: false, // DEBUG
+        foundCount: users.length
+      }
     });
 
   } catch (error) {
     console.error('❌ ERROR: Failed to search users:', error);
     res.status(500).json({
       success: false,
-      message: 'Erreur lors de la recherche d\'utilisateurs'
+      message: 'Erreur lors de la recherche d\'utilisateurs',
+      error: error.message
     });
   }
 };
@@ -160,23 +183,28 @@ const debugUsers = async (req, res) => {
   try {
     console.log('🔍 DEBUG: Getting all users for debug');
     
-    const allUsers = await User.find({}).select('name email role');
+    const allUsers = await User.find({}).select('name email firstName lastName fullName username role');
     
     console.log('✅ DEBUG: Total users in database:', allUsers.length);
-    console.log('📋 DEBUG: Users list:', allUsers);
+    console.log('📋 DEBUG: Users list with ALL fields:', allUsers);
 
     res.status(200).json({
       success: true,
       message: 'Debug: Tous les utilisateurs',
       count: allUsers.length,
-      data: allUsers
+      data: allUsers,
+      debug: {
+        fields: ['name', 'email', 'firstName', 'lastName', 'fullName', 'username', 'role'],
+        timestamp: new Date().toISOString()
+      }
     });
 
   } catch (error) {
     console.error('❌ ERROR: Failed to get debug users:', error);
     res.status(500).json({
       success: false,
-      message: 'Erreur lors du debug des utilisateurs'
+      message: 'Erreur lors du debug des utilisateurs',
+      error: error.message
     });
   }
 };

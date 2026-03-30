@@ -1,11 +1,54 @@
 import React, { useState, useEffect } from 'react';
-import { X, Search, User } from 'lucide-react';
+import { X, Search, User, Users } from 'lucide-react';
 
 const UserSelector = ({ selectedUsers = [], onUsersChange, disabled = false }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
+  const [allUsers, setAllUsers] = useState([]); // Fallback
   const [isSearching, setIsSearching] = useState(false);
+  const [isLoadingAll, setIsLoadingAll] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [showAllUsers, setShowAllUsers] = useState(false);
+
+  // Load all users for fallback
+  const loadAllUsers = async () => {
+    if (isLoadingAll || allUsers.length > 0) return;
+    
+    setIsLoadingAll(true);
+    try {
+      console.log('📡 DEBUG: Loading ALL users for fallback');
+      
+      const API_BASE_URL = import.meta.env.VITE_API_URL ||
+        (window.location.hostname.includes('les-echos-ieg-front.onrender.com')
+          ? 'https://les-echos-ieg.onrender.com/api'
+          : 'http://localhost:5000/api');
+
+      const response = await fetch(`${API_BASE_URL}/users/debug`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      console.log('📡 DEBUG: All users API response status:', response.status);
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('📡 DEBUG: All users API response data:', data);
+        
+        if (data.success && data.data) {
+          console.log('✅ DEBUG: Loaded all users:', data.data.length);
+          setAllUsers(data.data);
+        }
+      } else {
+        console.log('❌ DEBUG: Failed to load all users');
+      }
+    } catch (error) {
+      console.error('❌ ERROR: Failed to load all users:', error);
+    } finally {
+      setIsLoadingAll(false);
+    }
+  };
 
   // Search users
   useEffect(() => {
@@ -22,7 +65,6 @@ const UserSelector = ({ selectedUsers = [], onUsersChange, disabled = false }) =
       try {
         console.log('📡 DEBUG: Making API call to /users/search?q=', searchQuery);
         
-        // Get the API base URL
         const API_BASE_URL = import.meta.env.VITE_API_URL ||
           (window.location.hostname.includes('les-echos-ieg-front.onrender.com')
             ? 'https://les-echos-ieg.onrender.com/api'
@@ -66,6 +108,26 @@ const UserSelector = ({ selectedUsers = [], onUsersChange, disabled = false }) =
     return () => clearTimeout(timeoutId);
   }, [searchQuery]);
 
+  // Filter all users locally (fallback)
+  const filteredAllUsers = allUsers.filter(user => {
+    if (!searchQuery || searchQuery.trim().length < 2) return true;
+    
+    const q = searchQuery.toLowerCase();
+    const name = (user.name || '').toLowerCase();
+    const email = (user.email || '').toLowerCase();
+    const firstName = (user.firstName || '').toLowerCase();
+    const lastName = (user.lastName || '').toLowerCase();
+    const fullName = (user.fullName || '').toLowerCase();
+    const username = (user.username || '').toLowerCase();
+    
+    return name.includes(q) || 
+           email.includes(q) || 
+           firstName.includes(q) || 
+           lastName.includes(q) || 
+           fullName.includes(q) || 
+           username.includes(q);
+  });
+
   // Add user to selection
   const addUser = (user) => {
     console.log('➕ DEBUG: Adding user to selection:', user);
@@ -90,6 +152,9 @@ const UserSelector = ({ selectedUsers = [], onUsersChange, disabled = false }) =
     onUsersChange(newSelection);
   };
 
+  // Display users (search results or filtered all users)
+  const displayUsers = showAllUsers ? filteredAllUsers : searchResults;
+
   return (
     <div className="space-y-3">
       <label className="block text-sm font-medium text-gray-700">
@@ -104,7 +169,7 @@ const UserSelector = ({ selectedUsers = [], onUsersChange, disabled = false }) =
             className="flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
           >
             <User className="w-4 h-4" />
-            <span>{user.name || user.email}</span>
+            <span>{user.name || user.fullName || user.email}</span>
             {!disabled && (
               <button
                 onClick={() => removeUser(user._id)}
@@ -126,25 +191,43 @@ const UserSelector = ({ selectedUsers = [], onUsersChange, disabled = false }) =
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              onFocus={() => setIsOpen(true)}
+              onFocus={() => {
+                setIsOpen(true);
+                loadAllUsers(); // Load all users when focused
+              }}
               placeholder="Rechercher des utilisateurs..."
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
 
+          {/* Toggle between search and all users */}
+          <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex gap-1">
+            <button
+              onClick={() => setShowAllUsers(!showAllUsers)}
+              className="p-1 text-gray-400 hover:text-gray-600"
+              title={showAllUsers ? "Utiliser la recherche API" : "Afficher tous les utilisateurs"}
+            >
+              <Users className="w-4 h-4" />
+            </button>
+          </div>
+
           {/* Search results dropdown */}
-          {isOpen && (searchQuery.trim().length >= 2) && (
+          {isOpen && (
             <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
               {isSearching ? (
                 <div className="p-3 text-gray-500 text-center">
                   Recherche en cours...
                 </div>
-              ) : searchResults.length === 0 ? (
+              ) : isLoadingAll ? (
                 <div className="p-3 text-gray-500 text-center">
-                  Aucun utilisateur trouvé
+                  Chargement des utilisateurs...
+                </div>
+              ) : displayUsers.length === 0 ? (
+                <div className="p-3 text-gray-500 text-center">
+                  {showAllUsers ? 'Aucun utilisateur trouvé' : 'Aucun utilisateur trouvé - Essayez d\'afficher tous les utilisateurs'}
                 </div>
               ) : (
-                searchResults.map((user) => (
+                displayUsers.map((user) => (
                   <div
                     key={user._id}
                     onClick={() => addUser(user)}
@@ -154,13 +237,18 @@ const UserSelector = ({ selectedUsers = [], onUsersChange, disabled = false }) =
                       <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
                         <User className="w-4 h-4 text-gray-600" />
                       </div>
-                      <div>
+                      <div className="flex-1">
                         <div className="font-medium text-gray-900">
-                          {user.name || 'Utilisateur sans nom'}
+                          {user.name || user.fullName || `${user.firstName || ''} ${user.lastName || ''}` || 'Utilisateur sans nom'}
                         </div>
                         <div className="text-sm text-gray-500">
                           {user.email}
                         </div>
+                        {showAllUsers && (
+                          <div className="text-xs text-gray-400">
+                            Mode: Tous les utilisateurs
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -174,6 +262,7 @@ const UserSelector = ({ selectedUsers = [], onUsersChange, disabled = false }) =
       {/* Instructions */}
       <p className="text-xs text-gray-500">
         Les utilisateurs assignés pourront voir cette gazette. Seul le créateur peut modifier les assignations.
+        {showAllUsers && " Mode dépannage : affichage de tous les utilisateurs."}
       </p>
     </div>
   );
