@@ -22,6 +22,16 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { gazettesAPI } from '../services/api';
 
+// Formatage sécurisé des dates pour éviter les crashes
+const formatSafeDate = (value) => {
+  if (!value) return 'Date inconnue';
+  
+  const date = new Date(value);
+  if (isNaN(date.getTime())) return 'Date invalide';
+  
+  return format(date, 'dd MMM yyyy', { locale: fr });
+};
+
 export default function Gazette() {
   const [gazettes, setGazettes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -94,6 +104,7 @@ export default function Gazette() {
 
       console.log('📋 DEBUG: Final gazettes data:', gazettesData);
       console.log('📊 DEBUG: Gazettes count:', gazettesData.length);
+      console.log('🔍 GAZETTES RAW:', gazettesData);
       
       // Log détaillé de chaque gazette
       gazettesData.forEach((gazette, index) => {
@@ -103,7 +114,10 @@ export default function Gazette() {
           title: gazette.title,
           status: gazette.status,
           blocksCount: gazette.blocks?.length || 0,
-          createdAt: gazette.createdAt
+          createdAt: gazette.createdAt,
+          created_at: gazette.created_at,
+          updatedAt: gazette.updatedAt,
+          updated_at: gazette.updated_at
         });
       });
 
@@ -265,7 +279,7 @@ export default function Gazette() {
                       {getStatusLabel(gazette.status)}
                     </span>
                     <span className="text-sm text-gray-500">
-                      {format(new Date(gazette.created_at), 'dd MMM yyyy', { locale: fr })}
+                      {formatSafeDate(gazette.created_at || gazette.createdAt)}
                     </span>
                   </div>
                   
