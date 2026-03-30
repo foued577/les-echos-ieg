@@ -27,7 +27,7 @@ connectDB();
 
 const app = express();
 
-// Configuration CORS pour développement et production (AVANT helmet!)
+// Configuration CORS - LE TOUT PREMIER MIDDLEWARE!
 const allowedOrigins = [
   'https://les-echos-ieg-front.onrender.com',
   'http://localhost:5173',
@@ -130,6 +130,16 @@ app.use('/api/test', require('./routes/testRoutes'));
 app.use('/api/rubriques', require('./routes/rubriqueRoutes'));
 app.use('/api/contents', require('./routes/contentRoutes'));
 app.use('/api/gazettes', require('./routes/gazetteRoutes'));
+
+// Route de test CORS
+app.get('/cors-test', (req, res) => {
+  res.json({
+    success: true,
+    message: '✅ CORS test successful!',
+    origin: req.headers.origin,
+    timestamp: new Date().toISOString()
+  });
+});
 
 // Route de test
 app.get('/', (req, res) => {
