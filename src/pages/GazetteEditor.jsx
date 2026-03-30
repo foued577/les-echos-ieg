@@ -736,12 +736,14 @@ export default function GazetteEditor() {
       console.log('📋 DEBUG: Saved gazette title:', savedGazette?.data?.title || savedGazette?.title);
 
       // Validation critique : vérifier que la sauvegarde a réellement fonctionné
-      if (!savedGazette || (!savedGazette.data && !savedGazette.id)) {
+      if (!savedGazette || !savedGazette.data) {
         throw new Error('La gazette n\'a pas été sauvegardée - réponse invalide');
       }
 
-      const gazetteId = savedGazette.data?.id || savedGazette.id;
-      const gazetteTitle = savedGazette.data?.title || savedGazette.title;
+      // Le backend normalise maintenant avec { success, data }
+      const gazetteData = savedGazette.data || savedGazette;
+      const gazetteId = gazetteData.id;
+      const gazetteTitle = gazetteData.title;
 
       if (!gazetteId) {
         throw new Error('La gazette n\'a pas d\'ID après sauvegarde');

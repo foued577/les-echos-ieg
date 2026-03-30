@@ -63,12 +63,12 @@ export default function Gazette() {
       console.log('📊 DEBUG: Response type:', typeof apiResponse);
       console.log('📊 DEBUG: Response keys:', Object.keys(apiResponse || {}));
 
-      // Le backend retourne { message, data, count }
-      // Donc apiResponse devrait être { message, data, count }
+      // Le backend normalise maintenant avec { success, data }
+      // Donc apiResponse devrait être { success: true, data: [...], count }
       let gazettesData = [];
       
       if (apiResponse?.data && Array.isArray(apiResponse.data)) {
-        // Format attendu: { message, data: [...], count }
+        // Format attendu: { success: true, data: [...], count }
         gazettesData = apiResponse.data;
         console.log('📋 DEBUG: Using apiResponse.data, length:', gazettesData.length);
       } else if (Array.isArray(apiResponse)) {

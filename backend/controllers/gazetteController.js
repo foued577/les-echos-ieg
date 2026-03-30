@@ -41,9 +41,18 @@ const createGazette = async (req, res) => {
 
     console.log('✅ DEBUG: Gazette saved successfully:', savedGazette);
     
+    // Normaliser la réponse pour le frontend
+    const gazetteResponse = {
+      ...savedGazette.toObject(),
+      id: savedGazette._id.toString() // Convertir _id en id string
+    };
+    
+    console.log('📤 DEBUG: Normalized response for frontend:', gazetteResponse);
+    
     res.status(201).json({
+      success: true,
       message: 'Gazette créée avec succès',
-      data: savedGazette
+      data: gazetteResponse
     });
 
   } catch (error) {
@@ -90,10 +99,19 @@ const getGazettes = async (req, res) => {
 
     console.log('✅ DEBUG: Gazettes loaded:', gazettes.length, 'items');
     
+    // Normaliser la réponse pour le frontend (_id -> id)
+    const normalizedGazettes = gazettes.map(gazette => ({
+      ...gazette.toObject(),
+      id: gazette._id.toString() // Convertir _id en id string
+    }));
+    
+    console.log('📤 DEBUG: Normalized gazettes for frontend:', normalizedGazettes);
+    
     res.json({
+      success: true,
       message: 'Gazettes récupérées avec succès',
-      data: gazettes,
-      count: gazettes.length
+      data: normalizedGazettes,
+      count: normalizedGazettes.length
     });
 
   } catch (error) {
@@ -128,8 +146,12 @@ const getGazetteById = async (req, res) => {
     }
 
     res.json({
+      success: true,
       message: 'Gazette récupérée avec succès',
-      data: gazette
+      data: {
+        ...gazette.toObject(),
+        id: gazette._id.toString() // Convertir _id en id string
+      }
     });
 
   } catch (error) {
@@ -181,9 +203,18 @@ const updateGazette = async (req, res) => {
 
     console.log('✅ DEBUG: Gazette updated:', updatedGazette);
 
+    // Normaliser la réponse pour le frontend (_id -> id)
+    const normalizedGazette = {
+      ...updatedGazette.toObject(),
+      id: updatedGazette._id.toString() // Convertir _id en id string
+    };
+    
+    console.log('📤 DEBUG: Normalized updated gazette for frontend:', normalizedGazette);
+
     res.json({
+      success: true,
       message: 'Gazette mise à jour avec succès',
-      data: updatedGazette
+      data: normalizedGazette
     });
 
   } catch (error) {
