@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { User, Mail, Calendar, Shield, ArrowLeft, Save } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import ProfileImageUpload from '../components/ProfileImageUpload';
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 
 const UserProfile = () => {
   const [user, setUser] = useState(null);
