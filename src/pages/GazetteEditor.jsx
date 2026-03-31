@@ -25,7 +25,10 @@ import {
   List,
   ListOrdered,
   Quote,
-  Minus
+  Minus,
+  Upload,
+  Loader2,
+  X
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { format } from 'date-fns';
@@ -33,6 +36,7 @@ import { fr } from 'date-fns/locale';
 import { gazettesAPI } from '../services/api';
 import PreviewGazette from '../components/PreviewGazette';
 import UserSelector from '../components/UserSelector';
+import { toast } from 'sonner';
 
 // Block types
 const BLOCK_TYPES = {
@@ -46,14 +50,127 @@ const BLOCK_TYPES = {
   SEPARATOR: 'separator'
 };
 
+// Cloudinary upload function
+const uploadToCloudinary = async (file, type = 'image') => {
+  try {
+    console.log(`🚀 DEBUG: Uploading ${type} to Cloudinary:`, file);
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', 'gazette_uploads');
+    formData.append('folder', `gazette_${type}s`);
+    
+    // For videos, add resource type
+    if (type === 'video') {
+      formData.append('resource_type', 'video');
+    }
+
+    const cloudName = window.process?.env?.VITE_CLOUDINARY_CLOUD_NAME || 'dxzsmz3ku';
+    const response = await fetch(
+      `https://api.cloudinary.com/v1_1/${cloudName}/${type === 'video' ? 'video' : 'image'}/upload`,
+      {
+        method: 'POST',
+        body: formData
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Upload failed: ${response.statusText}`);
+    }
+
+    const result = await response.json();
+    console.log(`✅ DEBUG: ${type} uploaded successfully:`, result);
+    
+    if (result.error) {
+      throw new Error(result.error.message);
+    }
+
+    return {
+      url: result.secure_url,
+      publicId: result.public_id,
+      resourceType: result.resource_type
+    };
+  } catch (error) {
+    console.error(`❌ ERROR: Failed to upload ${type}:`, error);
+    throw error;
+  }
+};
+
 // Block components
 const BlockRenderer = ({ block, onUpdate, onRemove, onMoveUp, onMoveDown, isFirst, isLast }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [content, setContent] = useState(block.content || '');
+  const [uploading, setUploading] = useState(false);
 
   const saveContent = () => {
     onUpdate(block.id, { ...block, content });
     setIsEditing(false);
+  };
+
+  // Handle image upload
+  const handleImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    console.log('🖼️ DEBUG: Image file selected:', file);
+    
+    // Show loading state
+    setUploading(true);
+    
+    try {
+      // Upload to Cloudinary
+      const uploadResult = await uploadToCloudinary(file, 'image');
+      console.log('🖼️ DEBUG: Image uploaded to Cloudinary:', uploadResult);
+
+      // Update block with Cloudinary URL
+      setContent(uploadResult.url);
+      onUpdate(block.id, { 
+        ...block, 
+        content: uploadResult.url,
+        cloudinaryData: uploadResult,
+        file: null // Remove file reference
+      });
+      
+      toast.success('Image uploadée avec succès');
+    } catch (error) {
+      console.error('❌ ERROR: Failed to upload image:', error);
+      toast.error('Erreur lors de l\'upload de l\'image');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  // Handle video upload
+  const handleVideoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    console.log('🎥 DEBUG: Video file selected:', file);
+    
+    // Show loading state
+    setUploading(true);
+    
+    try {
+      // Upload to Cloudinary
+      const uploadResult = await uploadToCloudinary(file, 'video');
+      console.log('🎥 DEBUG: Video uploaded to Cloudinary:', uploadResult);
+
+      // Update block with Cloudinary URL
+      setContent(uploadResult.url);
+      onUpdate(block.id, { 
+        ...block, 
+        content: uploadResult.url,
+        cloudinaryData: uploadResult,
+        file: null // Remove file reference
+      });
+      
+      toast.success('Vidéo uploadée avec succès');
+    } catch (error) {
+      console.error('❌ ERROR: Failed to upload video:', error);
+      toast.error('Erreur lors de l\'upload de la vidéo');
+    } finally {
+      setUploading(false);
+    }
   };
 
   // Render content directly, not as a separate function
@@ -202,44 +319,45 @@ const BlockRenderer = ({ block, onUpdate, onRemove, onMoveUp, onMoveDown, isFirs
 
           {/* Block Content */}
           <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-            {content ? (
+            {uploading ? (
+              // Loading state
+              <div className="py-12">
+                <Loader2 className="w-12 h-12 text-blue-500 mx-auto mb-4 animate-spin" />
+                <p className="text-gray-600">Upload en cours...</p>
+              </div>
+            ) : content ? (
               // Image preview
               <div className="relative">
                 <img 
                   src={content} 
                   alt="Image uploadée"
                   className="max-w-full max-h-96 mx-auto rounded-lg shadow-md"
+                  onError={(e) => {
+                    console.error('❌ ERROR: Failed to load image:', content);
+                    const img = e.target;
+                    img.src = '';
+                    setContent('');
+                    onUpdate(block.id, { ...block, content: '', cloudinaryData: null });
+                  }}
                 />
                 <button
                   onClick={() => {
                     setContent('');
-                    onUpdate(block.id, { ...block, content: '', file: null });
+                    onUpdate(block.id, { ...block, content: '', cloudinaryData: null });
                   }}
                   className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <X className="w-4 h-4" />
                 </button>
               </div>
             ) : (
-              // Upload zone
+              // Upload area
               <div>
                 <input
                   type="file"
                   accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (!file) return;
-
-                    console.log('🖼️ DEBUG: Image file selected:', file);
-                    
-                    // Create preview URL
-                    const imageUrl = URL.createObjectURL(file);
-                    console.log('🖼️ DEBUG: Image preview URL:', imageUrl);
-
-                    // Update block with image data
-                    setContent(imageUrl);
-                    onUpdate(block.id, { ...block, content: imageUrl, file });
-                  }}
+                  onChange={handleImageUpload}
+                  disabled={uploading}
                   className="hidden"
                   id={`image-upload-${block.id}`}
                 />
@@ -250,7 +368,8 @@ const BlockRenderer = ({ block, onUpdate, onRemove, onMoveUp, onMoveDown, isFirs
                     console.log('🖼️ DEBUG: Clicking image upload button for block:', block.id);
                     document.getElementById(`image-upload-${block.id}`)?.click();
                   }}
-                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm"
+                  disabled={uploading}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Plus className="w-4 h-4 mr-2 inline" />
                   Ajouter une image
@@ -294,46 +413,47 @@ const BlockRenderer = ({ block, onUpdate, onRemove, onMoveUp, onMoveDown, isFirs
 
           {/* Block Content */}
           <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-            {content ? (
+            {uploading ? (
+              // Loading state
+              <div className="py-12">
+                <Loader2 className="w-12 h-12 text-blue-500 mx-auto mb-4 animate-spin" />
+                <p className="text-gray-600">Upload en cours...</p>
+              </div>
+            ) : content ? (
               // Video preview
               <div className="relative">
                 <video 
                   src={content} 
                   controls
                   className="max-w-full max-h-96 mx-auto rounded-lg shadow-md"
+                  onError={(e) => {
+                    console.error('❌ ERROR: Failed to load video:', content);
+                    const video = e.target;
+                    video.src = '';
+                    setContent('');
+                    onUpdate(block.id, { ...block, content: '', cloudinaryData: null });
+                  }}
                 >
                   Votre navigateur ne supporte pas la lecture vidéo.
                 </video>
                 <button
                   onClick={() => {
                     setContent('');
-                    onUpdate(block.id, { ...block, content: '', file: null });
+                    onUpdate(block.id, { ...block, content: '', cloudinaryData: null });
                   }}
                   className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <X className="w-4 h-4" />
                 </button>
               </div>
             ) : (
-              // Upload zone
+              // Upload area
               <div>
                 <input
                   type="file"
                   accept="video/*"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (!file) return;
-
-                    console.log('🎥 DEBUG: Video file selected:', file);
-                    
-                    // Create preview URL
-                    const videoUrl = URL.createObjectURL(file);
-                    console.log('🎥 DEBUG: Video preview URL:', videoUrl);
-
-                    // Update block with video data
-                    setContent(videoUrl);
-                    onUpdate(block.id, { ...block, content: videoUrl, file });
-                  }}
+                  onChange={handleVideoUpload}
+                  disabled={uploading}
                   className="hidden"
                   id={`video-upload-${block.id}`}
                 />
@@ -344,7 +464,8 @@ const BlockRenderer = ({ block, onUpdate, onRemove, onMoveUp, onMoveDown, isFirs
                     console.log('🎥 DEBUG: Clicking video upload button for block:', block.id);
                     document.getElementById(`video-upload-${block.id}`)?.click();
                   }}
-                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm"
+                  disabled={uploading}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Plus className="w-4 h-4 mr-2 inline" />
                   Ajouter une vidéo
@@ -648,12 +769,41 @@ export default function GazetteEditor() {
       console.log('📋 DEBUG: Gazette loaded:', response);
       
       if (response?.data) {
-        setGazette(response.data);
+        const gazetteData = response.data;
+        console.log('🔍 DEBUG: Gazette blocks RAW:', gazetteData.blocks);
+        console.log('🔍 DEBUG: Gazette blocks structure:', JSON.stringify(gazetteData.blocks, null, 2));
+        
+        // Log individual blocks for debugging
+        gazetteData.blocks?.forEach((block, index) => {
+          console.log(`🔍 DEBUG: Block ${index + 1}:`, {
+            id: block.id,
+            type: block.type,
+            content: block.content,
+            contentType: typeof block.content,
+            hasCloudinaryData: !!block.cloudinaryData,
+            cloudinaryData: block.cloudinaryData,
+            hasFile: !!block.file
+          });
+          
+          if (block.type === 'image' || block.type === 'video') {
+            console.log(`🖼️/🎥 DEBUG: Media block ${index + 1} details:`, {
+              type: block.type,
+              content: block.content,
+              isBlob: block.content?.startsWith('blob:'),
+              isHttp: block.content?.startsWith('http'),
+              isEmpty: !block.content,
+              cloudinaryData: block.cloudinaryData
+            });
+          }
+        });
+        
+        setGazette(gazetteData);
       } else if (response) {
         setGazette(response);
       }
     } catch (error) {
       console.error('❌ Error loading gazette:', error);
+      toast.error('Erreur lors du chargement de la gazette');
     } finally {
       setLoading(false);
     }
