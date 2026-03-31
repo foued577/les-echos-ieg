@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Search, User, Users } from 'lucide-react';
+import Avatar from './Avatar';
 
 const UserSelector = ({ selectedUsers = [], onUsersChange, disabled = false }) => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -176,7 +177,12 @@ const UserSelector = ({ selectedUsers = [], onUsersChange, disabled = false }) =
             key={user._id}
             className="flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
           >
-            <User className="w-4 h-4" />
+            <Avatar 
+              src={user.avatar} 
+              alt={user.name || user.fullName || user.email} 
+              size="xs"
+              fallbackText={user.name || user.fullName || user.email}
+            />
             <span>{user.name || user.fullName || user.email}</span>
             {!disabled && (
               <button
@@ -242,9 +248,12 @@ const UserSelector = ({ selectedUsers = [], onUsersChange, disabled = false }) =
                     className="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-                        <User className="w-4 h-4 text-gray-600" />
-                      </div>
+                      <Avatar 
+                        src={user.avatar} 
+                        alt={user.name || user.fullName || user.email} 
+                        size="sm"
+                        fallbackText={user.name || user.fullName || user.email}
+                      />
                       <div className="flex-1">
                         <div className="font-medium text-gray-900">
                           {user.name || user.fullName || `${user.firstName || ''} ${user.lastName || ''}` || 'Utilisateur sans nom'}

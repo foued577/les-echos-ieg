@@ -12,6 +12,7 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import ContentDetail from './pages/ContentDetail';
 import GazetteEditor from './pages/GazetteEditor';
+import UserProfile from './pages/UserProfile';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -84,6 +85,15 @@ const AuthenticatedApp = () => {
         <ProtectedRoute>
           <LayoutWrapper currentPageName="GazetteEditor">
             <GazetteEditor />
+          </LayoutWrapper>
+        </ProtectedRoute>
+      } />
+      
+      {/* User profile route */}
+      <Route path="/profile" element={
+        <ProtectedRoute>
+          <LayoutWrapper currentPageName="UserProfile">
+            <UserProfile />
           </LayoutWrapper>
         </ProtectedRoute>
       } />

@@ -16,7 +16,8 @@ import {
   ChevronRight,
   BookOpen,
   FolderOpen,
-  Newspaper
+  Newspaper,
+  User
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import {
@@ -26,7 +27,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import Avatar from '@/components/Avatar';
 
 export default function Layout({ children, currentPageName }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -168,11 +169,12 @@ export default function Layout({ children, currentPageName }) {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-3 p-2 rounded-xl hover:bg-secondary transition-all duration-200">
-                  <Avatar className="h-9 w-9">
-                    <AvatarFallback className="bg-secondary text-foreground text-sm font-medium">
-                      {getInitials(user?.name)}
-                    </AvatarFallback>
-                  </Avatar>
+                  <Avatar 
+                    src={user?.avatar} 
+                    alt={user?.name} 
+                    size="sm"
+                    fallbackText={user?.name}
+                  />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-64 apple-card">
@@ -180,6 +182,13 @@ export default function Layout({ children, currentPageName }) {
                   <p className="font-semibold text-sm text-foreground">{user?.name}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">{user?.email}</p>
                 </div>
+                <DropdownMenuSeparator className="bg-border" />
+                <DropdownMenuItem asChild>
+                  <Link to="/profile" className="flex items-center w-full">
+                    <User className="w-4 h-4 mr-3" />
+                    Mon profil
+                  </Link>
+                </DropdownMenuItem>
                 <DropdownMenuSeparator className="bg-border" />
                 <DropdownMenuItem onClick={() => logout()} className="text-muted-foreground hover:text-foreground transition-colors">
                   <LogOut className="w-4 h-4 mr-3" />

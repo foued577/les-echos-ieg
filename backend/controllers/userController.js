@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const { validationResult } = require('express-validator');
+const cloudinary = require('../config/cloudinary');
 
 // Obtenir tous les utilisateurs
 const getUsers = async (req, res) => {
@@ -178,6 +179,120 @@ const searchUsers = async (req, res) => {
   }
 };
 
+// Mettre à jour la photo de profil
+const uploadProfileImage = async (req, res) => {
+  try {
+    console.log('📸=== UPLOAD PROFILE IMAGE START ===');
+    console.log('📸 User ID:', req.user.id);
+    console.log('📸 File received:', req.file);
+
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'Aucun fichier fourni'
+      });
+    }
+
+    // Validation du type de fichier
+    const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!allowedMimeTypes.includes(req.file.mimetype)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Format de fichier non autorisé. Utilisez JPG, JPEG, PNG ou WebP.'
+      });
+    }
+
+    // Validation de la taille (max 5MB)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (req.file.size > maxSize) {
+      return res.status(400).json({
+        success: false,
+        message: 'Fichier trop volumineux. Maximum 5MB autorisé.'
+      });
+    }
+
+    // Récupérer l'utilisateur actuel
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'Utilisateur non trouvé'
+      });
+    }
+
+    // Supprimer l'ancienne image de profil si elle existe sur Cloudinary
+    if (user.avatar && user.avatar.includes('cloudinary')) {
+      try {
+        // Extraire le public_id de l'URL Cloudinary
+        const urlParts = user.avatar.split('/');
+        const filename = urlParts[urlParts.length - 1];
+        const publicId = filename.split('.')[0];
+        
+        if (publicId && publicId !== 'photo-1740698338265-0') {
+          await cloudinary.uploader.destroy(`profile_images/${publicId}`);
+          console.log('🗑️ Old profile image deleted from Cloudinary:', publicId);
+        }
+      } catch (deleteError) {
+        console.log('⚠️ Could not delete old profile image:', deleteError.message);
+      }
+    }
+
+    // Mettre à jour l'utilisateur avec la nouvelle URL de l'image
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user.id,
+      { avatar: req.file.path },
+      { new: true, runValidators: true }
+    ).select('-password');
+
+    console.log('✅=== PROFILE IMAGE UPDATED ===');
+    console.log('✅ New avatar URL:', updatedUser.avatar);
+    console.log('✅ User updated:', updatedUser.name);
+
+    res.status(200).json({
+      success: true,
+      message: 'Photo de profil mise à jour avec succès',
+      data: {
+        user: updatedUser,
+        avatar_url: updatedUser.avatar
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ ERROR: uploadProfileImage failed:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur lors de la mise à jour de la photo de profil',
+      error: error.message
+    });
+  }
+};
+
+// Obtenir le profil utilisateur actuel (avec avatar)
+const getCurrentUserProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('-password');
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'Utilisateur non trouvé'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: user
+    });
+  } catch (error) {
+    console.error('❌ ERROR: getCurrentUserProfile failed:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur lors de la récupération du profil',
+      error: error.message
+    });
+  }
+};
+
 // Debug endpoint pour vérifier les utilisateurs dans la base
 const debugUsers = async (req, res) => {
   try {
@@ -215,5 +330,7 @@ module.exports = {
   updateUser,
   deleteUser,
   searchUsers,
-  debugUsers
+  debugUsers,
+  uploadProfileImage,
+  getCurrentUserProfile
 };
