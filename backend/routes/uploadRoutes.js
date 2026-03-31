@@ -43,7 +43,7 @@ router.post('/cloudinary', authMiddleware, upload.single('file'), async (req, re
     const uploadOptions = {
       folder: `gazette_${type}s`,
       resource_type: type === 'video' ? 'video' : 'auto',
-      format: type === 'image' ? 'auto' : undefined
+      // Remove format parameter - it's causing the error
     };
     
     console.log('⚙️ DEBUG: Upload options:', uploadOptions);
