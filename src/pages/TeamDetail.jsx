@@ -130,12 +130,12 @@ export default function TeamDetail() {
       console.log(' API call will be: GET /api/teams/' + teamId);
       
       const [teamResponse, contentsResponse] = await Promise.all([
-        apiClient.get(`/teams/${teamId}`),
+        teamsAPI.getById(teamId),
         teamsAPI.getTeamContents(teamId, { status: 'approved' })
       ]);
 
-      // apiClient retourne directement les données, pas un objet avec success
-      const teamData = teamResponse.data;
+      // teamsAPI.getById retourne directement les données normalisées
+      const teamData = teamResponse;
       
       if (teamData._id) {
         console.log('🔍=== DIRECT TEAM RESPONSE ===');

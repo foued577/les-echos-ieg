@@ -122,6 +122,7 @@ app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/teams', require('./routes/teamRoutes'));
 app.use('/api/teams', require('./routes/teamStatsRoutes'));
+app.use('/api/upload', require('./routes/uploadRoutes'));
 app.use('/api/test', require('./routes/testRoutes'));
 app.use('/api/rubriques', require('./routes/rubriqueRoutes'));
 app.use('/api/contents', require('./routes/contentRoutes'));

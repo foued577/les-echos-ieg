@@ -50,45 +50,45 @@ const BLOCK_TYPES = {
   SEPARATOR: 'separator'
 };
 
-// Cloudinary upload function
+// Cloudinary upload function (via backend)
 const uploadToCloudinary = async (file, type = 'image') => {
   try {
-    console.log(`🚀 DEBUG: Uploading ${type} to Cloudinary:`, file);
+    console.log(`🚀 DEBUG: Uploading ${type} to Cloudinary via backend:`, file);
     
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('upload_preset', 'gazette_uploads');
-    formData.append('folder', `gazette_${type}s`);
+    formData.append('type', type);
     
-    // For videos, add resource type
-    if (type === 'video') {
-      formData.append('resource_type', 'video');
-    }
-
-    const cloudName = window.process?.env?.VITE_CLOUDINARY_CLOUD_NAME || 'dxzsmz3ku';
-    const response = await fetch(
-      `https://api.cloudinary.com/v1_1/${cloudName}/${type === 'video' ? 'video' : 'image'}/upload`,
-      {
-        method: 'POST',
-        body: formData
-      }
-    );
+    // Get API base URL
+    const API_BASE_URL = import.meta.env.VITE_API_URL || 
+      (window.location.hostname.includes('les-echos-ieg-front.onrender.com') 
+        ? 'https://les-echos-ieg.onrender.com/api'
+        : 'http://localhost:5000/api');
+    
+    // Use backend upload endpoint instead of direct Cloudinary
+    const response = await fetch(`${API_BASE_URL}/upload/cloudinary`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+      },
+      body: formData
+    });
 
     if (!response.ok) {
       throw new Error(`Upload failed: ${response.statusText}`);
     }
 
     const result = await response.json();
-    console.log(`✅ DEBUG: ${type} uploaded successfully:`, result);
+    console.log(`✅ DEBUG: ${type} uploaded successfully via backend:`, result);
     
-    if (result.error) {
-      throw new Error(result.error.message);
+    if (!result.success) {
+      throw new Error(result.message || 'Upload failed');
     }
 
     return {
-      url: result.secure_url,
-      publicId: result.public_id,
-      resourceType: result.resource_type
+      url: result.url,
+      publicId: result.publicId,
+      resourceType: result.resourceType
     };
   } catch (error) {
     console.error(`❌ ERROR: Failed to upload ${type}:`, error);
@@ -118,9 +118,14 @@ const BlockRenderer = ({ block, onUpdate, onRemove, onMoveUp, onMoveDown, isFirs
     setUploading(true);
     
     try {
-      // Upload to Cloudinary
+      // Upload to Cloudinary via backend
       const uploadResult = await uploadToCloudinary(file, 'image');
       console.log('🖼️ DEBUG: Image uploaded to Cloudinary:', uploadResult);
+
+      // Validate that we have a proper URL (not blob)
+      if (!uploadResult.url || uploadResult.url.startsWith('blob:')) {
+        throw new Error('Invalid URL received from upload');
+      }
 
       // Update block with Cloudinary URL
       setContent(uploadResult.url);
@@ -135,6 +140,9 @@ const BlockRenderer = ({ block, onUpdate, onRemove, onMoveUp, onMoveDown, isFirs
     } catch (error) {
       console.error('❌ ERROR: Failed to upload image:', error);
       toast.error('Erreur lors de l\'upload de l\'image');
+      // Reset content on error
+      setContent('');
+      onUpdate(block.id, { ...block, content: '', cloudinaryData: null, file: null });
     } finally {
       setUploading(false);
     }
@@ -151,9 +159,14 @@ const BlockRenderer = ({ block, onUpdate, onRemove, onMoveUp, onMoveDown, isFirs
     setUploading(true);
     
     try {
-      // Upload to Cloudinary
+      // Upload to Cloudinary via backend
       const uploadResult = await uploadToCloudinary(file, 'video');
       console.log('🎥 DEBUG: Video uploaded to Cloudinary:', uploadResult);
+
+      // Validate that we have a proper URL (not blob)
+      if (!uploadResult.url || uploadResult.url.startsWith('blob:')) {
+        throw new Error('Invalid URL received from upload');
+      }
 
       // Update block with Cloudinary URL
       setContent(uploadResult.url);
@@ -168,6 +181,9 @@ const BlockRenderer = ({ block, onUpdate, onRemove, onMoveUp, onMoveDown, isFirs
     } catch (error) {
       console.error('❌ ERROR: Failed to upload video:', error);
       toast.error('Erreur lors de l\'upload de la vidéo');
+      // Reset content on error
+      setContent('');
+      onUpdate(block.id, { ...block, content: '', cloudinaryData: null, file: null });
     } finally {
       setUploading(false);
     }
@@ -769,13 +785,46 @@ export default function GazetteEditor() {
       console.log('📋 DEBUG: Gazette loaded:', response);
       
       if (response?.data) {
-        const gazetteData = response.data;
+        let gazetteData = response.data;
         console.log('🔍 DEBUG: Gazette blocks RAW:', gazetteData.blocks);
         console.log('🔍 DEBUG: Gazette blocks structure:', JSON.stringify(gazetteData.blocks, null, 2));
         
+        // Clean up any blob URLs and validate media blocks
+        if (gazetteData.blocks) {
+          gazetteData.blocks = gazetteData.blocks.map(block => {
+            if (block.type === 'image' || block.type === 'video') {
+              console.log(`�️/🎥 DEBUG: Media block before cleanup:`, {
+                type: block.type,
+                content: block.content,
+                isBlob: block.content?.startsWith('blob:'),
+                isHttp: block.content?.startsWith('http'),
+                isEmpty: !block.content,
+                cloudinaryData: block.cloudinaryData
+              });
+              
+              // If we have a blob URL, remove it (it's invalid)
+              if (block.content?.startsWith('blob:')) {
+                console.warn(`⚠️ WARNING: Found blob URL in ${block.type} block, removing it`);
+                return {
+                  ...block,
+                  content: '',
+                  cloudinaryData: null,
+                  file: null
+                };
+              }
+              
+              // If we have a valid HTTP URL, keep it
+              if (block.content?.startsWith('http')) {
+                console.log(`✅ Valid ${block.type} URL found:`, block.content);
+              }
+            }
+            return block;
+          });
+        }
+        
         // Log individual blocks for debugging
         gazetteData.blocks?.forEach((block, index) => {
-          console.log(`🔍 DEBUG: Block ${index + 1}:`, {
+          console.log(`� DEBUG: Block ${index + 1}:`, {
             id: block.id,
             type: block.type,
             content: block.content,
@@ -784,17 +833,6 @@ export default function GazetteEditor() {
             cloudinaryData: block.cloudinaryData,
             hasFile: !!block.file
           });
-          
-          if (block.type === 'image' || block.type === 'video') {
-            console.log(`🖼️/🎥 DEBUG: Media block ${index + 1} details:`, {
-              type: block.type,
-              content: block.content,
-              isBlob: block.content?.startsWith('blob:'),
-              isHttp: block.content?.startsWith('http'),
-              isEmpty: !block.content,
-              cloudinaryData: block.cloudinaryData
-            });
-          }
         });
         
         setGazette(gazetteData);
