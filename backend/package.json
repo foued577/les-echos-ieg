@@ -1,7 +1,7 @@
 {
   "name": "les-echos-ieg-backend",
   "version": "1.0.0",
-  "description": "Backend pour Les Échos de IEG - Node.js + Express + MongoDB Atlas",
+  "description": "Backend pour Les Échos D'IEG - Node.js + Express + MongoDB Atlas",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

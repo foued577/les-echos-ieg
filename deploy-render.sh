@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Script de déploiement pour Les Échos de IEG sur Render
-echo "🚀 Préparation du déploiement Les Échos de IEG..."
+# Script de déploiement pour Les Échos D'IEG sur Render
+echo "🚀 Préparation du déploiement Les Échos D'IEG..."
 
 # Vérifier que les fichiers essentiels existent
 echo "📋 Vérification des fichiers..."

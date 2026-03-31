@@ -2,12 +2,13 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../lib/AuthContext';
 import { createPageUrl } from '../utils';
+import { APP_NAME } from '../config/app';
 import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 export default function Login() {
-  console.log('🔥=== LOGIN COMPONENT LOADED ===');
+  console.log('=== LOGIN COMPONENT LOADED ===');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -69,7 +70,7 @@ export default function Login() {
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="font-serif text-3xl font-bold text-gray-900 mb-2">
-            Les Échos de IEG
+            {APP_NAME}
           </h1>
           <p className="text-gray-600 text-lg">
             Connexion

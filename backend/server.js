@@ -6,6 +6,9 @@ const rateLimit = require('express-rate-limit');
 const path = require('path');
 const connectDB = require('./config/db');
 
+// Configuration de l'application
+const APP_NAME = "Les Échos D'IEG";
+
 // Charger les variables d'environnement AU DÉBUT
 dotenv.config();
 
@@ -128,7 +131,7 @@ app.use('/api/gazettes', require('./routes/gazetteRoutes'));
 app.get('/', (req, res) => {
   res.json({
     success: true,
-    message: '🚀 Les Échos de IEG Backend API est en ligne!',
+    message: `🚀 ${APP_NAME} Backend API est en ligne!`,
     version: '1.0.0',
     endpoints: {
       auth: '/api/auth',

@@ -1,6 +1,6 @@
-# Les Échos de IEG - Backend
+# Les Échos D'IEG - Backend
 
-Backend complet pour l'application Les Échos de IEG avec Node.js, Express, MongoDB Atlas et authentification JWT.
+Backend complet pour l'application Les Échos D'IEG avec Node.js, Express, MongoDB Atlas et authentification JWT.
 
 ## 🚀 Stack Technique
 
@@ -233,4 +233,4 @@ Pour toute question ou problème, contactez l'équipe IEG.
 
 ---
 
-**🚀 Les Échos de IEG Backend - Prêt à décoller !**
+**🚀 Les Échos D'IEG Backend - Prêt à décoller !**

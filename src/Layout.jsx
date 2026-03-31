@@ -4,6 +4,7 @@ import { createPageUrl } from './utils';
 import { teamsAPI } from '@/services/api';
 import { apiClient } from '@/lib/apiClient';
 import { useAuth } from '@/lib/AuthContext';
+import { APP_NAME } from '@/config/app';
 import { 
   Home,
   Users2,
@@ -154,7 +155,7 @@ export default function Layout({ children, currentPageName }) {
               <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center shadow-sm border border-black/8 p-1.5">
                 <BookOpen className="w-5 h-5 text-white" />
               </div>
-              <span className="font-sans text-xl font-semibold text-foreground hidden sm:block">Les Échos de IEG</span>
+              <span className="font-sans text-xl font-semibold text-foreground hidden sm:block">{APP_NAME}</span>
             </Link>
           </div>
 

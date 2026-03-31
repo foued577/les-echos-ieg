@@ -1,4 +1,4 @@
-# 🚀 Les Échos de IEG - Déploiement sur Render
+# 🚀 Les Échos D'IEG - Déploiement sur Render
 
 Application web complète prête pour le déploiement sur Render avec architecture MERN moderne.
 
