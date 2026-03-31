@@ -60,10 +60,14 @@ const uploadToCloudinary = async (file, type = 'image') => {
     formData.append('type', type);
     
     // Get API base URL
-    const API_BASE_URL = import.meta.env.VITE_API_URL || 
-      (window.location.hostname.includes('les-echos-ieg-front.onrender.com') 
-        ? 'https://les-echos-ieg.onrender.com/api'
-        : 'http://localhost:5000/api');
+    let API_BASE_URL;
+    if (window.location.hostname.includes('les-echos-ieg-front.onrender.com')) {
+      API_BASE_URL = 'https://les-echos-ieg.onrender.com/api';
+    } else {
+      API_BASE_URL = 'http://localhost:5000/api';
+    }
+    
+    console.log(`📡 DEBUG: Uploading to: ${API_BASE_URL}/upload/cloudinary`);
     
     // Use backend upload endpoint instead of direct Cloudinary
     const response = await fetch(`${API_BASE_URL}/upload/cloudinary`, {
@@ -74,8 +78,22 @@ const uploadToCloudinary = async (file, type = 'image') => {
       body: formData
     });
 
+    console.log(`📡 DEBUG: Upload response status:`, response.status);
+    console.log(`📡 DEBUG: Upload response headers:`, response.headers);
+
     if (!response.ok) {
-      throw new Error(`Upload failed: ${response.statusText}`);
+      // Try to get error details from response
+      let errorDetails = 'Upload failed';
+      try {
+        const errorData = await response.json();
+        errorDetails = errorData.message || errorData.error || `HTTP ${response.status}`;
+        console.error('❌ Backend error details:', errorData);
+      } catch (parseError) {
+        console.error('❌ Could not parse error response:', parseError);
+        errorDetails = `HTTP ${response.status}: ${response.statusText}`;
+      }
+      
+      throw new Error(errorDetails);
     }
 
     const result = await response.json();
@@ -92,6 +110,10 @@ const uploadToCloudinary = async (file, type = 'image') => {
     };
   } catch (error) {
     console.error(`❌ ERROR: Failed to upload ${type}:`, error);
+    console.error(`❌ ERROR details:`, {
+      message: error.message,
+      stack: error.stack
+    });
     throw error;
   }
 };

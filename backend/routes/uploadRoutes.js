@@ -16,7 +16,13 @@ const upload = multer({
 // Upload endpoint for gazette media
 router.post('/cloudinary', authMiddleware, upload.single('file'), async (req, res) => {
   try {
+    console.log('🚀 DEBUG: Upload request received');
+    console.log('📁 DEBUG: Request file:', req.file);
+    console.log('📝 DEBUG: Request body:', req.body);
+    console.log('🔐 DEBUG: User authenticated:', !!req.user);
+    
     if (!req.file) {
+      console.error('❌ ERROR: No file received');
       return res.status(400).json({
         success: false,
         message: 'Aucun fichier fourni'
@@ -26,12 +32,21 @@ router.post('/cloudinary', authMiddleware, upload.single('file'), async (req, re
     const { type = 'image' } = req.body;
     console.log(`🚀 Backend: Uploading ${type} to Cloudinary:`, req.file.originalname);
 
+    // Check Cloudinary configuration
+    console.log('☁️ DEBUG: Cloudinary config check:', {
+      cloud_name: process.env.CLOUDINARY_CLOUD_NAME ? 'SET' : 'MISSING',
+      api_key: process.env.CLOUDINARY_API_KEY ? 'SET' : 'MISSING',
+      api_secret: process.env.CLOUDINARY_API_SECRET ? 'SET' : 'MISSING'
+    });
+
     // Configure upload options based on type
     const uploadOptions = {
       folder: `gazette_${type}s`,
       resource_type: type === 'video' ? 'video' : 'auto',
       format: type === 'image' ? 'auto' : undefined
     };
+    
+    console.log('⚙️ DEBUG: Upload options:', uploadOptions);
 
     // Upload to Cloudinary
     const result = await new Promise((resolve, reject) => {
@@ -58,11 +73,13 @@ router.post('/cloudinary', authMiddleware, upload.single('file'), async (req, re
     });
 
   } catch (error) {
-    console.error('❌ Upload error:', error);
+    console.error('❌ CLOUDINARY UPLOAD ERROR:', error);
+    console.error('❌ ERROR STACK:', error.stack);
+    
     res.status(500).json({
       success: false,
-      message: 'Erreur lors de l\'upload',
-      error: error.message
+      message: error.message,
+      stack: process.env.NODE_ENV !== 'production' ? error.stack : undefined
     });
   }
 });
