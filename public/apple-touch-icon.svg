@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" width="180" height="180">
+  <!-- Fond bleu nuit -->
+  <rect width="180" height="180" rx="36" fill="#1e3a8a"/>
+  
+  <!-- Symbole livre/journal stylisé (plus grand) -->
+  <g transform="translate(36, 36)">
+    <!-- Page de gauche -->
+    <rect x="10" y="10" width="40" height="100" rx="4" fill="#ffffff" opacity="0.9"/>
+    <!-- Page de droite -->
+    <rect x="50" y="10" width="40" height="100" rx="4" fill="#ffffff" opacity="0.8"/>
+    <!-- Ligne de reliure -->
+    <rect x="49" y="10" width="2" height="100" fill="#60a5fa"/>
+    <!-- Lignes de texte -->
+    <rect x="20" y="30" width="20" height="2" fill="#1e3a8a" opacity="0.6"/>
+    <rect x="20" y="40" width="20" height="2" fill="#1e3a8a" opacity="0.6"/>
+    <rect x="20" y="50" width="15" height="2" fill="#1e3a8a" opacity="0.6"/>
+    <rect x="60" y="30" width="20" height="2" fill="#1e3a8a" opacity="0.5"/>
+    <rect x="60" y="40" width="20" height="2" fill="#1e3a8a" opacity="0.5"/>
+    <rect x="60" y="50" width="15" height="2" fill="#1e3a8a" opacity="0.5"/>
+  </g>
+  
+  <!-- Grand écho sonore stylisé -->
+  <g transform="translate(120, 140)">
+    <circle cx="0" cy="0" r="8" fill="#60a5fa"/>
+    <circle cx="12" cy="-4" r="6" fill="#60a5fa" opacity="0.7"/>
+    <circle cx="22" cy="-8" r="4" fill="#60a5fa" opacity="0.5"/>
+    <circle cx="30" cy="-12" r="3" fill="#60a5fa" opacity="0.3"/>
+  </g>
+</svg>
