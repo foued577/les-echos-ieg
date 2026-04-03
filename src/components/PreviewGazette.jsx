@@ -19,90 +19,320 @@ const PreviewGazette = ({ title, description, blocks, onClose }) => {
         return;
       }
 
-      // Create a temporary print-friendly version
-      const printContent = document.createElement('div');
-      printContent.innerHTML = `
-        <style>
-          @media print {
-            body { font-family: 'Georgia', serif; line-height: 1.6; color: #333; }
-            h1 { font-size: 32pt; margin-bottom: 24pt; color: #000; }
-            h2 { font-size: 24pt; margin-bottom: 16pt; color: #000; }
-            p { font-size: 12pt; margin-bottom: 12pt; }
-            .meta { font-size: 10pt; color: #666; margin-bottom: 20pt; }
-            .separator { border-top: 1px solid #ccc; margin: 20pt 0; text-align: center; }
-            .separator::after { content: "• • •"; color: #666; font-size: 10pt; }
-            .quote { border-left: 3px solid #ccc; padding-left: 12pt; margin: 16pt 0; font-style: italic; }
-            .section { border-left: 4px solid #2563eb; padding-left: 20pt; margin: 20pt 0; }
-            img { max-width: 100%; height: auto; margin: 16pt 0; }
-            video { display: none; }
-            .video-placeholder { border: 1px dashed #ccc; padding: 20pt; text-align: center; color: #666; margin: 16pt 0; }
-            .link { color: #2563eb; text-decoration: underline; }
-            .empty { color: #999; font-style: italic; }
-            @page { margin: 2cm; }
-          }
-          @media screen {
-            .print-only { display: none; }
-          }
-        </style>
-        <div class="print-only">
+      // Generate HTML content for the gazette
+      const gazetteContent = `
+        <header class="gazette-header">
           <h1>${title || 'Gazette sans titre'}</h1>
-          <div class="meta">
+          <div class="gazette-meta">
             <p>Publié le ${new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
             <p>La Gazette d'Occitanie</p>
           </div>
-          ${description ? `<p>${description}</p>` : ''}
+          ${description ? `<div class="gazette-description"><p>${description}</p></div>` : ''}
+        </header>
+        <main class="gazette-content">
           ${blocks.map(block => {
             switch (block.type) {
               case 'title':
-                return `<h1>${block.content || 'Titre'}</h1>`;
+                return `<h1 class="gazette-title">${block.content || 'Titre'}</h1>`;
               case 'text':
                 return block.content ? 
-                  `<p>${block.content.replace(/\n/g, '<br>')}</p>` : 
-                  `<p class="empty">Texte à ajouter...</p>`;
+                  `<div class="gazette-text">${block.content.replace(/\n/g, '<br>')}</div>` : 
+                  `<div class="gazette-empty">Texte à ajouter...</div>`;
               case 'image':
                 return block.content ? 
-                  `<img src="${block.content}" alt="Image" />` : 
-                  `<div class="empty">Image à ajouter</div>`;
+                  `<div class="gazette-image"><img src="${block.content}" alt="Image" /></div>` : 
+                  `<div class="gazette-empty">Image à ajouter</div>`;
               case 'video':
                 return block.content ? 
-                  `<div class="video-placeholder">Vidéo disponible: ${block.content}</div>` : 
-                  `<div class="empty">Vidéo à ajouter</div>`;
+                  `<div class="gazette-video-placeholder">🎥 Vidéo disponible: <em>${block.content}</em></div>` : 
+                  `<div class="gazette-empty">🎥 Vidéo à ajouter</div>`;
               case 'link':
                 return block.content ? 
-                  `<p class="link">${block.content}</p>` : 
-                  `<div class="empty">Lien à ajouter</div>`;
+                  `<div class="gazette-link">🔗 ${block.content}</div>` : 
+                  `<div class="gazette-empty">🔗 Lien à ajouter</div>`;
               case 'section':
-                return `<div class="section">
+                return `<div class="gazette-section">
                   <h2>${block.content || 'Section'}</h2>
                 </div>`;
               case 'quote':
                 return block.content ? 
-                  `<div class="quote">"${block.content}"</div>` : 
-                  `<div class="empty">"Citation à ajouter..."</div>`;
+                  `<div class="gazette-quote">"${block.content}"</div>` : 
+                  `<div class="gazette-empty">"Citation à ajouter..."</div>`;
               case 'separator':
-                return `<div class="separator"></div>`;
+                return `<div class="gazette-separator">• • •</div>`;
               default:
-                return `<p class="empty">Type de bloc non reconnu: ${block.type}</p>`;
+                return `<div class="gazette-error">Type de bloc non reconnu: ${block.type}</div>`;
             }
           }).join('')}
-        </div>
+        </main>
       `;
 
-      // Add to body, trigger print, then remove
-      document.body.appendChild(printContent);
+      // Create print-friendly HTML document
+      const printHTML = `
+        <!DOCTYPE html>
+        <html lang="fr">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>${title || 'Gazette'} - Les Échos D'IEG</title>
+          <style>
+            /* Reset and base styles */
+            * {
+              margin: 0;
+              padding: 0;
+              box-sizing: border-box;
+            }
+            
+            body {
+              font-family: 'Georgia', 'Times New Roman', serif;
+              line-height: 1.6;
+              color: #1a1a1a;
+              background: #fff;
+              max-width: 100%;
+            }
+            
+            /* Print-specific styles */
+            @media print {
+              body {
+                font-size: 12pt;
+                line-height: 1.5;
+                color: #000;
+                background: #fff;
+              }
+              
+              @page {
+                margin: 2cm;
+                size: A4;
+              }
+              
+              /* Avoid page breaks inside important elements */
+              h1, h2, .gazette-section {
+                page-break-after: avoid;
+                page-break-inside: avoid;
+              }
+              
+              .gazette-image {
+                page-break-inside: avoid;
+                max-width: 100% !important;
+              }
+              
+              /* Ensure proper spacing */
+              .gazette-title {
+                page-break-after: 20pt;
+              }
+              
+              .gazette-separator {
+                page-break-inside: avoid;
+              }
+            }
+            
+            /* Screen styles for print preview */
+            @media screen {
+              body {
+                padding: 40px;
+                background: #f5f5f5;
+              }
+              
+              .print-container {
+                background: #fff;
+                padding: 60px;
+                max-width: 800px;
+                margin: 0 auto;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                border-radius: 4px;
+              }
+            }
+            
+            /* Typography */
+            .gazette-title {
+              font-size: 28pt;
+              font-weight: 700;
+              margin-bottom: 24pt;
+              color: #000;
+              text-align: center;
+              line-height: 1.2;
+            }
+            
+            .gazette-section h2 {
+              font-size: 20pt;
+              font-weight: 600;
+              margin-bottom: 16pt;
+              color: #000;
+              border-left: 4pt solid #2563eb;
+              padding-left: 16pt;
+            }
+            
+            .gazette-text {
+              font-size: 12pt;
+              margin-bottom: 12pt;
+              text-align: justify;
+            }
+            
+            .gazette-description {
+              font-size: 14pt;
+              font-style: italic;
+              color: #666;
+              margin-bottom: 24pt;
+              text-align: center;
+            }
+            
+            /* Meta information */
+            .gazette-header {
+              text-align: center;
+              margin-bottom: 48pt;
+              border-bottom: 1pt solid #ccc;
+              padding-bottom: 24pt;
+            }
+            
+            .gazette-meta {
+              font-size: 10pt;
+              color: #666;
+              margin-top: 12pt;
+            }
+            
+            .gazette-meta p {
+              margin-bottom: 4pt;
+            }
+            
+            /* Content blocks */
+            .gazette-content {
+              max-width: 100%;
+            }
+            
+            .gazette-image {
+              margin: 24pt 0;
+              text-align: center;
+            }
+            
+            .gazette-image img {
+              max-width: 100%;
+              height: auto;
+              border-radius: 4pt;
+              box-shadow: 0 2pt 8pt rgba(0,0,0,0.1);
+            }
+            
+            .gazette-video-placeholder {
+              border: 1pt dashed #ccc;
+              padding: 20pt;
+              text-align: center;
+              color: #666;
+              margin: 16pt 0;
+              font-style: italic;
+              background: #f9f9f9;
+            }
+            
+            .gazette-link {
+              margin: 12pt 0;
+              padding: 8pt 12pt;
+              background: #f0f7ff;
+              border-left: 3pt solid #2563eb;
+              font-family: monospace;
+              font-size: 10pt;
+              word-break: break-all;
+            }
+            
+            .gazette-quote {
+              border-left: 3pt solid #ccc;
+              padding-left: 20pt;
+              margin: 20pt 0;
+              font-style: italic;
+              font-size: 13pt;
+              color: #444;
+            }
+            
+            .gazette-separator {
+              text-align: center;
+              margin: 32pt 0;
+              color: #999;
+              font-size: 10pt;
+              letter-spacing: 4pt;
+            }
+            
+            .gazette-separator::before {
+              content: "• • •";
+            }
+            
+            /* Empty states */
+            .gazette-empty {
+              color: #999;
+              font-style: italic;
+              padding: 12pt;
+              background: #f9f9f9;
+              border: 1pt dashed #ddd;
+              margin: 12pt 0;
+              text-align: center;
+            }
+            
+            .gazette-error {
+              color: #d63384;
+              padding: 12pt;
+              background: #f8d7da;
+              border: 1pt solid #f5c6cb;
+              margin: 12pt 0;
+              text-align: center;
+              font-size: 10pt;
+            }
+            
+            /* Section styling */
+            .gazette-section {
+              margin: 24pt 0;
+              padding: 16pt 0;
+            }
+            
+            /* Footer */
+            .print-footer {
+              margin-top: 48pt;
+              padding-top: 24pt;
+              border-top: 1pt solid #ccc;
+              text-align: center;
+              font-size: 9pt;
+              color: #666;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="print-container">
+            ${gazetteContent}
+            <div class="print-footer">
+              <p>Généré par Les Échos D'IEG - ${new Date().toLocaleDateString('fr-FR')}</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `;
+
+      // Open new window for printing
+      const printWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
       
-      // Wait a moment for content to render
-      setTimeout(() => {
-        window.print();
-        document.body.removeChild(printContent);
-        setExportStatus('success');
-        setTimeout(() => setExportStatus('idle'), 2000);
-      }, 500);
+      if (!printWindow) {
+        throw new Error('Impossible d\'ouvrir la fenêtre d\'impression. Veuillez autoriser les popups.');
+      }
+
+      // Write content to the new window
+      printWindow.document.write(printHTML);
+      printWindow.document.close();
+
+      // Wait for content to load, then trigger print
+      printWindow.onload = () => {
+        setTimeout(() => {
+          printWindow.print();
+          printWindow.close();
+          setExportStatus('success');
+          setTimeout(() => setExportStatus('idle'), 2000);
+        }, 500);
+      };
 
     } catch (error) {
       console.error('📄 ERROR: PDF export failed:', error);
       setExportStatus('error');
       setTimeout(() => setExportStatus('idle'), 3000);
+      
+      // Show user-friendly error message
+      if (error.message.includes('popup')) {
+        alert('Veuillez autoriser les popups pour exporter la gazette en PDF.');
+      } else {
+        alert('Erreur lors de l\'export PDF: ' + error.message);
+      }
     }
   };
 
