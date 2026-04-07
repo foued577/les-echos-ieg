@@ -35,16 +35,16 @@ const dashboardMessageSchema = new mongoose.Schema({
 dashboardMessageSchema.index({ isActive: 1 });
 dashboardMessageSchema.index({ createdAt: -1 });
 
-// Méthode pour activer un message et désactiver les autres
+// Méthode pour activer un message (permet plusieurs messages actifs)
 dashboardMessageSchema.methods.activate = async function() {
-  // Désactiver tous les autres messages
-  await this.constructor.updateMany(
-    { _id: { $ne: this._id } },
-    { isActive: false }
-  );
-  
-  // Activer ce message
+  // Activer ce message (sans désactiver les autres)
   this.isActive = true;
+  return this.save();
+};
+
+// Méthode pour désactiver un message
+dashboardMessageSchema.methods.deactivate = async function() {
+  this.isActive = false;
   return this.save();
 };
 

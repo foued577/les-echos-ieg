@@ -31,22 +31,46 @@ router.get('/', authMiddleware, isAdmin, async (req, res) => {
 // GET /api/dashboard-messages/active - Récupérer le message actif (public)
 router.get('/active', async (req, res) => {
   try {
-    console.log('📋 DEBUG: Getting active dashboard message');
+    console.log('DEBUG: Getting active dashboard message');
     
     const activeMessage = await DashboardMessage.findOne({ isActive: true })
       .populate('createdBy', 'name email');
     
-    console.log(`📋 DEBUG: Active message found:`, activeMessage ? activeMessage.content : 'None');
+    console.log(`DEBUG: Active message found:`, activeMessage ? activeMessage.content : 'None');
     
     res.json({
       success: true,
       data: activeMessage
     });
   } catch (error) {
-    console.error('📋 ERROR: Failed to get active message:', error);
+    console.error('ERROR: Failed to get active message:', error);
     res.status(500).json({
       success: false,
       message: 'Erreur lors de la récupération du message actif'
+    });
+  }
+});
+
+// GET /api/dashboard-messages/all-active - Récupérer TOUS les messages actifs (public)
+router.get('/all-active', async (req, res) => {
+  try {
+    console.log('DEBUG: Getting ALL active dashboard messages');
+    
+    const activeMessages = await DashboardMessage.find({ isActive: true })
+      .populate('createdBy', 'name email')
+      .sort({ createdAt: -1 });
+    
+    console.log(`DEBUG: Found ${activeMessages.length} active messages`);
+    
+    res.json({
+      success: true,
+      data: activeMessages
+    });
+  } catch (error) {
+    console.error('ERROR: Failed to get all active messages:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur lors de la récupération des messages actifs'
     });
   }
 });
@@ -95,7 +119,7 @@ router.post('/', authMiddleware, isAdmin, async (req, res) => {
 // PUT /api/dashboard-messages/:id/activate - Activer un message (admin uniquement)
 router.put('/:id/activate', authMiddleware, isAdmin, async (req, res) => {
   try {
-    console.log('📋 DEBUG: Activating dashboard message:', req.params.id);
+    console.log('DEBUG: Activating dashboard message:', req.params.id);
     
     const message = await DashboardMessage.findById(req.params.id);
     
@@ -109,7 +133,7 @@ router.put('/:id/activate', authMiddleware, isAdmin, async (req, res) => {
     await message.activate();
     await message.populate('createdBy', 'name email');
     
-    console.log('📋 DEBUG: Dashboard message activated successfully:', message._id);
+    console.log('DEBUG: Dashboard message activated successfully:', message._id);
     
     res.json({
       success: true,
@@ -117,10 +141,43 @@ router.put('/:id/activate', authMiddleware, isAdmin, async (req, res) => {
       data: message
     });
   } catch (error) {
-    console.error('📋 ERROR: Failed to activate dashboard message:', error);
+    console.error('ERROR: Failed to activate dashboard message:', error);
     res.status(500).json({
       success: false,
       message: 'Erreur lors de l\'activation du message'
+    });
+  }
+});
+
+// PUT /api/dashboard-messages/:id/deactivate - Désactiver un message (admin uniquement)
+router.put('/:id/deactivate', authMiddleware, isAdmin, async (req, res) => {
+  try {
+    console.log('DEBUG: Deactivating dashboard message:', req.params.id);
+    
+    const message = await DashboardMessage.findById(req.params.id);
+    
+    if (!message) {
+      return res.status(404).json({
+        success: false,
+        message: 'Message non trouvé'
+      });
+    }
+    
+    await message.deactivate();
+    await message.populate('createdBy', 'name email');
+    
+    console.log('DEBUG: Dashboard message deactivated successfully:', message._id);
+    
+    res.json({
+      success: true,
+      message: 'Message désactivé avec succès',
+      data: message
+    });
+  } catch (error) {
+    console.error('ERROR: Failed to deactivate dashboard message:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur lors de la désactivation du message'
     });
   }
 });

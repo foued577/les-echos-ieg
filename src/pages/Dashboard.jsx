@@ -3,7 +3,7 @@ import { useAuth } from '@/lib/AuthContext';
 import { contentsAPI, dashboardMessagesAPI } from '@/services/api';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '../utils';
-import NewsTicker from '../components/NewsTicker';
+import MessageCarousel from '../components/MessageCarousel';
 import { 
   Clock, 
   FileText, 
@@ -95,6 +95,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
   const [activeMessage, setActiveMessage] = useState(null);
+  const [activeMessages, setActiveMessages] = useState([]);
 
   // Global refresh function for other components
   useEffect(() => {
@@ -111,20 +112,20 @@ export default function Dashboard() {
   useEffect(() => {
     if (user) {
       loadData();
-      loadDashboardMessage();
+      loadDashboardMessages();
     }
   }, [user, refreshKey]);
 
-  const loadDashboardMessage = useCallback(async () => {
+  const loadDashboardMessages = useCallback(async () => {
     try {
-      console.log('📋 Loading active dashboard message...');
-      const response = await dashboardMessagesAPI.getActive();
-      setActiveMessage(response.data);
-      console.log('📋 Active dashboard message loaded:', response.data);
+      console.log('Loading all active dashboard messages...');
+      const response = await dashboardMessagesAPI.getAllActive();
+      setActiveMessages(response.data || []);
+      console.log('Active dashboard messages loaded:', response.data);
     } catch (error) {
-      console.error('📋 Error loading dashboard message:', error);
-      // Fallback to default message
-      setActiveMessage(null);
+      console.error('Error loading dashboard messages:', error);
+      // Fallback to empty array
+      setActiveMessages([]);
     }
   }, []);
 
@@ -243,17 +244,24 @@ export default function Dashboard() {
               Bonjour, {user?.name ? user.name.split(' ')[0] : '...'}
             </h1>
             
-            {/* News Ticker pour le message dynamique */}
+            {/* Message Carousel pour les messages dynamiques */}
             <div className="mb-8">
-              {activeMessage ? (
-                <NewsTicker message={activeMessage} icon="news" />
+              {activeMessages && activeMessages.length > 0 ? (
+                <MessageCarousel 
+                  messages={activeMessages} 
+                  interval={5000}
+                  showDots={true}
+                  showArrows={false}
+                />
               ) : (
-                <NewsTicker 
-                  message={{ 
+                <MessageCarousel 
+                  messages={[{ 
                     content: "Bienvenue sur votre centre de connaissances", 
                     icon: "Welcome" 
-                  }} 
-                  icon="info" 
+                  }]} 
+                  interval={5000}
+                  showDots={false}
+                  showArrows={false}
                 />
               )}
             </div>

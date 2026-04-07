@@ -235,6 +235,18 @@ export const dashboardMessagesAPI = {
     }
   },
   
+  getAllActive: async () => {
+    console.log('📡 DEBUG: dashboardMessagesAPI.getAllActive called');
+    try {
+      const response = await api.get('/dashboard-messages/all-active');
+      console.log('📡 DEBUG: dashboardMessagesAPI.getAllActive response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ ERROR: dashboardMessagesAPI.getAllActive failed:', error);
+      throw error;
+    }
+  },
+  
   create: async (messageData) => {
     console.log('📡 DEBUG: dashboardMessagesAPI.create called with data:', messageData);
     try {
@@ -383,41 +395,43 @@ export const teamsAPI = {
   
   delete: async (id) => {
     const response = await api.delete(`/teams/${id}`);
-    return response.data;
-  }
 };
 
 // Rubriques
 export const rubriquesAPI = {
-  getAll: async () => {
-    const response = await api.get('/rubriques');
-    return response.data;
-  },
+getAll: async () => {
+const response = await api.get('/rubriques');
+return response.data;
+},
   
-  getById: async (id) => {
-    const response = await api.get(`/rubriques/${id}`);
-    return response.data;
-  },
+getById: async (id) => {
+const response = await api.get(`/rubriques/${id}`);
+return response.data;
+},
   
-  create: async (rubriqueData) => {
-    const response = await api.post('/rubriques', rubriqueData);
-    return response.data;
-  },
+create: async (rubriqueData) => {
+const response = await api.post('/rubriques', rubriqueData);
+return response.data;
+},
   
-  update: async (id, rubriqueData) => {
-    const response = await api.put(`/rubriques/${id}`, rubriqueData);
-    return response.data;
-  },
+update: async (id, rubriqueData) => {
+const response = await api.put(`/rubriques/${id}`, rubriqueData);
+return response.data;
+},
   
-  delete: async (id) => {
-    const response = await api.delete(`/rubriques/${id}`);
-    return response.data;
-  }
+delete: async (id) => {
+const response = await api.delete(`/rubriques/${id}`);
+return response.data;
+}
 };
 
 // Contenus
 export const contentsAPI = {
-  getDashboard: async (filters = {}) => {
+getDashboard: async (filters = {}) => {
+const params = new URLSearchParams(filters);
+const response = await api.get(`/contents/dashboard?${params}`);
+return response.data;
+},
     const params = new URLSearchParams(filters);
     const response = await api.get(`/contents/dashboard?${params}`);
     return response.data;
