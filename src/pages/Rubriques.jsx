@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/AuthContext';
-import { rubriquesAPI, teamsAPI } from '@/services/api';
-import { Plus, Search, FolderOpen, Edit2, Trash2, Tag, Hash, Users, Calendar, Edit } from 'lucide-react';
+import { rubriquesAPI, teamsAPI, contentsAPI } from '@/services/api';
+import { Plus, Search, FolderOpen, Edit2, Trash2, Tag, Hash, Users, Calendar, Edit, FileText, Newspaper, TrendingUp, ArrowRight, Eye } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -23,10 +23,76 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 
+// Utility functions for rubrique types and colors
+const getRubriqueType = (rubrique) => {
+  const name = rubrique.name.toLowerCase();
+  if (name.includes('veille') || name.includes('actualité') || name.includes('news')) return 'veille';
+  if (name.includes('pédagogie') || name.includes('formation') || name.includes(' apprentissage')) return 'pedagogie';
+  if (name.includes('législatif') || name.includes('juridique') || name.includes('droit')) return 'legislatif';
+  if (name.includes('entreprise') || name.includes('business') || name.includes('commercial')) return 'entreprise';
+  return 'default';
+};
+
+const getRubriqueTypeInfo = (type) => {
+  const types = {
+    veille: {
+      icon: Newspaper,
+      emoji: '📰',
+      label: 'Veille',
+      color: '#3b82f6',
+      bgColor: '#eff6ff',
+      borderColor: '#3b82f6'
+    },
+    pedagogie: {
+      icon: FileText,
+      emoji: '📚',
+      label: 'Pédagogie',
+      color: '#10b981',
+      bgColor: '#f0fdf4',
+      borderColor: '#10b981'
+    },
+    legislatif: {
+      icon: Tag,
+      emoji: '⚖️',
+      label: 'Législatif',
+      color: '#f59e0b',
+      bgColor: '#fffbeb',
+      borderColor: '#f59e0b'
+    },
+    entreprise: {
+      icon: TrendingUp,
+      emoji: '💼',
+      label: 'Entreprise',
+      color: '#8b5cf6',
+      bgColor: '#faf5ff',
+      borderColor: '#8b5cf6'
+    },
+    default: {
+      icon: FolderOpen,
+      emoji: '📁',
+      label: 'Autre',
+      color: '#6b7280',
+      bgColor: '#f9fafb',
+      borderColor: '#6b7280'
+    }
+  };
+  
+  return types[type] || types.default;
+};
+
+const formatDate = (date) => {
+  return new Intl.DateTimeFormat('fr-FR', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric'
+  }).format(date);
+};
+
 export default function Rubriques() {
   const { user } = useAuth();
   const [teams, setTeams] = useState([]);
   const [rubriques, setRubriques] = useState([]);
+  const [rubriqueStats, setRubriqueStats] = useState({});
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingRubrique, setEditingRubrique] = useState(null);
@@ -64,6 +130,9 @@ export default function Rubriques() {
       if (rubriquesResponse.success) {
         setRubriques(rubriquesResponse.data);
         console.log('✅ Rubriques loaded:', rubriquesResponse.data.length);
+        
+        // Fetch content statistics for each rubrique
+        await fetchRubriqueStats(rubriquesResponse.data);
       }
       
       // teamsAPI.getAll() returns directly an array
@@ -312,59 +381,161 @@ export default function Rubriques() {
       </div>
 
       {loading ? (
-        <div className="text-center py-12">
-          <div className="text-gray-500">Chargement...</div>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="w-8 h-8 border-2 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
+            <div className="text-gray-500">Chargement des rubriques...</div>
+          </div>
         </div>
       ) : (
-        <div className="grid gap-4">
-          {filteredRubriques.map(rubrique => (
-            <div key={rubrique._id} className="bg-white rounded-lg border p-4">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div 
-                      className="w-4 h-4 rounded-full"
-                      style={{ backgroundColor: rubrique.color }}
-                    />
-                    <h3 className="font-semibold text-lg">{rubrique.name}</h3>
-                  </div>
-                  <p className="text-gray-600 mb-3">{rubrique.description}</p>
-                  <div className="flex items-center gap-4 text-sm text-gray-500">
-                    <div className="flex items-center gap-1">
-                      <Users className="w-4 h-4" />
-                      {rubrique.team_ids?.length || 0} équipe(s)
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Calendar className="w-4 h-4" />
-                      {new Date(rubrique.created_at).toLocaleDateString()}
-                    </div>
-                  </div>
-                </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredRubriques.map(rubrique => {
+            const type = getRubriqueType(rubrique);
+            const typeInfo = getRubriqueTypeInfo(type);
+            const stats = rubriqueStats[rubrique._id] || {
+              totalContents: 0,
+              gazettes: 0,
+              otherContents: 0,
+              recentContents: [],
+              lastUpdated: new Date(rubrique.created_at)
+            };
+            
+            return (
+              <div
+                key={rubrique._id}
+                className="group bg-white rounded-xl border border-gray-200 hover:border-gray-300 hover:shadow-lg transition-all duration-200 overflow-hidden"
+              >
+                {/* Header with type badge */}
+                <div 
+                  className="h-2"
+                  style={{ 
+                    background: `linear-gradient(to right, ${typeInfo.bgColor}, ${typeInfo.borderColor}20)`
+                  }}
+                />
                 
-                {canCreateEdit && (
-                  <div className="flex items-center gap-2 ml-4">
+                <div className="p-6">
+                  {/* Type and title */}
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div 
+                        className="w-12 h-12 rounded-xl flex items-center justify-center text-white"
+                        style={{ backgroundColor: typeInfo.color }}
+                      >
+                        <typeInfo.icon className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="font-semibold text-lg text-gray-900 group-hover:text-blue-700 transition-colors">
+                            {rubrique.name}
+                          </h3>
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                                style={{ 
+                                  backgroundColor: typeInfo.bgColor,
+                                  color: typeInfo.color
+                                }}>
+                            {typeInfo.emoji} {typeInfo.label}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-600 line-clamp-2">
+                          {rubrique.description}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    {/* Actions */}
+                    {canCreateEdit && (
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => openEditDialog(rubrique)}
+                          className="h-8 w-8 p-0 text-gray-500 hover:text-blue-600"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        {(user?.role === 'ADMIN' || user?.role === 'admin') && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => confirmDelete(rubrique)}
+                            className="h-8 w-8 p-0 text-gray-500 hover:text-red-600"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Content Statistics */}
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div className="bg-gray-50 rounded-lg p-3">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Newspaper className="w-4 h-4 text-blue-600" />
+                        <span className="text-sm font-medium text-gray-700">Gazettes</span>
+                      </div>
+                      <div className="text-2xl font-bold text-gray-900">{stats.gazettes}</div>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-3">
+                      <div className="flex items-center gap-2 mb-1">
+                        <FileText className="w-4 h-4 text-green-600" />
+                        <span className="text-sm font-medium text-gray-700">Contenus</span>
+                      </div>
+                      <div className="text-2xl font-bold text-gray-900">{stats.otherContents}</div>
+                    </div>
+                  </div>
+
+                  {/* Recent Contents Preview */}
+                  {stats.recentContents.length > 0 && (
+                    <div className="mb-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <TrendingUp className="w-4 h-4 text-gray-500" />
+                        <span className="text-sm font-medium text-gray-700">Derniers contenus</span>
+                      </div>
+                      <div className="space-y-2">
+                        {stats.recentContents.slice(0, 3).map((content, index) => (
+                          <div key={content._id} className="flex items-center gap-2 text-sm">
+                            <div className="w-1.5 h-1.5 rounded-full bg-gray-300"></div>
+                            <span className="text-gray-600 truncate flex-1">
+                              {content.title}
+                            </span>
+                            <span className="text-xs text-gray-400 whitespace-nowrap">
+                              {formatDate(new Date(content.created_at))}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Footer with metadata and action */}
+                  <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                    <div className="flex items-center gap-4 text-xs text-gray-500">
+                      <div className="flex items-center gap-1">
+                        <Users className="w-3 h-3" />
+                        {rubrique.team_ids?.length || 0} équipe(s)
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Calendar className="w-3 h-3" />
+                        {formatDate(new Date(rubrique.created_at))}
+                      </div>
+                    </div>
+                    
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => openEditDialog(rubrique)}
+                      onClick={() => window.location.href = `/rubriques/${rubrique._id}`}
+                      className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 transition-colors flex items-center gap-1"
                     >
-                      <Edit className="w-4 h-4" />
+                      <Eye className="w-4 h-4" />
+                      Voir les contenus
+                      <ArrowRight className="w-3 h-3" />
                     </Button>
-                    {(user?.role === 'ADMIN' || user?.role === 'admin') && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => confirmDelete(rubrique)}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    )}
                   </div>
-                )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
