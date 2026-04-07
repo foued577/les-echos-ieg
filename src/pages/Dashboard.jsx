@@ -3,6 +3,7 @@ import { useAuth } from '@/lib/AuthContext';
 import { contentsAPI, dashboardMessagesAPI } from '@/services/api';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '../utils';
+import NewsTicker from '../components/NewsTicker';
 import { 
   Clock, 
   FileText, 
@@ -241,16 +242,21 @@ export default function Dashboard() {
             <h1 className="text-4xl font-serif text-gray-900 tracking-tight mb-4">
               Bonjour, {user?.name ? user.name.split(' ')[0] : '...'}
             </h1>
-            <p className="text-xl text-gray-600 mb-8 font-light">
+            
+            {/* News Ticker pour le message dynamique */}
+            <div className="mb-8">
               {activeMessage ? (
-                <span>
-                  {activeMessage.icon && <span className="mr-2">{activeMessage.icon}</span>}
-                  {activeMessage.content}
-                </span>
+                <NewsTicker message={activeMessage} icon="news" />
               ) : (
-                'Bienvenue sur votre centre de connaissances'
+                <NewsTicker 
+                  message={{ 
+                    content: "Bienvenue sur votre centre de connaissances", 
+                    icon: "Welcome" 
+                  }} 
+                  icon="info" 
+                />
               )}
-            </p>
+            </div>
             <div className="flex gap-4">
               <Link to={createPageUrl('CreateContent')}>
                 <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2">
