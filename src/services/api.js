@@ -395,43 +395,41 @@ export const teamsAPI = {
   
   delete: async (id) => {
     const response = await api.delete(`/teams/${id}`);
+    return response.data;
+  }
 };
 
 // Rubriques
 export const rubriquesAPI = {
-getAll: async () => {
-const response = await api.get('/rubriques');
-return response.data;
-},
+  getAll: async () => {
+    const response = await api.get('/rubriques');
+    return response.data;
+  },
   
-getById: async (id) => {
-const response = await api.get(`/rubriques/${id}`);
-return response.data;
-},
+  getById: async (id) => {
+    const response = await api.get(`/rubriques/${id}`);
+    return response.data;
+  },
   
-create: async (rubriqueData) => {
-const response = await api.post('/rubriques', rubriqueData);
-return response.data;
-},
+  create: async (rubriqueData) => {
+    const response = await api.post('/rubriques', rubriqueData);
+    return response.data;
+  },
   
-update: async (id, rubriqueData) => {
-const response = await api.put(`/rubriques/${id}`, rubriqueData);
-return response.data;
-},
+  update: async (id, rubriqueData) => {
+    const response = await api.put(`/rubriques/${id}`, rubriqueData);
+    return response.data;
+  },
   
-delete: async (id) => {
-const response = await api.delete(`/rubriques/${id}`);
-return response.data;
-}
+  delete: async (id) => {
+    const response = await api.delete(`/rubriques/${id}`);
+    return response.data;
+  }
 };
 
 // Contenus
 export const contentsAPI = {
-getDashboard: async (filters = {}) => {
-const params = new URLSearchParams(filters);
-const response = await api.get(`/contents/dashboard?${params}`);
-return response.data;
-},
+  getDashboard: async (filters = {}) => {
     const params = new URLSearchParams(filters);
     const response = await api.get(`/contents/dashboard?${params}`);
     return response.data;
