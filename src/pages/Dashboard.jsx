@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/lib/AuthContext';
-import { contentsAPI } from '@/services/api';
+import { contentsAPI, dashboardMessagesAPI } from '@/services/api';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '../utils';
 import { 
@@ -93,6 +93,7 @@ export default function Dashboard() {
   const [pendingContents, setPendingContents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [activeMessage, setActiveMessage] = useState(null);
 
   // Global refresh function for other components
   useEffect(() => {
@@ -109,8 +110,22 @@ export default function Dashboard() {
   useEffect(() => {
     if (user) {
       loadData();
+      loadDashboardMessage();
     }
   }, [user, refreshKey]);
+
+  const loadDashboardMessage = useCallback(async () => {
+    try {
+      console.log('📋 Loading active dashboard message...');
+      const response = await dashboardMessagesAPI.getActive();
+      setActiveMessage(response.data);
+      console.log('📋 Active dashboard message loaded:', response.data);
+    } catch (error) {
+      console.error('📋 Error loading dashboard message:', error);
+      // Fallback to default message
+      setActiveMessage(null);
+    }
+  }, []);
 
   const loadData = useCallback(async () => {
     try {
@@ -227,7 +242,14 @@ export default function Dashboard() {
               Bonjour, {user?.name ? user.name.split(' ')[0] : '...'}
             </h1>
             <p className="text-xl text-gray-600 mb-8 font-light">
-              Bienvenue sur votre centre de connaissances
+              {activeMessage ? (
+                <span>
+                  {activeMessage.icon && <span className="mr-2">{activeMessage.icon}</span>}
+                  {activeMessage.content}
+                </span>
+              ) : (
+                'Bienvenue sur votre centre de connaissances'
+              )}
             </p>
             <div className="flex gap-4">
               <Link to={createPageUrl('CreateContent')}>

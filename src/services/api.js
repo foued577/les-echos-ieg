@@ -209,6 +209,69 @@ export const gazettesAPI = {
   }
 };
 
+// Dashboard Messages API
+export const dashboardMessagesAPI = {
+  getAll: async () => {
+    console.log('📡 DEBUG: dashboardMessagesAPI.getAll called');
+    try {
+      const response = await api.get('/dashboard-messages');
+      console.log('📡 DEBUG: dashboardMessagesAPI.getAll response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ ERROR: dashboardMessagesAPI.getAll failed:', error);
+      throw error;
+    }
+  },
+  
+  getActive: async () => {
+    console.log('📡 DEBUG: dashboardMessagesAPI.getActive called');
+    try {
+      const response = await api.get('/dashboard-messages/active');
+      console.log('📡 DEBUG: dashboardMessagesAPI.getActive response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ ERROR: dashboardMessagesAPI.getActive failed:', error);
+      throw error;
+    }
+  },
+  
+  create: async (messageData) => {
+    console.log('📡 DEBUG: dashboardMessagesAPI.create called with data:', messageData);
+    try {
+      const response = await api.post('/dashboard-messages', messageData);
+      console.log('📡 DEBUG: dashboardMessagesAPI.create response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ ERROR: dashboardMessagesAPI.create failed:', error);
+      throw error;
+    }
+  },
+  
+  activate: async (id) => {
+    console.log('📡 DEBUG: dashboardMessagesAPI.activate called with id:', id);
+    try {
+      const response = await api.put(`/dashboard-messages/${id}/activate`);
+      console.log('📡 DEBUG: dashboardMessagesAPI.activate response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ ERROR: dashboardMessagesAPI.activate failed:', error);
+      throw error;
+    }
+  },
+  
+  delete: async (id) => {
+    console.log('📡 DEBUG: dashboardMessagesAPI.delete called with id:', id);
+    try {
+      const response = await api.delete(`/dashboard-messages/${id}`);
+      console.log('📡 DEBUG: dashboardMessagesAPI.delete response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ ERROR: dashboardMessagesAPI.delete failed:', error);
+      throw error;
+    }
+  }
+};
+
 // Normalisation des réponses API pour gérer différents formats
 export const normalizeTeam = (data) => data?.team ?? data; // support {team: {...}} ou {...}
 

@@ -22,6 +22,7 @@ import {
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '../utils';
+import DashboardMessagesAdmin from '@/components/DashboardMessagesAdmin';
 
 export default function Admin() {
   const { user } = useAuth();
@@ -214,6 +215,9 @@ export default function Admin() {
           <p className="text-slate-500 text-sm">Équipes créées</p>
         </div>
       </div>
+
+      {/* Dashboard Messages Management */}
+      <DashboardMessagesAdmin />
 
       {/* Users List */}
       <div className="bg-white rounded-xl border border-stone-200">
