@@ -196,14 +196,7 @@ router.delete('/:id', authMiddleware, isAdmin, async (req, res) => {
       });
     }
     
-    // Empêcher la suppression du message actif
-    if (message.isActive) {
-      return res.status(400).json({
-        success: false,
-        message: 'Impossible de supprimer le message actif. Veuillez d\'abord en activer un autre.'
-      });
-    }
-    
+    // Autoriser la suppression de tous les messages (actifs ou non)
     await DashboardMessage.findByIdAndDelete(req.params.id);
     
     console.log('📋 DEBUG: Dashboard message deleted successfully:', req.params.id);

@@ -85,13 +85,12 @@ const DashboardMessagesAdmin = () => {
     const message = messages.find(m => m._id === messageId);
     
     if (!message) return;
-    
-    if (message.isActive) {
-      toast.error('Impossible de supprimer le message actif');
-      return;
-    }
 
-    if (!window.confirm(`Supprimer le message "${message.label}" ?`)) {
+    const confirmMessage = message.isActive 
+      ? `⚠️ Attention : ce message est actuellement actif et visible dans le dashboard.\n\nSupprimer "${message.label}" ?`
+      : `Supprimer le message "${message.label}" ?`;
+
+    if (!window.confirm(confirmMessage)) {
       return;
     }
 
@@ -270,15 +269,17 @@ const DashboardMessagesAdmin = () => {
                       </button>
                     )}
                     
-                    {!message.isActive && (
-                      <button
-                        onClick={() => handleDelete(message._id)}
-                        className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                        Supprimer
-                      </button>
-                    )}
+                    <button
+                      onClick={() => handleDelete(message._id)}
+                      className={`px-3 py-2 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2 ${
+                        message.isActive 
+                          ? 'bg-orange-600 hover:bg-orange-700' 
+                          : 'bg-red-600 hover:bg-red-700'
+                      }`}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      {message.isActive ? 'Supprimer (actif)' : 'Supprimer'}
+                    </button>
                   </div>
                 </div>
               </div>
@@ -296,11 +297,11 @@ const DashboardMessagesAdmin = () => {
               Comment ça fonctionne ?
             </h4>
             <ul className="text-blue-800 space-y-1 text-sm">
-              <li>• Un seul message peut être actif à la fois</li>
-              <li>• Le message actif s'affiche dans le dashboard de tous les utilisateurs</li>
+              <li>• Plusieurs messages peuvent être actifs simultanément</li>
+              <li>• Les messages actifs s'affichent en carousel dans le dashboard</li>
               <li>• Utilisez les emojis pour personnaliser l'apparence</li>
-              <li>• Les messages inactifs peuvent être supprimés</li>
-              <li>• Le message actif ne peut pas être supprimé</li>
+              <li>• Tous les messages (actifs ou inactifs) peuvent être supprimés</li>
+              <li>• La suppression d'un message actif le retire immédiatement du carousel</li>
             </ul>
           </div>
         </div>
