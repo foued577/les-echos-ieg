@@ -272,10 +272,10 @@ export default function Dashboard() {
                   Nouvelle proposition
                 </Button>
               </Link>
-              <Link to={createPageUrl('Explorer')}>
+              <Link to="/contenus">
                 <Button variant="outline" className="border-gray-300 text-gray-700 hover:bg-gray-50 px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2">
-                  <Eye className="w-4 h-4" />
-                  Explorer
+                  <FileText className="w-4 h-4" />
+                  Voir mes contenus
                 </Button>
               </Link>
             </div>
