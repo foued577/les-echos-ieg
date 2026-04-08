@@ -963,54 +963,71 @@ export default function GazetteEditor() {
 
       console.log('📤 DEBUG: Sending payload to API:', JSON.stringify(payload, null, 2));
 
-      // Appeler l'API de création
-      console.log('📡 DEBUG: Calling gazettesAPI.create()...');
-      const response = await gazettesAPI.create(payload);
+      // Déterminer si on est en mode création ou édition
+      const gazetteId = id || new URLSearchParams(location.search).get('id');
+      const isEditing = !!gazetteId;
       
-      console.log('� DEBUG: SAVE RAW RESPONSE FROM API:', response);
-      console.log('📋 DEBUG: Response type:', typeof response);
-      console.log('📋 DEBUG: Response is null/undefined:', response == null);
-      console.log('📋 DEBUG: Response keys:', Object.keys(response || {}));
+      console.log('DEBUG: Gazette ID:', gazetteId);
+      console.log('DEBUG: Is editing mode:', isEditing);
+
+      let response;
+      if (isEditing) {
+        // Mode édition : mettre à jour la gazette existante
+        console.log('DEBUG: Calling gazettesAPI.update() for ID:', gazetteId);
+        response = await gazettesAPI.update(gazetteId, payload);
+        console.log('DEBUG: Gazette updated successfully');
+      } else {
+        // Mode création : créer une nouvelle gazette
+        console.log('DEBUG: Calling gazettesAPI.create()...');
+        response = await gazettesAPI.create(payload);
+        console.log('DEBUG: Gazette created successfully');
+      }
+      
+      console.log('DEBUG: SAVE RAW RESPONSE FROM API:', response);
+      console.log('DEBUG: Response type:', typeof response);
+      console.log('DEBUG: Response is null/undefined:', response == null);
+      console.log('DEBUG: Response keys:', Object.keys(response || {}));
       
       // Vérification critique de la réponse
       if (!response) {
-        console.error('❌ ERROR: createGazette returned null/undefined');
-        throw new Error('La réponse de l\'API est vide - aucune gazette créée');
+        console.error('ERROR: API returned null/undefined');
+        throw new Error('La réponse de l\'API est vide');
       }
       
       // Extraire la gazette sauvegardée de manière robuste
       const savedGazette = response?.data ?? response;
       
-      console.log('📋 DEBUG: SAVE PARSED GAZETTE:', savedGazette);
-      console.log('📋 DEBUG: Gazette object type:', typeof savedGazette);
-      console.log('📋 DEBUG: Gazette object is null/undefined:', savedGazette == null);
-      console.log('📋 DEBUG: Gazette object keys:', Object.keys(savedGazette || {}));
+      console.log('DEBUG: SAVE PARSED GAZETTE:', savedGazette);
+      console.log('DEBUG: Gazette object type:', typeof savedGazette);
+      console.log('DEBUG: Gazette object is null/undefined:', savedGazette == null);
+      console.log('DEBUG: Gazette object keys:', Object.keys(savedGazette || {}));
       
       // Chercher un ID valide dans toutes les positions possibles
-      const gazetteId = 
+      const savedGazetteId = 
         savedGazette?.id ??
         savedGazette?._id ??
         savedGazette?.data?.id ??
         savedGazette?.data?._id;
       
-      console.log('🔍 DEBUG: GAZETTE ID:', gazetteId);
-      console.log('🔍 DEBUG: ID checks:', {
+      console.log('DEBUG: GAZETTE ID:', savedGazetteId);
+      console.log('DEBUG: ID checks:', {
         'savedGazette.id': savedGazette?.id,
         'savedGazette._id': savedGazette?._id,
         'savedGazette.data.id': savedGazette?.data?.id,
         'savedGazette.data._id': savedGazette?.data?._id,
-        'typeof gazetteId': typeof gazetteId
+        'typeof savedGazetteId': typeof savedGazetteId
       });
       
       // VALIDATION STRICTE : ID obligatoire pour continuer
-      if (!gazetteId) {
-        console.error('❌ ERROR: No valid ID found in response');
-        console.error('❌ ERROR: Full response structure:', JSON.stringify(response, null, 2));
+      if (!savedGazetteId) {
+        console.error('ERROR: No valid ID found in response');
+        console.error('ERROR: Full response structure:', JSON.stringify(response, null, 2));
         throw new Error("La gazette n'a pas d'ID après sauvegarde");
       }
 
-      console.log('🎉 SUCCESS: Gazette created with valid ID:', gazetteId);
-      console.log('🎉 SUCCESS: Gazette title:', savedGazette?.title || savedGazette?.data?.title);
+      const action = isEditing ? 'mise à jour' : 'créée';
+      console.log(`SUCCESS: Gazette ${action} with valid ID:`, savedGazetteId);
+      console.log('SUCCESS: Gazette title:', savedGazette?.title || savedGazette?.data?.title);
 
       setSaving(false);
       
