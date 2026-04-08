@@ -377,6 +377,53 @@ export default function Rubriques() {
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9 bg-white border-stone-200"
           />
+        </div>
+        
+        <Select value={selectedTeam} onValueChange={setSelectedTeam}>
+          <SelectTrigger className="w-48">
+            <SelectValue placeholder="Filtrer par équipe" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Toutes les équipes</SelectItem>
+            {teams.map((team) => (
+              <SelectItem key={team._id} value={team._id.toString()}>
+                {team.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {loading ? (
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="w-8 h-8 border-2 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
+            <div className="text-gray-500">Chargement des rubriques...</div>
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredRubriques.map(rubrique => {
+            const type = getRubriqueType(rubrique);
+            const typeInfo = getRubriqueTypeInfo(type);
+            const stats = rubriqueStats[rubrique._id] || {
+              totalContents: 0,
+              recentContents: [],
+              lastUpdated: new Date(rubrique.created_at)
+            };
+            
+            return (
+              <div
+                key={rubrique._id}
+                className="group bg-white rounded-xl border border-gray-200 hover:border-gray-300 hover:shadow-lg transition-all duration-200 overflow-hidden"
+              >
+                {/* Header with type badge */}
+                <div 
+                  className="h-2"
+                  style={{ 
+                    background: `linear-gradient(to right, ${typeInfo.bgColor}, ${typeInfo.borderColor}20)`
+                  }}
+                />
                 
                 <div className="p-6">
                   {/* Type and title */}
