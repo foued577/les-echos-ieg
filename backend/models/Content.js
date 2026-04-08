@@ -16,6 +16,7 @@ const contentSchema = new mongoose.Schema({
     enum: ['lien', 'fichier', 'article'],
     required: [true, 'Le type est requis']
   },
+  // Single file support (backward compatibility)
   file_url: {
     type: String,
     default: null
@@ -32,6 +33,30 @@ const contentSchema = new mongoose.Schema({
     type: String,
     default: null
   },
+  
+  // Multiple files support (new feature)
+  files: [{
+    name: {
+      type: String,
+      required: true
+    },
+    url: {
+      type: String,
+      required: true
+    },
+    type: {
+      type: String,
+      required: true
+    },
+    size: {
+      type: Number,
+      required: true
+    },
+    cloudinary_public_id: {
+      type: String,
+      required: true
+    }
+  }],
   status: {
     type: String,
     enum: ['draft', 'pending_review', 'approved', 'rejected'],

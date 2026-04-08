@@ -33,6 +33,7 @@ export default function CreateContent() {
   const [submitting, setSubmitting] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [fileName, setFileName] = useState('');
+  const [selectedFiles, setSelectedFiles] = useState([]);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -40,6 +41,7 @@ export default function CreateContent() {
     type: 'link',
     url: '',
     file_url: '',
+    files: [], // Support multiple files
     content: '',
     team_ids: [], // Support multiple teams
     category_id: '',
@@ -99,16 +101,39 @@ export default function CreateContent() {
   });
 
   const handleFileUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
 
     setUploading(true);
-    setFileName(file.name);
     
-    // Stocker le fichier directement pour FormData
-    setFormData({ ...formData, file_url: file });
+    // Store multiple files
+    setSelectedFiles(files);
+    
+    // Update form data with files array
+    setFormData({ 
+      ...formData, 
+      files: files,
+      file_url: files[0] // Keep first file for backward compatibility
+    });
+    
+    setFileName(files.length === 1 ? files[0].name : `${files.length} fichiers sélectionnés`);
     setUploading(false);
-    toast.success('Fichier sélectionné avec succès');
+    
+    toast.success(`${files.length} fichier(s) sélectionné(s) avec succès`);
+  };
+
+  const removeFile = (index) => {
+    const newFiles = selectedFiles.filter((_, i) => i !== index);
+    setSelectedFiles(newFiles);
+    
+    setFormData({ 
+      ...formData, 
+      files: newFiles,
+      file_url: newFiles.length > 0 ? newFiles[0] : null
+    });
+    
+    setFileName(newFiles.length === 1 ? newFiles[0].name : 
+               newFiles.length === 0 ? '' : `${newFiles.length} fichiers sélectionnés`);
   };
 
   const addTag = () => {
@@ -142,27 +167,28 @@ export default function CreateContent() {
         fd.append("tags", JSON.stringify(formData.tags || []));
         fd.append("status", status === 'en_attente' ? 'pending_review' : 'draft');
         
-        // Ajouter le fichier si disponible
-        const isBrowserFile = formData.file_url && 
-          typeof formData.file_url === 'object' &&
-          typeof formData.file_url.name === 'string' &&
-          typeof formData.file_url.size === 'number';
-          
-        if (isBrowserFile) {
-          fd.append("file", formData.file_url);
-        } else if (formData.file_url !== null) {
-          throw new Error('Veuillez sélectionner un fichier');
+        // Ajouter les fichiers multiples
+        if (selectedFiles && selectedFiles.length > 0) {
+          selectedFiles.forEach((file, index) => {
+            fd.append(`files`, file); // Same field name for all files
+          });
+          console.log(`📁 Adding ${selectedFiles.length} files to FormData`);
+        } else {
+          throw new Error('Veuillez sélectionner au moins un fichier');
         }
-
-        // Ajouter les champs manquants pour les fichiers
-        fd.append("file_name", formData.file_url?.name || formData.title);
-        fd.append("file_url", ""); // Sera rempli par le backend après upload
 
         console.log('🔨 Creating file content with FormData');
         console.log('📦 FormData contents:');
-        for (let [key, value] of Array.from(fd.entries())) {
-          console.log(`  ${key}:`, value);
+        // Debug FormData (convert to object for logging)
+        const formDataObj = {};
+        for (let [key, value] of fd.entries()) {
+          if (value instanceof File) {
+            formDataObj[key] = `File: ${value.name} (${value.size} bytes)`;
+          } else {
+            formDataObj[key] = value;
+          }
         }
+        console.log('📦 FormData object:', formDataObj);
         
         response = await contentsAPI.createWithFile(fd);
       } else {
@@ -376,22 +402,55 @@ export default function CreateContent() {
 
         {formData.type === 'file' && (
           <div className="space-y-2">
-            <Label className="text-slate-700">Fichier *</Label>
+            <Label className="text-slate-700">Fichiers *</Label>
             <div className="border-2 border-dashed border-stone-200 rounded-xl p-8 text-center bg-white">
-              {formData.file_url && fileName ? (
-                <div className="flex items-center justify-center gap-3">
-                  <FileIcon className="w-5 h-5 text-slate-600" />
-                  <span className="text-sm font-medium text-slate-900">{fileName}</span>
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={() => {
-                      setFormData({ ...formData, file_url: '' });
-                      setFileName('');
-                    }}
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
+              {selectedFiles && selectedFiles.length > 0 ? (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-center gap-2 mb-2">
+                    <FileIcon className="w-5 h-5 text-slate-600" />
+                    <span className="text-sm font-medium text-slate-900">
+                      {selectedFiles.length} fichier(s) sélectionné(s)
+                    </span>
+                  </div>
+                  
+                  {/* List of selected files */}
+                  <div className="space-y-2 max-h-40 overflow-y-auto">
+                    {selectedFiles.map((file, index) => (
+                      <div key={index} className="flex items-center justify-between bg-slate-50 rounded-lg p-3">
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                          <FileIcon className="w-4 h-4 text-slate-500 flex-shrink-0" />
+                          <div className="text-sm text-slate-700 truncate">
+                            <div className="font-medium">{file.name}</div>
+                            <div className="text-slate-500">
+                              {(file.size / 1024).toFixed(1)} KB
+                            </div>
+                          </div>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeFile(index)}
+                          className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {/* Add more files button */}
+                  <label className="cursor-pointer">
+                    <div className="flex items-center justify-center gap-2 text-blue-600 hover:text-blue-700">
+                      <Upload className="w-4 h-4" />
+                      <span className="text-sm">Ajouter des fichiers</span>
+                    </div>
+                    <input
+                      type="file"
+                      multiple
+                      className="hidden"
+                      onChange={handleFileUpload}
+                    />
+                  </label>
                 </div>
               ) : uploading ? (
                 <div className="flex items-center justify-center gap-2">
@@ -402,9 +461,10 @@ export default function CreateContent() {
                 <label className="cursor-pointer">
                   <Upload className="w-8 h-8 mx-auto text-slate-400 mb-2" />
                   <p className="text-sm text-slate-600">Cliquez pour uploader</p>
-                  <p className="text-xs text-slate-400 mt-1">PDF, DOC, XLS, PPT...</p>
+                  <p className="text-xs text-slate-400 mt-1">PDF, DOC, XLS, PPT... (plusieurs fichiers possibles)</p>
                   <input
                     type="file"
+                    multiple
                     className="hidden"
                     onChange={handleFileUpload}
                   />

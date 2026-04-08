@@ -37,8 +37,8 @@ router.get('/', authMiddleware, getContents); // ADD authMiddleware
 router.get('/:id', authMiddleware, getContentById); // ADD authMiddleware
 router.get('/:id/download', authMiddleware, downloadContentFile); // Download route
 
-// Route de création avec upload de fichier
-router.post('/', authMiddleware, upload.single('file'), contentValidation, createContent);
+// Route de création avec upload de fichiers (multiple support)
+router.post('/', authMiddleware, upload.array('files', 10), contentValidation, createContent); // Support up to 10 files
 router.put('/:id', authMiddleware, updateContent);
 router.delete('/:id', authMiddleware, deleteContent);
 

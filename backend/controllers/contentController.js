@@ -318,14 +318,15 @@ const createContent = async (req, res) => {
   try {
     console.log('🔨=== CREATE CONTENT START ===');
     console.log('🔨 Request body:', req.body);
+    console.log('🔨 Request files:', req.files);
     console.log('🔨 Request file:', req.file);
-    console.log('🔨 File details:', req.file ? {
-      originalname: req.file.originalname,
-      mimetype: req.file.mimetype,
-      size: req.file.size,
-      path: req.file.path,
-      filename: req.file.filename
-    } : 'No file');
+    console.log('🔨 Files details:', req.files ? req.files.map(f => ({
+      originalname: f.originalname,
+      mimetype: f.mimetype,
+      size: f.size,
+      path: f.path,
+      filename: f.filename
+    })) : 'No files');
     console.log('🔨 User from token:', req.user);
     
     // Validation des entrées
@@ -382,28 +383,44 @@ const createContent = async (req, res) => {
 
     // Gérer selon le type
     if (type === "fichier") {
-      // Pour les fichiers, vérifier qu'un fichier a été uploadé
-      if (!req.file) {
-        console.log('❌ File missing for type fichier');
+      // Pour les fichiers, vérifier qu'au moins un fichier a été uploadé
+      const uploadedFiles = req.files || [];
+      
+      if (uploadedFiles.length === 0 && !req.file) {
+        console.log('❌ No files uploaded for type fichier');
         return res.status(400).json({
           success: false,
-          message: 'Un fichier est requis pour le type "fichier"'
+          message: 'Au moins un fichier est requis pour le type "fichier"'
         });
       }
 
-      // Ajouter les informations du fichier avec URL Cloudinary
-      contentData.file_url = req.file.path; // URL Cloudinary
-      contentData.file_name = req.file.originalname;
-      contentData.mime_type = req.file.mimetype;
-      contentData.cloudinary_public_id = req.file.filename; // important
-      contentData.content = req.file.originalname; // Nom du fichier comme content
-      
-      console.log('📁 File uploaded to Cloudinary:', {
-        file_url: contentData.file_url,
-        file_name: contentData.file_name,
-        mime_type: contentData.mime_type,
-        cloudinary_public_id: contentData.cloudinary_public_id
-      });
+      // Support multiple files (new feature)
+      if (uploadedFiles.length > 0) {
+        contentData.files = uploadedFiles.map(file => ({
+          name: file.originalname,
+          url: file.path, // URL Cloudinary
+          type: file.mimetype,
+          size: file.size,
+          cloudinary_public_id: file.filename
+        }));
+        
+        console.log('📁 Multiple files uploaded to Cloudinary:', contentData.files);
+      } 
+      // Backward compatibility for single file
+      else if (req.file) {
+        contentData.file_url = req.file.path; // URL Cloudinary
+        contentData.file_name = req.file.originalname;
+        contentData.mime_type = req.file.mimetype;
+        contentData.cloudinary_public_id = req.file.filename; // important
+        contentData.content = req.file.originalname; // Nom du fichier comme content
+        
+        console.log('📁 Single file uploaded to Cloudinary:', {
+          file_url: contentData.file_url,
+          file_name: contentData.file_name,
+          mime_type: contentData.mime_type,
+          cloudinary_public_id: contentData.cloudinary_public_id
+        });
+      }
     } else {
       // Pour les liens et articles, utiliser le content normal
       if (!content) {
