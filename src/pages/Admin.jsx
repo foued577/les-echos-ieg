@@ -44,16 +44,31 @@ export default function Admin() {
 
   const loadData = async () => {
     try {
+      console.log('ADMIN DEBUG: Loading admin data...');
+      
       const [usersData, teamsData] = await Promise.all([
         usersAPI.getAll(),
         teamsAPI.getAll(),
       ]);
+      
+      console.log('ADMIN DEBUG: Users API response:', usersData);
+      console.log('ADMIN DEBUG: Teams API response:', teamsData);
+      
+      // Both APIs return {success: true, data: [...]} structure
+      const usersArray = usersData?.data || [];
+      const teamsArray = Array.isArray(teamsData) ? teamsData : (teamsData?.data || []);
+      
+      console.log('ADMIN DEBUG: Users array:', usersArray);
+      console.log('ADMIN DEBUG: Teams array:', teamsArray);
+      console.log('ADMIN DEBUG: Teams count:', teamsArray.length);
 
-      setUsers(usersData.data || []);
-      setTeams(teamsData.data || []);
+      setUsers(usersArray);
+      setTeams(teamsArray);
       setLoading(false);
+      
+      console.log('ADMIN DEBUG: Data loaded successfully');
     } catch (error) {
-      console.error('Error loading data:', error);
+      console.error('ADMIN ERROR: Error loading data:', error);
       setLoading(false);
     }
   };

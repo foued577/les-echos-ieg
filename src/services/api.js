@@ -103,7 +103,7 @@ export const authAPI = {
 // Utilisateurs
 export const usersAPI = {
   getAll: async () => {
-    const response = await api.get('/test/users');
+    const response = await api.get('/users');
     return response.data;
   },
   
@@ -113,7 +113,7 @@ export const usersAPI = {
   },
   
   create: async (userData) => {
-    const response = await api.post('/test/users', userData);
+    const response = await api.post('/users', userData);
     return response.data;
   },
   
