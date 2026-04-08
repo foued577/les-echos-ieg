@@ -34,9 +34,14 @@ router.use(authMiddleware);
 // Routes
 router.post('/', createGazette);                              // POST /api/gazettes
 router.get('/', getGazettes);                               // GET /api/gazettes
+router.delete('/:id', (req, res, next) => {
+  console.log('DEBUG: DELETE /api/gazettes/:id route called');
+  console.log('DEBUG: Params:', req.params);
+  console.log('DEBUG: User:', req.user?.id);
+  next();
+}, deleteGazette);                        // DELETE /api/gazettes/:id
 router.get('/:id', getGazetteById);                         // GET /api/gazettes/:id
 router.put('/:id', updateGazette);                           // PUT /api/gazettes/:id
-router.delete('/:id', deleteGazette);                        // DELETE /api/gazettes/:id
 router.get('/users/search', searchUsers);                     // GET /api/gazettes/users/search?q=query
 
 module.exports = router;

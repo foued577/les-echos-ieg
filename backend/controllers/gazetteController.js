@@ -257,28 +257,54 @@ const deleteGazette = async (req, res) => {
     const { id } = req.params;
     const userId = req.user.id;
 
+    console.log('DELETE DEBUG: Gazette ID:', id);
+    console.log('DELETE DEBUG: User ID:', userId);
+
+    // Vérifier si l'ID est valide
+    if (!id || id === 'undefined') {
+      return res.status(400).json({
+        message: 'ID de gazette invalide',
+        error: 'INVALID_ID'
+      });
+    }
+
+    // Trouver la gazette avec vérification des permissions
     const gazette = await Gazette.findOne({
       _id: id,
-      author_id: userId
+      author_id: userId  // Seul le créateur peut supprimer
     });
 
     if (!gazette) {
+      console.log('DELETE DEBUG: Gazette not found or no permission');
       return res.status(404).json({
-        message: 'Gazette non trouvée',
+        message: 'Gazette non trouvée ou accès non autorisé',
         error: 'GAZETTE_NOT_FOUND'
       });
     }
 
-    await Gazette.findByIdAndDelete(id);
+    console.log('DELETE DEBUG: Gazette found, deleting:', gazette._id);
 
-    console.log('✅ DEBUG: Gazette deleted:', id);
+    // Supprimer la gazette trouvée (pas besoin de findByIdAndDelete)
+    await Gazette.deleteOne({ _id: gazette._id });
+
+    console.log('DELETE DEBUG: Gazette deleted successfully');
 
     res.json({
+      success: true,
       message: 'Gazette supprimée avec succès'
     });
 
   } catch (error) {
-    console.error('❌ ERROR: Failed to delete gazette:', error);
+    console.error('DELETE ERROR: Failed to delete gazette:', error);
+    
+    // Gérer les erreurs spécifiques à MongoDB
+    if (error.name === 'CastError') {
+      return res.status(400).json({
+        message: 'ID de gazette invalide',
+        error: 'INVALID_ID_FORMAT'
+      });
+    }
+    
     res.status(500).json({
       message: 'Erreur lors de la suppression de la gazette',
       error: error.message
