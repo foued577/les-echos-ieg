@@ -315,35 +315,50 @@ const RubriqueDetail = () => {
                             // DEBUG LOGS
                             console.log('CONTENT CLICKED:', content);
                             console.log('CONTENT TYPE:', content.type);
-                            console.log('CONTENT URL:', content.url || content.file_url || content.link);
                             console.log('CONTENT FIELDS:', Object.keys(content));
+                            console.log('ALL CONTENT DATA:', JSON.stringify(content, null, 2));
                             
                             if (content.type === 'lien') {
-                              // Pour les liens, ouvrir l'URL réelle dans un nouvel onglet
-                              const linkUrl = content.url || content.link || content.file_url;
-                              if (linkUrl) {
-                                window.open(linkUrl, '_blank', 'noopener,noreferrer');
+                              // Pour les liens, l'URL est stockée dans le champ 'content'
+                              const linkUrl = content.content || content.url || content.link || content.file_url;
+                              console.log('LINK URL FOUND:', linkUrl);
+                              if (linkUrl && linkUrl.trim() !== '') {
+                                window.open(linkUrl.trim(), '_blank', 'noopener,noreferrer');
                               } else {
                                 console.error('No URL found for link content:', content);
+                                // Afficher une notification à l'utilisateur
+                                alert('Ce lien ne contient pas d\'URL valide. Vérifiez le contenu du lien.');
                               }
                             } else if (content.type === 'fichier') {
-                              // Pour les fichiers, ouvrir le fichier dans un nouvel onglet
+                              // Pour les fichiers, utiliser file_url ou cloudinary URLs
                               const fileUrl = content.file_url || content.url || content.secure_url;
-                              if (fileUrl) {
-                                window.open(fileUrl, '_blank', 'noopener,noreferrer');
+                              console.log('FILE URL FOUND:', fileUrl);
+                              if (fileUrl && fileUrl.trim() !== '') {
+                                window.open(fileUrl.trim(), '_blank', 'noopener,noreferrer');
                               } else {
                                 console.error('No file URL found for file content:', content);
+                                alert('Ce fichier n\'a pas d\'URL valide. Vérifiez le fichier.');
                               }
                             } else if (content.type === 'article') {
-                              // Pour les articles, ouvrir l'URL si elle existe
-                              const articleUrl = content.url || content.link;
-                              if (articleUrl) {
-                                window.open(articleUrl, '_blank', 'noopener,noreferrer');
+                              // Pour les articles, l'URL peut être dans 'content' s'il s'agit d'un lien
+                              const articleUrl = content.content || content.url || content.link;
+                              console.log('ARTICLE URL FOUND:', articleUrl);
+                              if (articleUrl && articleUrl.trim() !== '') {
+                                // Vérifier si c'est une URL valide
+                                if (articleUrl.startsWith('http://') || articleUrl.startsWith('https://')) {
+                                  window.open(articleUrl.trim(), '_blank', 'noopener,noreferrer');
+                                } else {
+                                  // Si ce n'est pas une URL, c'est probablement du contenu texte
+                                  console.log('Article content is text, not URL');
+                                  alert('Cet article est du contenu texte, pas un lien.');
+                                }
                               } else {
                                 console.error('No URL found for article content:', content);
+                                alert('Cet article n\'a pas d\'URL valide.');
                               }
                             } else {
                               console.error('Unknown content type:', content.type);
+                              alert('Type de contenu inconnu: ' + content.type);
                             }
                           }}
                           className="text-gray-500 hover:text-blue-600"
