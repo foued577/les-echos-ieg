@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/AuthContext';
 import { rubriquesAPI, teamsAPI, contentsAPI } from '@/services/api';
 import { Plus, Search, FolderOpen, Edit2, Trash2, Tag, Hash, Users, Calendar, Edit, FileText, Newspaper, TrendingUp, ArrowRight, Eye } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -90,6 +91,7 @@ const formatDate = (date) => {
 
 export default function Rubriques() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [teams, setTeams] = useState([]);
   const [rubriques, setRubriques] = useState([]);
   const [rubriqueStats, setRubriqueStats] = useState({});
@@ -128,11 +130,24 @@ export default function Rubriques() {
       console.log('📥 Teams response:', teamsResponse);
       
       if (rubriquesResponse.success) {
-        setRubriques(rubriquesResponse.data);
-        console.log('✅ Rubriques loaded:', rubriquesResponse.data.length);
+        // Populate teams in rubriques
+        const rubriquesWithTeams = await Promise.all(
+          rubriquesResponse.data.map(async (rubrique) => {
+            try {
+              const populatedRubrique = await rubriquesAPI.getById(rubrique._id);
+              return populatedRubrique.data || rubrique;
+            } catch (error) {
+              console.error(`Error populating teams for rubrique ${rubrique._id}:`, error);
+              return rubrique;
+            }
+          })
+        );
+        
+        setRubriques(rubriquesWithTeams);
+        console.log('✅ Rubriques loaded with teams:', rubriquesWithTeams.length);
         
         // Fetch content statistics for each rubrique
-        await fetchRubriqueStats(rubriquesResponse.data);
+        await fetchRubriqueStats(rubriquesWithTeams);
       }
       
       // teamsAPI.getAll() returns directly an array
@@ -362,56 +377,6 @@ export default function Rubriques() {
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9 bg-white border-stone-200"
           />
-        </div>
-        <div className="w-48">
-          <Select value={selectedTeam} onValueChange={setSelectedTeam}>
-            <SelectTrigger className="bg-white border-stone-200">
-              <SelectValue placeholder="Filtrer par équipe" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Toutes les équipes</SelectItem>
-              {teams.map((team) => (
-                <SelectItem key={team._id} value={team._id.toString()}>
-                  {team.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      {loading ? (
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <div className="w-8 h-8 border-2 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
-            <div className="text-gray-500">Chargement des rubriques...</div>
-          </div>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredRubriques.map(rubrique => {
-            const type = getRubriqueType(rubrique);
-            const typeInfo = getRubriqueTypeInfo(type);
-            const stats = rubriqueStats[rubrique._id] || {
-              totalContents: 0,
-              gazettes: 0,
-              otherContents: 0,
-              recentContents: [],
-              lastUpdated: new Date(rubrique.created_at)
-            };
-            
-            return (
-              <div
-                key={rubrique._id}
-                className="group bg-white rounded-xl border border-gray-200 hover:border-gray-300 hover:shadow-lg transition-all duration-200 overflow-hidden"
-              >
-                {/* Header with type badge */}
-                <div 
-                  className="h-2"
-                  style={{ 
-                    background: `linear-gradient(to right, ${typeInfo.bgColor}, ${typeInfo.borderColor}20)`
-                  }}
-                />
                 
                 <div className="p-6">
                   {/* Type and title */}
@@ -468,20 +433,18 @@ export default function Rubriques() {
                   </div>
 
                   {/* Content Statistics */}
-                  <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div className="bg-gray-50 rounded-lg p-3">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Newspaper className="w-4 h-4 text-blue-600" />
-                        <span className="text-sm font-medium text-gray-700">Gazettes</span>
-                      </div>
-                      <div className="text-2xl font-bold text-gray-900">{stats.gazettes}</div>
+                  <div className="mb-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <FileText className="w-4 h-4 text-green-600" />
+                      <span className="text-sm font-medium text-gray-700">Contenus</span>
                     </div>
-                    <div className="bg-gray-50 rounded-lg p-3">
-                      <div className="flex items-center gap-2 mb-1">
-                        <FileText className="w-4 h-4 text-green-600" />
-                        <span className="text-sm font-medium text-gray-700">Contenus</span>
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <div className="text-3xl font-bold text-gray-900">{stats.totalContents}</div>
+                      <div className="text-sm text-gray-500">
+                        {stats.totalContents === 0 ? 'Aucun contenu' : 
+                         stats.totalContents === 1 ? '1 contenu' : 
+                         `${stats.totalContents} contenus`}
                       </div>
-                      <div className="text-2xl font-bold text-gray-900">{stats.otherContents}</div>
                     </div>
                   </div>
 
@@ -508,6 +471,34 @@ export default function Rubriques() {
                     </div>
                   )}
 
+                  {/* Team Information */}
+                  {rubrique.team_ids && rubrique.team_ids.length > 0 && (
+                    <div className="mb-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Users className="w-4 h-4 text-purple-600" />
+                        <span className="text-sm font-medium text-gray-700">Équipe(s) associée(s)</span>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {rubrique.team_ids.map((teamId, index) => {
+                          const team = Array.isArray(teamId) ? teamId : 
+                                    (typeof teamId === 'object' && teamId.name) ? teamId :
+                                    teams.find(t => t._id === teamId || t.id === teamId);
+                          
+                          if (!team || !team.name) return null;
+                          
+                          return (
+                            <span 
+                              key={index}
+                              className="inline-flex items-center px-2 py-1 bg-purple-50 text-purple-700 text-xs font-medium rounded-full"
+                            >
+                              {team.name}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Footer with metadata and action */}
                   <div className="flex items-center justify-between pt-4 border-t border-gray-100">
                     <div className="flex items-center gap-4 text-xs text-gray-500">
@@ -524,7 +515,7 @@ export default function Rubriques() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => window.location.href = `/rubriques/${rubrique._id}`}
+                      onClick={() => navigate(`/rubriques/${rubrique._id}`)}
                       className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 transition-colors flex items-center gap-1"
                     >
                       <Eye className="w-4 h-4" />
