@@ -89,50 +89,6 @@ const formatDate = (date) => {
   }).format(date);
 };
 
-const fetchRubriqueStats = async (rubriquesList) => {
-  try {
-    const statsPromises = rubriquesList.map(async (rubrique) => {
-      try {
-        // Get all contents for this rubrique using correct field name
-        const contentsResponse = await contentsAPI.getAll({ rubrique_id: rubrique._id });
-        const contents = contentsResponse.data || [];
-        
-        // Get recent contents (last 3)
-        const recentContents = contents
-          .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-          .slice(0, 3);
-        
-        return {
-          [rubrique._id]: {
-            totalContents: contents.length,
-            recentContents: recentContents,
-            lastUpdated: contents.length > 0 ? 
-              new Date(Math.max(...contents.map(c => new Date(c.created_at)))) : 
-              new Date(rubrique.created_at)
-          }
-        };
-      } catch (error) {
-        console.error(`Error fetching stats for rubrique ${rubrique._id}:`, error);
-        return {
-          [rubrique._id]: {
-            totalContents: 0,
-            recentContents: [],
-            lastUpdated: new Date(rubrique.created_at)
-          }
-        };
-      }
-    });
-    
-    const statsResults = await Promise.all(statsPromises);
-    const stats = statsResults.reduce((acc, stat) => ({ ...acc, ...stat }), {});
-    setRubriqueStats(stats);
-    
-    console.log('Rubrique stats loaded:', stats);
-  } catch (error) {
-    console.error('Error fetching rubrique stats:', error);
-  }
-};
-
 export default function Rubriques() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -153,6 +109,64 @@ export default function Rubriques() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [rubriqueToDelete, setRubriqueToDelete] = useState(null);
+
+  const fetchRubriqueStats = async (rubriquesList) => {
+    try {
+      console.log('FETCH RUBRIQUE STATS STARTING...');
+      console.log('RUBRIQUES LIST:', rubriquesList);
+      
+      const statsPromises = rubriquesList.map(async (rubrique) => {
+        try {
+          console.log('Fetching stats for rubrique:', rubrique._id, rubrique.name);
+          
+          // Get all contents for this rubrique using correct field name
+          const contentsResponse = await contentsAPI.getAll({ rubrique_id: rubrique._id });
+          const contents = contentsResponse.data || contentsResponse || [];
+          
+          console.log('CONTENTS RESPONSE for', rubrique.name, ':', contentsResponse);
+          console.log('CONTENTS ARRAY for', rubrique.name, ':', contents);
+          console.log('CONTENTS COUNT for', rubrique.name, ':', contents.length);
+          
+          // Get recent contents (last 3)
+          const recentContents = contents
+            .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+            .slice(0, 3);
+          
+          const result = {
+            [rubrique._id]: {
+              totalContents: contents.length,
+              recentContents: recentContents,
+              lastUpdated: contents.length > 0 ? 
+                new Date(Math.max(...contents.map(c => new Date(c.created_at)))) : 
+                new Date(rubrique.created_at)
+            }
+          };
+          
+          console.log('STATS RESULT for', rubrique.name, ':', result);
+          return result;
+        } catch (error) {
+          console.error(`Error fetching stats for rubrique ${rubrique._id}:`, error);
+          return {
+            [rubrique._id]: {
+              totalContents: 0,
+              recentContents: [],
+              lastUpdated: new Date(rubrique.created_at)
+            }
+          };
+        }
+      });
+      
+      const statsResults = await Promise.all(statsPromises);
+      const stats = statsResults.reduce((acc, stat) => ({ ...acc, ...stat }), {});
+      
+      console.log('FINAL STATS OBJECT:', stats);
+      setRubriqueStats(stats);
+      
+      console.log('Rubrique stats loaded:', stats);
+    } catch (error) {
+      console.error('Error fetching rubrique stats:', error);
+    }
+  };
 
   useEffect(() => {
     if (user) {

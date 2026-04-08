@@ -57,12 +57,22 @@ const RubriqueDetail = () => {
       
       // Load contents for this rubrique
       const contentsResponse = await contentsAPI.getAll({ rubrique_id: id });
+      let loadedContents = [];
+      
       if (contentsResponse.success) {
-        setContents(contentsResponse.data || []);
+        loadedContents = contentsResponse.data || [];
       } else {
         // Handle case where API returns data directly without success wrapper
-        setContents(contentsResponse || []);
+        loadedContents = contentsResponse || [];
       }
+      
+      setContents(loadedContents);
+      
+      // DEBUG LOGS
+      console.log('RUBRIQUE CONTENTS:', loadedContents);
+      console.log('RUBRIQUE ID:', id);
+      console.log('TOTAL CONTENTS:', loadedContents.length);
+      
     } catch (error) {
       console.error('Error loading rubrique details:', error);
     } finally {
@@ -301,7 +311,41 @@ const RubriqueDetail = () => {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => window.open(content.file_url || '#', '_blank')}
+                          onClick={() => {
+                            // DEBUG LOGS
+                            console.log('CONTENT CLICKED:', content);
+                            console.log('CONTENT TYPE:', content.type);
+                            console.log('CONTENT URL:', content.url || content.file_url || content.link);
+                            console.log('CONTENT FIELDS:', Object.keys(content));
+                            
+                            if (content.type === 'lien') {
+                              // Pour les liens, ouvrir l'URL réelle dans un nouvel onglet
+                              const linkUrl = content.url || content.link || content.file_url;
+                              if (linkUrl) {
+                                window.open(linkUrl, '_blank', 'noopener,noreferrer');
+                              } else {
+                                console.error('No URL found for link content:', content);
+                              }
+                            } else if (content.type === 'fichier') {
+                              // Pour les fichiers, ouvrir le fichier dans un nouvel onglet
+                              const fileUrl = content.file_url || content.url || content.secure_url;
+                              if (fileUrl) {
+                                window.open(fileUrl, '_blank', 'noopener,noreferrer');
+                              } else {
+                                console.error('No file URL found for file content:', content);
+                              }
+                            } else if (content.type === 'article') {
+                              // Pour les articles, ouvrir l'URL si elle existe
+                              const articleUrl = content.url || content.link;
+                              if (articleUrl) {
+                                window.open(articleUrl, '_blank', 'noopener,noreferrer');
+                              } else {
+                                console.error('No URL found for article content:', content);
+                              }
+                            } else {
+                              console.error('Unknown content type:', content.type);
+                            }
+                          }}
                           className="text-gray-500 hover:text-blue-600"
                         >
                           <Eye className="w-4 h-4" />
