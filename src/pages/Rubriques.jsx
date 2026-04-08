@@ -89,6 +89,50 @@ const formatDate = (date) => {
   }).format(date);
 };
 
+const fetchRubriqueStats = async (rubriquesList) => {
+  try {
+    const statsPromises = rubriquesList.map(async (rubrique) => {
+      try {
+        // Get all contents for this rubrique using correct field name
+        const contentsResponse = await contentsAPI.getAll({ rubrique_id: rubrique._id });
+        const contents = contentsResponse.data || [];
+        
+        // Get recent contents (last 3)
+        const recentContents = contents
+          .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+          .slice(0, 3);
+        
+        return {
+          [rubrique._id]: {
+            totalContents: contents.length,
+            recentContents: recentContents,
+            lastUpdated: contents.length > 0 ? 
+              new Date(Math.max(...contents.map(c => new Date(c.created_at)))) : 
+              new Date(rubrique.created_at)
+          }
+        };
+      } catch (error) {
+        console.error(`Error fetching stats for rubrique ${rubrique._id}:`, error);
+        return {
+          [rubrique._id]: {
+            totalContents: 0,
+            recentContents: [],
+            lastUpdated: new Date(rubrique.created_at)
+          }
+        };
+      }
+    });
+    
+    const statsResults = await Promise.all(statsPromises);
+    const stats = statsResults.reduce((acc, stat) => ({ ...acc, ...stat }), {});
+    setRubriqueStats(stats);
+    
+    console.log('Rubrique stats loaded:', stats);
+  } catch (error) {
+    console.error('Error fetching rubrique stats:', error);
+  }
+};
+
 export default function Rubriques() {
   const { user } = useAuth();
   const navigate = useNavigate();

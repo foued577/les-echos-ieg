@@ -59,6 +59,9 @@ const RubriqueDetail = () => {
       const contentsResponse = await contentsAPI.getAll({ rubrique_id: id });
       if (contentsResponse.success) {
         setContents(contentsResponse.data || []);
+      } else {
+        // Handle case where API returns data directly without success wrapper
+        setContents(contentsResponse || []);
       }
     } catch (error) {
       console.error('Error loading rubrique details:', error);

@@ -13,6 +13,7 @@ import Signup from './pages/Signup';
 import ContentDetail from './pages/ContentDetail';
 import GazetteEditor from './pages/GazetteEditor';
 import UserProfile from './pages/UserProfile';
+import RubriqueDetail from './pages/RubriqueDetail';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -94,6 +95,15 @@ const AuthenticatedApp = () => {
         <ProtectedRoute>
           <LayoutWrapper currentPageName="UserProfile">
             <UserProfile />
+          </LayoutWrapper>
+        </ProtectedRoute>
+      } />
+      
+      {/* Rubrique detail route */}
+      <Route path="/rubriques/:id" element={
+        <ProtectedRoute>
+          <LayoutWrapper currentPageName="RubriqueDetail">
+            <RubriqueDetail />
           </LayoutWrapper>
         </ProtectedRoute>
       } />
