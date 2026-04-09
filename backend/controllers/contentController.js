@@ -418,7 +418,21 @@ const createContent = async (req, res) => {
           cloudinary_public_id: file.filename
         }));
         
-        console.log('📁 Multiple files uploaded to Cloudinary:', contentData.files);
+        // Fallback to legacy format for compatibility
+        contentData.file_url = uploadedFiles[0].path;
+        contentData.file_name = uploadedFiles[0].originalname;
+        contentData.mime_type = uploadedFiles[0].mimetype;
+        contentData.cloudinary_public_id = uploadedFiles[0].filename;
+        contentData.content = uploadedFiles[0].originalname;
+        
+        console.log('=== FILE HANDLING DEBUG ===');
+        console.log('Uploaded files count:', uploadedFiles.length);
+        console.log('Files array:', contentData.files);
+        console.log('Legacy fallback:', {
+          file_url: contentData.file_url,
+          file_name: contentData.file_name,
+          mime_type: contentData.mime_type
+        });
       } 
       // Backward compatibility for single file
       else if (req.file) {
@@ -428,11 +442,20 @@ const createContent = async (req, res) => {
         contentData.cloudinary_public_id = req.file.filename; // important
         contentData.content = req.file.originalname; // Nom du fichier comme content
         
-        console.log('📁 Single file uploaded to Cloudinary:', {
+        console.log('=== LEGACY SINGLE FILE DEBUG ===');
+        console.log('Single file uploaded:', {
           file_url: contentData.file_url,
           file_name: contentData.file_name,
           mime_type: contentData.mime_type,
           cloudinary_public_id: contentData.cloudinary_public_id
+        });
+      }
+      // No files uploaded - block creation
+      else {
+        console.log('=== NO FILES UPLOADED ===');
+        return res.status(400).json({
+          success: false,
+          message: 'Aucun fichier uploadé pour le contenu de type "fichier"'
         });
       }
     } else {
@@ -448,6 +471,22 @@ const createContent = async (req, res) => {
     }
 
     const newContent = await Content.create(contentData);
+
+    console.log('=== CONTENT SAVED - TRUTH LOG ===');
+    console.log('CONTENT SAVED:', {
+      id: newContent._id,
+      type: newContent.type,
+      title: newContent.title,
+      file_url: newContent.file_url,
+      file_name: newContent.file_name,
+      mime_type: newContent.mime_type,
+      cloudinary_public_id: newContent.cloudinary_public_id,
+      files: newContent.files,
+      files_count: newContent.files?.length || 0,
+      has_files: !!(newContent.files && newContent.files.length > 0),
+      has_legacy_file: !!newContent.file_url
+    });
+    console.log('=== END TRUTH LOG ===');
 
     console.log('✅ Content created:', {
       id: newContent._id,

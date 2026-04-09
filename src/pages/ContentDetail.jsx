@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import { teamsAPI, contentsAPI, buildFileUrl, buildDownloadUrl } from '@/services/api';
 import { getFileUrl } from '../utils';
-import { ArrowLeft, ExternalLink, Download, FileText, Link as LinkIcon, File, Trash2 } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Download, FileText, Link as LinkIcon, File, Trash2, X } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -18,6 +18,43 @@ export default function ContentDetail() {
   const [content, setContent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  const [showFilesModal, setShowFilesModal] = useState(false);
+
+  // Utility function to get files from content (new + legacy format)
+  const getContentFiles = (content) => {
+    console.log('=== GET CONTENT FILES DEBUG ===');
+    console.log('Content received:', content);
+    
+    if (Array.isArray(content?.files) && content.files.length > 0) {
+      const files = content.files
+        .filter((f) => f && f.url)
+        .map((f) => ({
+          name: f.name || 'Fichier',
+          url: f.url,
+          type: f.type || '',
+          size: f.size || 0
+        }));
+      
+      console.log('Using new files format:', files);
+      return files;
+    }
+
+    if (content?.file_url) {
+      const legacyFile = [{
+        name: content.file_name || 'Fichier',
+        url: content.file_url,
+        type: content.mime_type || '',
+        size: 0
+      }];
+      
+      console.log('Using legacy format:', legacyFile);
+      return legacyFile;
+    }
+
+    console.log('No files found');
+    return [];
+  };
 
   useEffect(() => {
     if (id && user) loadContent();
@@ -70,49 +107,80 @@ export default function ContentDetail() {
   };
 
   const handleDownloadFile = (fileIndex = 0) => {
-    console.log('📁=== DOWNLOAD FILE DEBUG ===');
-    console.log('📁 Content:', content);
-    console.log('📁 Files array:', content?.files);
-    console.log('📁 Files length:', content?.files?.length);
-    console.log('📁 Legacy file_url:', content?.file_url);
-    console.log('📁 Requested file index:', fileIndex);
+    console.log('=== DOWNLOAD FILE DEBUG ===');
     
-    // New format: multiple files
-    if (content?.files && content.files.length > 0) {
-      const file = content.files[fileIndex];
-      if (!file) {
-        console.error('❌ File not found at index:', fileIndex);
-        return;
-      }
-      
-      console.log('📁 Downloading new format file:', file);
-      const fileUrl = buildFileUrl(file.url);
-      const downloadUrl = buildDownloadUrl(fileUrl);
-      
-      const link = document.createElement('a');
-      link.href = downloadUrl;
-      link.download = file.name || content.title || 'document';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+    const files = getContentFiles(content);
+    console.log('Available files:', files);
+    console.log('Requested file index:', fileIndex);
+    
+    if (!files.length) {
+      console.error('No files available for download');
+      alert("Ce contenu de type fichier n'a aucun fichier associé.");
+      return;
     }
-    // Legacy format: single file
-    else if (content?.file_url) {
-      console.log('📁 Downloading legacy format file');
-      const fileUrl = buildFileUrl(content.file_url);
-      const downloadUrl = buildDownloadUrl(fileUrl);
-      
-      const link = document.createElement('a');
-      link.href = downloadUrl;
-      link.download = content.file_name || content.title || 'document';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+    
+    if (fileIndex >= files.length) {
+      console.error('File index out of range:', fileIndex, 'Available:', files.length);
+      alert('Fichier non disponible');
+      return;
     }
-    else {
-      console.error('❌ No file URL found');
-      alert('Aucun fichier disponible pour le téléchargement');
+    
+    const file = files[fileIndex];
+    console.log('Downloading file:', file);
+    
+    const fileUrl = buildFileUrl(file.url);
+    const downloadUrl = buildDownloadUrl(fileUrl);
+    
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.download = file.name || content.title || 'document';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleOpenFile = (fileIndex = 0) => {
+    console.log('=== OPEN FILE DEBUG ===');
+    
+    const files = getContentFiles(content);
+    console.log('Available files:', files);
+    
+    if (!files.length) {
+      console.error('No files available for opening');
+      alert("Ce contenu de type fichier n'a aucun fichier associé.");
+      return;
     }
+    
+    if (fileIndex >= files.length) {
+      console.error('File index out of range:', fileIndex, 'Available:', files.length);
+      alert('Fichier non disponible');
+      return;
+    }
+    
+    const file = files[fileIndex];
+    console.log('Opening file:', file);
+    
+    const fileUrl = buildFileUrl(file.url);
+    window.open(fileUrl, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleFileClick = () => {
+    const files = getContentFiles(content);
+    
+    if (!files.length) {
+      alert("Ce contenu de type fichier n'a aucun fichier associé.");
+      return;
+    }
+    
+    if (files.length === 1) {
+      // Single file - open directly
+      handleOpenFile(0);
+      return;
+    }
+    
+    // Multiple files - show modal
+    setSelectedFiles(files);
+    setShowFilesModal(true);
   };
 
   const handleDeleteContent = async () => {
@@ -237,54 +305,51 @@ export default function ContentDetail() {
               <File className="w-5 h-5 text-green-500 mt-1" />
               <div className="flex-1">
                 <h3 className="font-medium text-slate-900 mb-2">
-                  {content.files?.length > 1 ? 'Fichiers' : 'Fichier'}
+                  {(() => {
+                    const files = getContentFiles(content);
+                    return files.length > 1 ? 'Fichiers' : 'Fichier';
+                  })()}
                 </h3>
-                <p className="text-slate-600 mb-4">{content.description || 'Cliquez pour télécharger le(s) fichier(s)'}</p>
+                <p className="text-slate-600 mb-4">{content.description || 'Cliquez pour accéder au(x) fichier(s)'}</p>
                 
-                {/* Multiple files list */}
-                {content.files && content.files.length > 0 ? (
-                  <div className="space-y-2">
-                    {content.files.map((file, index) => (
-                      <div key={index} className="bg-stone-50 p-3 rounded-lg flex items-center justify-between">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-stone-900 truncate">{file.name}</p>
+                <div className="bg-stone-50 p-3 rounded-lg">
+                  {(() => {
+                    const files = getContentFiles(content);
+                    if (files.length === 0) {
+                      return <p className="text-sm text-stone-600">Aucun fichier associé</p>;
+                    } else if (files.length === 1) {
+                      return (
+                        <div>
+                          <p className="text-sm font-medium text-stone-900">{files[0].name}</p>
                           <p className="text-xs text-stone-500">
-                            {(file.size / 1024).toFixed(1)} KB • {file.type}
+                            {files[0].type && `${files[0].type} `}
+                            {files[0].size > 0 && `(${(files[0].size / 1024).toFixed(1)} KB)`}
                           </p>
                         </div>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleDownloadFile(index)}
-                          className="text-green-600 border-green-200 hover:bg-green-50 hover:text-green-700 ml-2"
-                        >
-                          <Download className="w-4 h-4 mr-1" />
-                          Télécharger
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  /* Legacy single file */
-                  <div className="bg-stone-50 p-3 rounded-lg">
-                    <p className="text-sm text-stone-600 truncate">
-                      {content.file_name || content.file_url || 'Fichier disponible'}
-                    </p>
-                  </div>
-                )}
+                      );
+                    } else {
+                      return (
+                        <div>
+                          <p className="text-sm font-medium text-stone-900">{files.length} fichiers</p>
+                          <p className="text-xs text-stone-500">Cliquez pour voir la liste complète</p>
+                        </div>
+                      );
+                    }
+                  })()}
+                </div>
               </div>
             </div>
             
-            {/* Download button for legacy single file */}
-            {(!content.files || content.files.length === 0) && content.file_url && (
-              <Button 
-                onClick={() => handleDownloadFile()}
-                className="bg-green-500 hover:bg-green-600 text-white"
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Télécharger le fichier
-              </Button>
-            )}
+            <Button 
+              onClick={handleFileClick}
+              className="bg-green-500 hover:bg-green-600 text-white"
+            >
+              <Download className="w-4 h-4 mr-2" />
+              {(() => {
+                const files = getContentFiles(content);
+                return files.length === 1 ? 'Ouvrir le fichier' : 'Voir les fichiers';
+              })()}
+            </Button>
           </div>
         )}
 
@@ -326,6 +391,59 @@ export default function ContentDetail() {
           </div>
         )}
       </div>
+
+      {/* Files Modal */}
+      {showFilesModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 max-w-2xl w-full max-h-96 overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-slate-900">
+                Fichiers du contenu
+              </h3>
+              <button
+                onClick={() => setShowFilesModal(false)}
+                className="text-slate-400 hover:text-slate-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="space-y-3">
+              {selectedFiles.map((file, index) => (
+                <div key={index} className="flex items-center justify-between p-3 bg-stone-50 rounded-lg">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-stone-900 truncate">{file.name}</p>
+                    <p className="text-xs text-stone-500">
+                      {file.type && `${file.type} `}
+                      {file.size > 0 && `(${(file.size / 1024).toFixed(1)} KB)`}
+                    </p>
+                  </div>
+                  <div className="flex gap-2 ml-4">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleOpenFile(index)}
+                      className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                    >
+                      <ExternalLink className="w-4 h-4 mr-1" />
+                      Ouvrir
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleDownloadFile(index)}
+                      className="text-green-600 border-green-200 hover:bg-green-50"
+                    >
+                      <Download className="w-4 h-4 mr-1" />
+                      Télécharger
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
