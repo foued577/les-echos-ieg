@@ -448,8 +448,19 @@ export const contentsAPI = {
   },
   
   getById: async (id) => {
+    console.log('🔍=== CONTENTS API GET BY ID ===');
+    console.log('🔍 Requested ID:', id);
+    
     const response = await api.get(`/contents/${id}`);
-    return response.data;
+    console.log('🔍 Raw response:', response.data);
+    console.log('🔍 Response structure:', {
+      success: response.data.success,
+      hasData: !!response.data.data,
+      dataKeys: response.data.data ? Object.keys(response.data.data) : []
+    });
+    
+    // Backend returns {success: true, data: content}
+    return response.data.data || response.data;
   },
   
   create: async (contentData) => {

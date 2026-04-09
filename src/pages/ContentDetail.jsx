@@ -32,6 +32,14 @@ export default function ContentDetail() {
       
       if (response.success) {
         console.log('✅ Content loaded:', response.data);
+        console.log('🔍 Content type:', response.data?.type);
+        console.log('🔍 Files field:', response.data?.files);
+        console.log('🔍 Files count:', response.data?.files?.length || 0);
+        console.log('🔍 file_url field:', response.data?.file_url);
+        console.log('🔍 file_name field:', response.data?.file_name);
+        console.log('🔍 All content keys:', Object.keys(response.data || {}));
+        console.log('🔍 Full content object:', JSON.stringify(response.data, null, 2));
+        
         setContent(response.data);
         setError(null);
       } else {

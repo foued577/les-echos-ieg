@@ -288,10 +288,24 @@ const getContents = async (req, res) => {
 // Obtenir un contenu par ID
 const getContentById = async (req, res) => {
   try {
+    console.log('🔍=== GET CONTENT BY ID ===');
+    console.log('🔍 Requested ID:', req.params.id);
+    
     const content = await Content.findById(req.params.id)
       .populate('author_id', 'name email avatar')
       .populate('team_ids', 'name')
       .populate('rubrique_id', 'name description color');
+    
+    console.log('🔍 Content found:', !!content);
+    if (content) {
+      console.log('🔍 Content type:', content.type);
+      console.log('🔍 Files field:', content.files);
+      console.log('🔍 Files count:', content.files?.length || 0);
+      console.log('🔍 file_url field:', content.file_url);
+      console.log('🔍 file_name field:', content.file_name);
+      console.log('🔍 All content keys:', Object.keys(content.toObject()));
+      console.log('🔍 Full content object:', JSON.stringify(content, null, 2));
+    }
     
     if (!content) {
       return res.status(404).json({
@@ -459,6 +473,15 @@ const createContent = async (req, res) => {
       .populate('author_id', 'name email avatar')
       .populate('team_ids', 'name')
       .populate('rubrique_id', 'name description color');
+
+    console.log('🔍=== DATABASE VERIFICATION ===');
+    console.log('🔍 Raw content from DB:', JSON.stringify(populatedContent, null, 2));
+    console.log('🔍 Files field:', populatedContent.files);
+    console.log('🔍 Files count:', populatedContent.files?.length || 0);
+    console.log('🔍 file_url field:', populatedContent.file_url);
+    console.log('🔍 file_name field:', populatedContent.file_name);
+    console.log('🔍 Content type:', populatedContent.type);
+    console.log('🔍 Full content object keys:', Object.keys(populatedContent.toObject()));
 
     res.status(201).json({
       success: true,
