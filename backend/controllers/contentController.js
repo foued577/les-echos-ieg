@@ -440,7 +440,9 @@ const createContent = async (req, res) => {
       title: newContent.title,
       type: newContent.type,
       file_url: newContent.file_url,
-      cloudinary_public_id: newContent.cloudinary_public_id
+      cloudinary_public_id: newContent.cloudinary_public_id,
+      files_count: newContent.files?.length || 0,
+      files: newContent.files
     });
 
     console.log('📋 Content details for debug:', {
@@ -448,7 +450,9 @@ const createContent = async (req, res) => {
       type: newContent.type,
       file_url: newContent.file_url,
       file_name: newContent.file_name,
-      has_file: !!newContent.file_url
+      has_file: !!newContent.file_url,
+      files_count: newContent.files?.length || 0,
+      files: newContent.files
     });
 
     const populatedContent = await Content.findById(newContent._id)

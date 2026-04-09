@@ -61,9 +61,36 @@ export default function ContentDetail() {
     }
   };
 
-  const handleDownloadFile = () => {
-    if (content?.file_url) {
-      // Téléchargement direct du fichier avec buildDownloadUrl pour Cloudinary
+  const handleDownloadFile = (fileIndex = 0) => {
+    console.log('📁=== DOWNLOAD FILE DEBUG ===');
+    console.log('📁 Content:', content);
+    console.log('📁 Files array:', content?.files);
+    console.log('📁 Files length:', content?.files?.length);
+    console.log('📁 Legacy file_url:', content?.file_url);
+    console.log('📁 Requested file index:', fileIndex);
+    
+    // New format: multiple files
+    if (content?.files && content.files.length > 0) {
+      const file = content.files[fileIndex];
+      if (!file) {
+        console.error('❌ File not found at index:', fileIndex);
+        return;
+      }
+      
+      console.log('📁 Downloading new format file:', file);
+      const fileUrl = buildFileUrl(file.url);
+      const downloadUrl = buildDownloadUrl(fileUrl);
+      
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = file.name || content.title || 'document';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+    // Legacy format: single file
+    else if (content?.file_url) {
+      console.log('📁 Downloading legacy format file');
       const fileUrl = buildFileUrl(content.file_url);
       const downloadUrl = buildDownloadUrl(fileUrl);
       
@@ -73,6 +100,10 @@ export default function ContentDetail() {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+    }
+    else {
+      console.error('❌ No file URL found');
+      alert('Aucun fichier disponible pour le téléchargement');
     }
   };
 
@@ -197,20 +228,55 @@ export default function ContentDetail() {
             <div className="flex items-start gap-3">
               <File className="w-5 h-5 text-green-500 mt-1" />
               <div className="flex-1">
-                <h3 className="font-medium text-slate-900 mb-2">Fichier</h3>
-                <p className="text-slate-600 mb-4">{content.description || 'Cliquez pour télécharger le fichier'}</p>
-                <div className="bg-stone-50 p-3 rounded-lg">
-                  <p className="text-sm text-stone-600 truncate">{content.file_url || 'Fichier disponible'}</p>
-                </div>
+                <h3 className="font-medium text-slate-900 mb-2">
+                  {content.files?.length > 1 ? 'Fichiers' : 'Fichier'}
+                </h3>
+                <p className="text-slate-600 mb-4">{content.description || 'Cliquez pour télécharger le(s) fichier(s)'}</p>
+                
+                {/* Multiple files list */}
+                {content.files && content.files.length > 0 ? (
+                  <div className="space-y-2">
+                    {content.files.map((file, index) => (
+                      <div key={index} className="bg-stone-50 p-3 rounded-lg flex items-center justify-between">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-stone-900 truncate">{file.name}</p>
+                          <p className="text-xs text-stone-500">
+                            {(file.size / 1024).toFixed(1)} KB • {file.type}
+                          </p>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleDownloadFile(index)}
+                          className="text-green-600 border-green-200 hover:bg-green-50 hover:text-green-700 ml-2"
+                        >
+                          <Download className="w-4 h-4 mr-1" />
+                          Télécharger
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  /* Legacy single file */
+                  <div className="bg-stone-50 p-3 rounded-lg">
+                    <p className="text-sm text-stone-600 truncate">
+                      {content.file_name || content.file_url || 'Fichier disponible'}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
-            <Button 
-              onClick={handleDownloadFile}
-              className="bg-green-500 hover:bg-green-600 text-white"
-            >
-              <Download className="w-4 h-4 mr-2" />
-              Télécharger le fichier
-            </Button>
+            
+            {/* Download button for legacy single file */}
+            {(!content.files || content.files.length === 0) && content.file_url && (
+              <Button 
+                onClick={() => handleDownloadFile()}
+                className="bg-green-500 hover:bg-green-600 text-white"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Télécharger le fichier
+              </Button>
+            )}
           </div>
         )}
 
