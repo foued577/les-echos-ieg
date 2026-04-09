@@ -328,10 +328,43 @@ export default function ContentDetail() {
                         </div>
                       );
                     } else {
+                      // Afficher tous les fichiers directement
                       return (
-                        <div>
-                          <p className="text-sm font-medium text-stone-900">{files.length} fichiers</p>
-                          <p className="text-xs text-stone-500">Cliquez pour voir la liste complète</p>
+                        <div className="space-y-2">
+                          <p className="text-sm font-medium text-stone-900 mb-2">
+                            {files.length} fichiers disponibles
+                          </p>
+                          {files.map((file, index) => (
+                            <div key={index} className="flex items-center justify-between p-2 bg-white rounded border border-stone-200">
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-stone-900 truncate">{file.name}</p>
+                                <p className="text-xs text-stone-500">
+                                  {file.type && `${file.type} `}
+                                  {file.size > 0 && `(${(file.size / 1024).toFixed(1)} KB)`}
+                                </p>
+                              </div>
+                              <div className="flex gap-1 ml-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleOpenFile(index)}
+                                  className="text-blue-600 border-blue-200 hover:bg-blue-50 h-8 px-2"
+                                  title="Ouvrir le fichier"
+                                >
+                                  <ExternalLink className="w-3 h-3" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleDownloadFile(index)}
+                                  className="text-green-600 border-green-200 hover:bg-green-50 h-8 px-2"
+                                  title="Télécharger le fichier"
+                                >
+                                  <Download className="w-3 h-3" />
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       );
                     }
@@ -347,7 +380,9 @@ export default function ContentDetail() {
               <Download className="w-4 h-4 mr-2" />
               {(() => {
                 const files = getContentFiles(content);
-                return files.length === 1 ? 'Ouvrir le fichier' : 'Voir les fichiers';
+                if (files.length === 0) return 'Aucun fichier';
+                if (files.length === 1) return 'Ouvrir le fichier';
+                return 'Télécharger tous les fichiers';
               })()}
             </Button>
           </div>
