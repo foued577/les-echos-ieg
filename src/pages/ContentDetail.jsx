@@ -10,6 +10,46 @@ import { fr } from 'date-fns/locale';
 import { toast } from 'sonner';
 import ArticleDisplay from '@/components/ArticleDisplay';
 
+// Utility function to normalize files from content (new + legacy format)
+export function normalizeContentFiles(content) {
+  console.log('=== NORMALIZE CONTENT FILES DEBUG ===');
+  console.log('Content received:', content);
+  
+  const result = [];
+
+  // Nouveau format multi-fichiers
+  if (Array.isArray(content.files) && content.files.length > 0) {
+    console.log('Using new files format, count:', content.files.length);
+    content.files.forEach((file, index) => {
+      if (file && file.url) {
+        result.push({
+          id: file._id || `${content._id}-file-${index}`,
+          name: file.name || `Fichier ${index + 1}`,
+          url: file.url,
+          type: file.type || '',
+          size: file.size || 0
+        });
+      }
+    });
+  }
+
+  // Ancien format fichier unique
+  if (result.length === 0 && content.file_url) {
+    console.log('Using legacy format');
+    result.push({
+      id: `${content._id}-legacy-file`,
+      name: content.file_name || 'Fichier',
+      url: content.file_url,
+      type: content.mime_type || '',
+      size: 0
+    });
+  }
+
+  console.log('Normalized files result:', result);
+  console.log('=== END NORMALIZE DEBUG ===');
+  return result;
+}
+
 export default function ContentDetail() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -18,42 +58,29 @@ export default function ContentDetail() {
   const [content, setContent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedFiles, setSelectedFiles] = useState([]);
-  const [showFilesModal, setShowFilesModal] = useState(false);
+  const [selectedContentFiles, setSelectedContentFiles] = useState([]);
+  const [filesModalOpen, setFilesModalOpen] = useState(false);
 
-  // Utility function to get files from content (new + legacy format)
-  const getContentFiles = (content) => {
-    console.log('=== GET CONTENT FILES DEBUG ===');
-    console.log('Content received:', content);
-    
-    if (Array.isArray(content?.files) && content.files.length > 0) {
-      const files = content.files
-        .filter((f) => f && f.url)
-        .map((f) => ({
-          name: f.name || 'Fichier',
-          url: f.url,
-          type: f.type || '',
-          size: f.size || 0
-        }));
-      
-      console.log('Using new files format:', files);
-      return files;
+  const handleFileContentClick = (content) => {
+    console.log('=== HANDLE FILE CONTENT CLICK DEBUG ===');
+    const files = normalizeContentFiles(content);
+    console.log('FILES COUNT:', files.length);
+    console.log('FILES DETAILS:', files);
+
+    if (!files.length) {
+      alert("Ce contenu n'a aucun fichier associé.");
+      return;
     }
 
-    if (content?.file_url) {
-      const legacyFile = [{
-        name: content.file_name || 'Fichier',
-        url: content.file_url,
-        type: content.mime_type || '',
-        size: 0
-      }];
-      
-      console.log('Using legacy format:', legacyFile);
-      return legacyFile;
+    if (files.length === 1) {
+      console.log('Opening single file directly');
+      window.open(files[0].url, '_blank', 'noopener,noreferrer');
+      return;
     }
 
-    console.log('No files found');
-    return [];
+    console.log('Opening files modal for multiple files');
+    setSelectedContentFiles(files);
+    setFilesModalOpen(true);
   };
 
   useEffect(() => {
@@ -108,9 +135,8 @@ export default function ContentDetail() {
 
   const handleDownloadFile = (fileIndex = 0) => {
     console.log('=== DOWNLOAD FILE DEBUG ===');
-    
-    const files = getContentFiles(content);
-    console.log('Available files:', files);
+    const files = normalizeContentFiles(content);
+    console.log('Available files for download:', files);
     console.log('Requested file index:', fileIndex);
     
     if (!files.length) {
@@ -141,9 +167,9 @@ export default function ContentDetail() {
 
   const handleOpenFile = (fileIndex = 0) => {
     console.log('=== OPEN FILE DEBUG ===');
-    
-    const files = getContentFiles(content);
-    console.log('Available files:', files);
+    const files = normalizeContentFiles(content);
+    console.log('Available files for opening:', files);
+    console.log('Requested file index:', fileIndex);
     
     if (!files.length) {
       console.error('No files available for opening');
@@ -162,25 +188,6 @@ export default function ContentDetail() {
     
     const fileUrl = buildFileUrl(file.url);
     window.open(fileUrl, '_blank', 'noopener,noreferrer');
-  };
-
-  const handleFileClick = () => {
-    const files = getContentFiles(content);
-    
-    if (!files.length) {
-      alert("Ce contenu de type fichier n'a aucun fichier associé.");
-      return;
-    }
-    
-    if (files.length === 1) {
-      // Single file - open directly
-      handleOpenFile(0);
-      return;
-    }
-    
-    // Multiple files - show modal
-    setSelectedFiles(files);
-    setShowFilesModal(true);
   };
 
   const handleDeleteContent = async () => {
@@ -306,7 +313,7 @@ export default function ContentDetail() {
               <div className="flex-1">
                 <h3 className="font-medium text-slate-900 mb-2">
                   {(() => {
-                    const files = getContentFiles(content);
+                    const files = normalizeContentFiles(content);
                     return files.length > 1 ? 'Fichiers' : 'Fichier';
                   })()}
                 </h3>
@@ -314,7 +321,10 @@ export default function ContentDetail() {
                 
                 <div className="bg-stone-50 p-3 rounded-lg">
                   {(() => {
-                    const files = getContentFiles(content);
+                    const files = normalizeContentFiles(content);
+                    console.log('DISPLAY DEBUG - Files count:', files.length);
+                    console.log('DISPLAY DEBUG - Files:', files);
+                    
                     if (files.length === 0) {
                       return <p className="text-sm text-stone-600">Aucun fichier associé</p>;
                     } else if (files.length === 1) {
@@ -328,14 +338,14 @@ export default function ContentDetail() {
                         </div>
                       );
                     } else {
-                      // Afficher tous les fichiers directement
+                      // Afficher TOUS les fichiers directement
                       return (
                         <div className="space-y-2">
                           <p className="text-sm font-medium text-stone-900 mb-2">
                             {files.length} fichiers disponibles
                           </p>
                           {files.map((file, index) => (
-                            <div key={index} className="flex items-center justify-between p-2 bg-white rounded border border-stone-200">
+                            <div key={file.id} className="flex items-center justify-between p-2 bg-white rounded border border-stone-200">
                               <div className="flex-1 min-w-0">
                                 <p className="text-sm font-medium text-stone-900 truncate">{file.name}</p>
                                 <p className="text-xs text-stone-500">
@@ -374,15 +384,15 @@ export default function ContentDetail() {
             </div>
             
             <Button 
-              onClick={handleFileClick}
+              onClick={() => handleFileContentClick(content)}
               className="bg-green-500 hover:bg-green-600 text-white"
             >
               <Download className="w-4 h-4 mr-2" />
               {(() => {
-                const files = getContentFiles(content);
+                const files = normalizeContentFiles(content);
                 if (files.length === 0) return 'Aucun fichier';
                 if (files.length === 1) return 'Ouvrir le fichier';
-                return 'Télécharger tous les fichiers';
+                return 'Voir tous les fichiers';
               })()}
             </Button>
           </div>
@@ -428,7 +438,7 @@ export default function ContentDetail() {
       </div>
 
       {/* Files Modal */}
-      {showFilesModal && (
+      {filesModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-6 max-w-2xl w-full max-h-96 overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
@@ -436,7 +446,7 @@ export default function ContentDetail() {
                 Fichiers du contenu
               </h3>
               <button
-                onClick={() => setShowFilesModal(false)}
+                onClick={() => setFilesModalOpen(false)}
                 className="text-slate-400 hover:text-slate-600"
               >
                 <X className="w-5 h-5" />
@@ -444,8 +454,8 @@ export default function ContentDetail() {
             </div>
             
             <div className="space-y-3">
-              {selectedFiles.map((file, index) => (
-                <div key={index} className="flex items-center justify-between p-3 bg-stone-50 rounded-lg">
+              {selectedContentFiles.map((file, index) => (
+                <div key={file.id} className="flex items-center justify-between p-3 bg-stone-50 rounded-lg">
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-stone-900 truncate">{file.name}</p>
                     <p className="text-xs text-stone-500">
