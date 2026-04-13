@@ -7,8 +7,42 @@ import {
   Check, 
   Trash2, 
   Settings, 
-  Loader2 
+  Loader2,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
+
+// Icônes prédéfinies par catégories
+const ICON_CATEGORIES = {
+  information: {
+    label: 'Information',
+    icons: ['\ud83d\udce2', '\ud83d\udccc', '\u2139\ufe0f', '\ud83d\udcf0', '\ud83d\udccb', '\ud83d\udccf']
+  },
+  alert: {
+    label: 'Alerte',
+    icons: ['\u26a0\ufe0f', '\u2757', '\ud83d\udea8', '\ud83d\udd34', '\ud83c\udfaf', '\ud83d\udeab']
+  },
+  success: {
+    label: 'Succès',
+    icons: ['\u2705', '\ud83c\udf89', '\ud83c\udf8a', '\ud83e\udd47', '\ud83d\udcaf', '\ud83c\udfc6']
+  },
+  dynamic: {
+    label: 'Dynamique',
+    icons: ['\ud83d\ude80', '\ud83d\udd25', '\ud83d\udca1', '\u26a1', '\ud83d\udcab', '\ud83c\udf1f']
+  },
+  tools: {
+    label: 'Outils',
+    icons: ['\ud83d\udd27', '\ud83d\udcca', '\ud83d\udcc1', '\ud83d\udcf1', '\ud83d\udda5\ufe0f', '\u2699\ufe0f']
+  },
+  communication: {
+    label: 'Communication',
+    icons: ['\ud83d\udcac', '\ud83d\udce7', '\ud83d\udcde', '\ud83d\udcf9', '\ud83c\udfa5', '\ud83c\udfa4']
+  },
+  misc: {
+    label: 'Divers',
+    icons: ['\ud83d\udcc5', '\ud83d\udcc2', '\ud83c\udfe0', '\ud83d\udcbc', '\ud83d\udc65', '\ud83c\udf93']
+  }
+};
 
 const DashboardMessagesAdmin = () => {
   const [messages, setMessages] = useState([]);
@@ -20,6 +54,8 @@ const DashboardMessagesAdmin = () => {
   });
   const [isCreating, setIsCreating] = useState(false);
   const [activatingId, setActivatingId] = useState(null);
+  const [expandedCategories, setExpandedCategories] = useState(['information']);
+  const [showIconPicker, setShowIconPicker] = useState(false);
 
   useEffect(() => {
     loadMessages();
@@ -113,6 +149,89 @@ const DashboardMessagesAdmin = () => {
     }));
   };
 
+  // Composant IconPicker
+  const IconPicker = () => {
+    const toggleCategory = (categoryKey) => {
+      setExpandedCategories(prev => 
+        prev.includes(categoryKey) 
+          ? prev.filter(cat => cat !== categoryKey)
+          : [...prev, categoryKey]
+      );
+    };
+
+    const selectIcon = (icon) => {
+      setFormData(prev => ({ ...prev, icon }));
+      setShowIconPicker(false);
+    };
+
+    return (
+      <div className="space-y-4">
+        {/* Icône sélectionnée */}
+        <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+          <span className="text-sm font-medium text-gray-700">Icône sélectionnée :</span>
+          <span className="text-2xl">{formData.icon}</span>
+          <button
+            type="button"
+            onClick={() => setShowIconPicker(!showIconPicker)}
+            className="ml-auto text-blue-600 hover:text-blue-700 text-sm font-medium"
+          >
+            {showIconPicker ? 'Masquer' : 'Changer'}
+          </button>
+        </div>
+
+        {/* Sélecteur d'icônes */}
+        {showIconPicker && (
+          <div className="bg-white border border-gray-200 rounded-lg p-4 space-y-3">
+            <div className="text-sm font-medium text-gray-700 mb-2">
+              Choisissez une icône :
+            </div>
+            
+            {Object.entries(ICON_CATEGORIES).map(([categoryKey, category]) => {
+              const isExpanded = expandedCategories.includes(categoryKey);
+              
+              return (
+                <div key={categoryKey} className="border border-gray-200 rounded-lg overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => toggleCategory(categoryKey)}
+                    className="w-full flex items-center justify-between px-3 py-2 bg-gray-50 hover:bg-gray-100 transition-colors"
+                  >
+                    <span className="text-sm font-medium text-gray-700">{category.label}</span>
+                    {isExpanded ? (
+                      <ChevronUp className="w-4 h-4 text-gray-500" />
+                    ) : (
+                      <ChevronDown className="w-4 h-4 text-gray-500" />
+                    )}
+                  </button>
+                  
+                  {isExpanded && (
+                    <div className="p-3 grid grid-cols-6 gap-2">
+                      {category.icons.map((icon) => (
+                        <button
+                          key={icon}
+                          type="button"
+                          onClick={() => selectIcon(icon)}
+                          className={`w-10 h-10 flex items-center justify-center rounded-lg border-2 transition-all hover:scale-110 ${
+                            formData.icon === icon
+                              ? 'border-blue-500 bg-blue-50 shadow-sm'
+                              : 'border-gray-200 hover:border-gray-300'
+                          }`}
+                          title={icon}
+                        >
+                          <span className="text-lg">{icon}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -148,18 +267,8 @@ const DashboardMessagesAdmin = () => {
               />
             </div>
             
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Icône
-              </label>
-              <input
-                type="text"
-                value={formData.icon}
-                onChange={(e) => handleInputChange('icon', e.target.value)}
-                placeholder="👋"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                maxLength={10}
-              />
+            <div className="md:col-span-2">
+              <IconPicker />
             </div>
             
             <div className="md:col-span-1">
