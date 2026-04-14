@@ -539,15 +539,15 @@ const createContent = async (req, res) => {
 // Mettre à jour un contenu
 const updateContent = async (req, res) => {
   try {
-    console.log('🔄=== UPDATE CONTENT START ===');
-    console.log('🔄 Params ID:', req.params.id);
-    console.log('🔄 Request body:', req.body);
-    console.log('🔄 User from token:', req.user);
+    console.log('=== UPDATE CONTENT START ===');
+    console.log('Params ID:', req.params.id);
+    console.log('Request body:', req.body);
+    console.log('User from token:', req.user);
     
     // Validation des entrées
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      console.log('❌ Validation errors:', errors.array());
+      console.log('Validation errors:', errors.array());
       return res.status(400).json({
         success: false,
         message: 'Erreurs de validation',
@@ -556,10 +556,12 @@ const updateContent = async (req, res) => {
     }
 
     const content = await Content.findById(req.params.id);
-    console.log('🔄 Content found:', !!content);
+    console.log('Content found:', !!content);
+    console.log('Original content status:', content?.status);
+    console.log('Original content description:', content?.description);
     
     if (!content) {
-      console.log('❌ Content not found');
+      console.log('Content not found');
       return res.status(404).json({
         success: false,
         message: 'Contenu non trouvé'
@@ -568,16 +570,41 @@ const updateContent = async (req, res) => {
 
     // Vérifier les permissions
     if (req.user.role !== 'ADMIN' && content.author_id.toString() !== req.user._id.toString()) {
-      console.log('❌ Permission denied - User role:', req.user.role, 'Author:', content.author_id, 'User:', req.user._id);
+      console.log('Permission denied - User role:', req.user.role, 'Author:', content.author_id, 'User:', req.user._id);
       return res.status(403).json({
         success: false,
         message: 'Non autorisé à modifier ce contenu'
       });
     }
 
-    console.log('✅ Permission granted - Updating content...');
+    console.log('Permission granted - Updating content...');
 
-    const updatedContent = await Content.findByIdAndUpdate(req.params.id, req.body, {
+    // Create update object that preserves existing fields
+    const updateData = {
+      title: req.body.title ?? content.title,
+      description: req.body.description ?? content.description,
+      type: req.body.type ?? content.type,
+      rubrique_id: req.body.rubrique_id ?? content.rubrique_id,
+      tags: req.body.tags ?? content.tags,
+      team_ids: req.body.team_ids ?? content.team_ids,
+      // IMPORTANT: Only update status if explicitly provided
+      status: req.body.status !== undefined ? req.body.status : content.status,
+      // Preserve content field based on type
+      content: req.body.content !== undefined ? req.body.content : content.content,
+      // Preserve file fields
+      file_url: req.body.file_url !== undefined ? req.body.file_url : content.file_url,
+      file_name: req.body.file_name !== undefined ? req.body.file_name : content.file_name,
+      mime_type: req.body.mime_type !== undefined ? req.body.mime_type : content.mime_type,
+      cloudinary_public_id: req.body.cloudinary_public_id !== undefined ? req.body.cloudinary_public_id : content.cloudinary_public_id,
+      // Preserve files array
+      files: req.body.files !== undefined ? req.body.files : content.files,
+    };
+
+    console.log('Update data:', updateData);
+    console.log('Status after update will be:', updateData.status);
+    console.log('Description after update will be:', updateData.description);
+
+    const updatedContent = await Content.findByIdAndUpdate(req.params.id, updateData, {
       new: true,
       runValidators: true
     })
@@ -585,7 +612,9 @@ const updateContent = async (req, res) => {
       .populate('team_ids', 'name')
       .populate('rubrique_id', 'name description color');
 
-    console.log('✅ Content updated successfully');
+    console.log('Content updated successfully');
+    console.log('Final content status:', updatedContent.status);
+    console.log('Final content description:', updatedContent.description);
 
     res.status(200).json({
       success: true,

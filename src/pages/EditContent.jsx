@@ -49,6 +49,7 @@ export default function EditContent() {
     team_ids: [], // Support multiple teams
     rubrique_id: '',
     tags: [],
+    status: '', // Add status to preserve existing status
   });
   const [newTag, setNewTag] = useState('');
 
@@ -81,6 +82,7 @@ export default function EditContent() {
           team_ids: content.team_ids?.map(team => team._id || team) || [],
           rubrique_id: content.rubrique_id?._id || content.rubrique_id || '',
           tags: content.tags || [],
+          status: content.status || 'draft', // Preserve existing status
         });
         
         // Set selected files for display
@@ -198,8 +200,9 @@ export default function EditContent() {
 
     try {
       setSubmitting(true);
-      console.log('🔄=== UPDATE CONTENT SUBMIT ===');
-      console.log('🔄 Form data:', formData);
+      console.log('=== UPDATE CONTENT SUBMIT ===');
+      console.log('Form data:', formData);
+      console.log('Existing status being preserved:', formData.status);
 
       let response;
       
@@ -212,7 +215,18 @@ export default function EditContent() {
         formDataToSend.append('rubrique_id', formData.rubrique_id);
         formDataToSend.append('tags', JSON.stringify(formData.tags));
         formDataToSend.append('team_ids', JSON.stringify(formData.team_ids));
-        formDataToSend.append('status', 'draft');
+        // IMPORTANT: Preserve existing status, don't force to 'draft'
+        formDataToSend.append('status', formData.status || 'draft');
+        
+        console.log('UPDATE PAYLOAD (FILES):', {
+          title: formData.title,
+          description: formData.description,
+          type: formData.type,
+          rubrique_id: formData.rubrique_id,
+          tags: formData.tags,
+          team_ids: formData.team_ids,
+          status: formData.status || 'draft'
+        });
         
         // Append all files
         selectedFiles.forEach((file, index) => {
@@ -229,7 +243,8 @@ export default function EditContent() {
           rubrique_id: formData.rubrique_id,
           tags: formData.tags,
           team_ids: formData.team_ids,
-          status: 'draft'
+          // IMPORTANT: Preserve existing status, don't force to 'draft'
+          status: formData.status || 'draft'
         };
 
         if (formData.type === 'lien') {
@@ -238,8 +253,12 @@ export default function EditContent() {
           contentData.content = formData.content;
         }
 
+        console.log('UPDATE PAYLOAD (REGULAR):', contentData);
+
         response = await contentsAPI.update(id, contentData);
       }
+
+      console.log('UPDATED CONTENT RESPONSE:', response.data);
 
       if (response.success) {
         toast.success('Contenu mis à jour avec succès');
