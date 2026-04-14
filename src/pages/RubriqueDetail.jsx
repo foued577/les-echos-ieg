@@ -295,6 +295,9 @@ const RubriqueDetail = () => {
                           </div>
                           <div>
                             <h3 className="font-semibold text-gray-900 text-lg">{content.title}</h3>
+                            {content.description && (
+                              <p className="text-sm text-gray-600 mt-1 mb-2">{content.description}</p>
+                            )}
                             <div className="flex items-center gap-2 mt-1">
                               <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(content.status)}`}>
                                 {getStatusLabel(content.status)}
@@ -308,6 +311,19 @@ const RubriqueDetail = () => {
                       </div>
                       
                       <div className="flex items-center gap-2 ml-4">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            console.log('EDIT CONTENT:', content);
+                            navigate(`/edit-content/${content._id}`);
+                          }}
+                          className="text-gray-500 hover:text-blue-600"
+                          title="Modifier le contenu"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        
                         <Button
                           variant="ghost"
                           size="sm"

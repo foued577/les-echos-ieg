@@ -478,7 +478,26 @@ export const contentsAPI = {
   },
   
   update: async (id, contentData) => {
+    console.log('🔄=== CONTENTS API UPDATE ===');
+    console.log('🔄 Updating content ID:', id);
+    console.log('🔄 Content data:', contentData);
+    
     const response = await api.put(`/contents/${id}`, contentData);
+    console.log('🔄 Update response:', response.data);
+    return response.data;
+  },
+  
+  updateWithFile: async (id, formData) => {
+    console.log('🔄=== CONTENTS API UPDATE WITH FILE ===');
+    console.log('🔄 Updating content ID:', id);
+    console.log('🔄 Form data keys:', Array.from(formData.keys()));
+    
+    const response = await api.put(`/contents/${id}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    console.log('🔄 Update with file response:', response.data);
     return response.data;
   },
   

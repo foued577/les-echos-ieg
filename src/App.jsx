@@ -14,6 +14,7 @@ import ContentDetail from './pages/ContentDetail';
 import GazetteEditor from './pages/GazetteEditor';
 import UserProfile from './pages/UserProfile';
 import RubriqueDetail from './pages/RubriqueDetail';
+import EditContent from './pages/EditContent';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -104,6 +105,15 @@ const AuthenticatedApp = () => {
         <ProtectedRoute>
           <LayoutWrapper currentPageName="RubriqueDetail">
             <RubriqueDetail />
+          </LayoutWrapper>
+        </ProtectedRoute>
+      } />
+      
+      {/* Edit content route */}
+      <Route path="/edit-content/:id" element={
+        <ProtectedRoute>
+          <LayoutWrapper currentPageName="EditContent">
+            <EditContent />
           </LayoutWrapper>
         </ProtectedRoute>
       } />
