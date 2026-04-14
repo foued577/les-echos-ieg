@@ -64,26 +64,32 @@ export default function EditContent() {
   const loadContent = async () => {
     try {
       setLoading(true);
-      console.log('🔄=== LOAD CONTENT FOR EDIT ===');
-      console.log('🔄 Content ID:', id);
+      console.log('=== LOAD CONTENT FOR EDIT ===');
+      console.log('Content ID:', id);
       
       const content = await contentsAPI.getById(id);
-      console.log('🔄 Content loaded:', content);
+      console.log('Content loaded from API:', content);
       
       if (content) {
-        setFormData({
+        // Load ALL existing fields into formData
+        const loadedFormData = {
           title: content.title || '',
           description: content.description || '',
-          type: content.type || 'link',
+          type: content.type || 'lien',
           url: content.type === 'lien' ? content.content || '' : '',
           file_url: content.file_url || '',
           files: content.files || [],
           content: content.type === 'article' ? content.content : '',
-          team_ids: content.team_ids?.map(team => team._id || team) || [],
+          team_ids: Array.isArray(content.team_ids) 
+            ? content.team_ids.map(team => team._id || team) 
+            : [],
           rubrique_id: content.rubrique_id?._id || content.rubrique_id || '',
-          tags: content.tags || [],
-          status: content.status || 'draft', // Preserve existing status
-        });
+          tags: Array.isArray(content.tags) ? content.tags : [],
+          status: content.status || '' // Load existing status
+        };
+        
+        console.log('FORM DATA AFTER LOADING:', loadedFormData);
+        setFormData(loadedFormData);
         
         // Set selected files for display
         if (content.files && content.files.length > 0) {
@@ -100,7 +106,7 @@ export default function EditContent() {
         setIsEditing(true);
       }
     } catch (error) {
-      console.error('🔄 Error loading content:', error);
+      console.error('Error loading content:', error);
       toast.error('Erreur lors du chargement du contenu');
     } finally {
       setLoading(false);
@@ -201,8 +207,7 @@ export default function EditContent() {
     try {
       setSubmitting(true);
       console.log('=== UPDATE CONTENT SUBMIT ===');
-      console.log('Form data:', formData);
-      console.log('Existing status being preserved:', formData.status);
+      console.log('FORM DATA BEFORE UPDATE:', formData);
 
       let response;
       
@@ -215,8 +220,11 @@ export default function EditContent() {
         formDataToSend.append('rubrique_id', formData.rubrique_id);
         formDataToSend.append('tags', JSON.stringify(formData.tags));
         formDataToSend.append('team_ids', JSON.stringify(formData.team_ids));
-        // IMPORTANT: Preserve existing status, don't force to 'draft'
-        formDataToSend.append('status', formData.status || 'draft');
+        
+        // IMPORTANT: Only send status if it was actually loaded/changed
+        if (formData.status) {
+          formDataToSend.append('status', formData.status);
+        }
         
         console.log('UPDATE PAYLOAD (FILES):', {
           title: formData.title,
@@ -225,7 +233,7 @@ export default function EditContent() {
           rubrique_id: formData.rubrique_id,
           tags: formData.tags,
           team_ids: formData.team_ids,
-          status: formData.status || 'draft'
+          status: formData.status || 'NOT_SENT'
         });
         
         // Append all files
@@ -235,27 +243,31 @@ export default function EditContent() {
         
         response = await contentsAPI.updateWithFile(id, formDataToSend);
       } else {
-        // Regular form data for links and articles
-        const contentData = {
+        // Build COMPLETE payload without forcing status
+        const payload = {
           title: formData.title,
           description: formData.description,
           type: formData.type,
           rubrique_id: formData.rubrique_id,
           tags: formData.tags,
-          team_ids: formData.team_ids,
-          // IMPORTANT: Preserve existing status, don't force to 'draft'
-          status: formData.status || 'draft'
+          team_ids: formData.team_ids
         };
 
+        // Add content based on type
         if (formData.type === 'lien') {
-          contentData.content = formData.url;
+          payload.content = formData.url;
         } else if (formData.type === 'article') {
-          contentData.content = formData.content;
+          payload.content = formData.content;
         }
 
-        console.log('UPDATE PAYLOAD (REGULAR):', contentData);
+        // IMPORTANT: Only send status if it was actually loaded/changed
+        if (formData.status) {
+          payload.status = formData.status;
+        }
 
-        response = await contentsAPI.update(id, contentData);
+        console.log('UPDATE PAYLOAD (REGULAR):', payload);
+
+        response = await contentsAPI.update(id, payload);
       }
 
       console.log('UPDATED CONTENT RESPONSE:', response.data);

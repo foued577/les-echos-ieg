@@ -541,7 +541,7 @@ const updateContent = async (req, res) => {
   try {
     console.log('=== UPDATE CONTENT START ===');
     console.log('Params ID:', req.params.id);
-    console.log('Request body:', req.body);
+    console.log('REQ.BODY UPDATE:', req.body);
     console.log('User from token:', req.user);
     
     // Validation des entrées
@@ -556,9 +556,9 @@ const updateContent = async (req, res) => {
     }
 
     const content = await Content.findById(req.params.id);
-    console.log('Content found:', !!content);
-    console.log('Original content status:', content?.status);
-    console.log('Original content description:', content?.description);
+    console.log('CONTENT BEFORE UPDATE:', content);
+    console.log('Original status:', content?.status);
+    console.log('Original description:', content?.description);
     
     if (!content) {
       console.log('Content not found');
@@ -577,44 +577,110 @@ const updateContent = async (req, res) => {
       });
     }
 
-    console.log('Permission granted - Updating content...');
+    console.log('Permission granted - Updating content field by field...');
 
-    // Create update object that preserves existing fields
-    const updateData = {
-      title: req.body.title ?? content.title,
-      description: req.body.description ?? content.description,
-      type: req.body.type ?? content.type,
-      rubrique_id: req.body.rubrique_id ?? content.rubrique_id,
-      tags: req.body.tags ?? content.tags,
-      team_ids: req.body.team_ids ?? content.team_ids,
-      // IMPORTANT: Only update status if explicitly provided
-      status: req.body.status !== undefined ? req.body.status : content.status,
-      // Preserve content field based on type
-      content: req.body.content !== undefined ? req.body.content : content.content,
-      // Preserve file fields
-      file_url: req.body.file_url !== undefined ? req.body.file_url : content.file_url,
-      file_name: req.body.file_name !== undefined ? req.body.file_name : content.file_name,
-      mime_type: req.body.mime_type !== undefined ? req.body.mime_type : content.mime_type,
-      cloudinary_public_id: req.body.cloudinary_public_id !== undefined ? req.body.cloudinary_public_id : content.cloudinary_public_id,
-      // Preserve files array
-      files: req.body.files !== undefined ? req.body.files : content.files,
-    };
+    // Extract fields from request body
+    const {
+      title,
+      description,
+      type,
+      content: contentField,
+      rubrique_id,
+      tags,
+      team_ids,
+      status,
+      file_url,
+      file_name,
+      mime_type,
+      cloudinary_public_id,
+      files
+    } = req.body;
 
-    console.log('Update data:', updateData);
-    console.log('Status after update will be:', updateData.status);
-    console.log('Description after update will be:', updateData.description);
+    // Update ONLY fields that are explicitly provided
+    if (title !== undefined && title !== null && title !== '') {
+      content.title = title;
+      console.log('Updated title to:', title);
+    }
 
-    const updatedContent = await Content.findByIdAndUpdate(req.params.id, updateData, {
-      new: true,
-      runValidators: true
-    })
-      .populate('author_id', 'name email avatar')
-      .populate('team_ids', 'name')
-      .populate('rubrique_id', 'name description color');
+    if (description !== undefined && description !== null && description !== '') {
+      content.description = description;
+      console.log('Updated description to:', description);
+    }
 
+    if (type !== undefined && type !== null && type !== '') {
+      content.type = type;
+      console.log('Updated type to:', type);
+    }
+
+    if (contentField !== undefined) {
+      content.content = contentField;
+      console.log('Updated content field to:', contentField);
+    }
+
+    if (rubrique_id !== undefined && rubrique_id !== null && rubrique_id !== '') {
+      content.rubrique_id = rubrique_id;
+      console.log('Updated rubrique_id to:', rubrique_id);
+    }
+
+    if (tags !== undefined) {
+      content.tags = tags;
+      console.log('Updated tags to:', tags);
+    }
+
+    if (team_ids !== undefined) {
+      content.team_ids = team_ids;
+      console.log('Updated team_ids to:', team_ids);
+    }
+
+    // TRÈS IMPORTANT: Ne changer le statut que s'il est explicitement envoyé ET non vide
+    if (status !== undefined && status !== null && status !== '') {
+      content.status = status;
+      console.log('Updated status to:', status);
+    } else {
+      console.log('Status NOT changed (not provided or empty), keeping:', content.status);
+    }
+
+    // Update file fields only if provided
+    if (file_url !== undefined) {
+      content.file_url = file_url;
+      console.log('Updated file_url to:', file_url);
+    }
+
+    if (file_name !== undefined) {
+      content.file_name = file_name;
+      console.log('Updated file_name to:', file_name);
+    }
+
+    if (mime_type !== undefined) {
+      content.mime_type = mime_type;
+      console.log('Updated mime_type to:', mime_type);
+    }
+
+    if (cloudinary_public_id !== undefined) {
+      content.cloudinary_public_id = cloudinary_public_id;
+      console.log('Updated cloudinary_public_id to:', cloudinary_public_id);
+    }
+
+    if (files !== undefined) {
+      content.files = files;
+      console.log('Updated files to:', files);
+    }
+
+    console.log('CONTENT BEFORE SAVE:', content);
+    console.log('Final status will be:', content.status);
+    console.log('Final description will be:', content.description);
+
+    const updatedContent = await content.save();
+
+    // Populate the updated content
+    await updatedContent.populate('author_id', 'name email avatar');
+    await updatedContent.populate('team_ids', 'name');
+    await updatedContent.populate('rubrique_id', 'name description color');
+
+    console.log('CONTENT AFTER SAVE:', updatedContent);
+    console.log('Final status:', updatedContent.status);
+    console.log('Final description:', updatedContent.description);
     console.log('Content updated successfully');
-    console.log('Final content status:', updatedContent.status);
-    console.log('Final content description:', updatedContent.description);
 
     res.status(200).json({
       success: true,
