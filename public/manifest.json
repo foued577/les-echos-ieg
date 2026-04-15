@@ -1,7 +1,7 @@
 {
-  "name": "Les Échos D'IEG",
-  "short_name": "Échos IEG",
-  "description": "Plateforme de publication et de gestion de contenu pour l'IEG",
+  "name": "Les Échos",
+  "short_name": "Les Échos",
+  "description": "Plateforme de publication et de gestion de contenu",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#1e3a8a",

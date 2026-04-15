@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Download, Share2, Check, AlertCircle } from 'lucide-react';
 import GazetteViewer from './GazetteViewer';
+import { APP_NAME } from '../constants/app';
 
 const PreviewGazette = ({ title, description, blocks, onClose }) => {
   const [shareStatus, setShareStatus] = useState('idle'); // idle, copying, success, error
@@ -12,7 +13,7 @@ const PreviewGazette = ({ title, description, blocks, onClose }) => {
     description,
     blocks,
     publication_date: new Date().toISOString(),
-    author: 'La Gazette d\'Occitanie'
+    author: APP_NAME
   };
 
   const handleExportPDF = async () => {
@@ -84,7 +85,7 @@ const PreviewGazette = ({ title, description, blocks, onClose }) => {
         <head>
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>${title || 'Gazette'} - Les Échos D'IEG</title>
+          <title>${title || 'Gazette'} - ${APP_NAME}</title>
           <style>
             /* Reset and base styles */
             * {
@@ -304,7 +305,7 @@ const PreviewGazette = ({ title, description, blocks, onClose }) => {
           <div class="print-container">
             ${gazetteContent}
             <div class="print-footer">
-              <p>Généré par Les Échos D'IEG - ${new Date().toLocaleDateString('fr-FR')}</p>
+              <p>Généré par ${APP_NAME} - ${new Date().toLocaleDateString('fr-FR')}</p>
             </div>
           </div>
         </body>
@@ -362,8 +363,8 @@ const PreviewGazette = ({ title, description, blocks, onClose }) => {
 
       // Create share URL (current page URL for now, could be updated to actual gazette URL)
       const shareUrl = window.location.href;
-      const shareTitle = title || 'Gazette d\'Occitanie';
-      const shareText = description || `Découvrez ma gazette "${shareTitle}" sur La Gazette d'Occitanie`;
+      const shareTitle = title || `Gazette ${APP_NAME}`;
+      const shareText = description || `Découvrez ma gazette "${shareTitle}" sur ${APP_NAME}`;
 
       // Try native share API first
       if (navigator.share) {

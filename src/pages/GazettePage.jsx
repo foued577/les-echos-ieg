@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Share2 } from 'lucide-react';
 import { gazettesAPI } from '../services/api';
 import GazetteViewer from '../components/GazetteViewer';
+import { APP_NAME } from '../constants/app';
 
 const GazettePage = () => {
   const { id } = useParams();
@@ -69,8 +70,8 @@ const GazettePage = () => {
       const shareUrl = window.location.href;
       console.log('🔗 SHARE URL:', shareUrl);
       
-      const shareTitle = gazette?.title || 'Gazette d\'Occitanie';
-      const shareText = gazette?.description || `Découvrez cette gazette sur Les Échos IEG`;
+      const shareTitle = gazette?.title || `Gazette ${APP_NAME}`;
+      const shareText = gazette?.description || `Découvrez cette gazette sur ${APP_NAME}`;
       
       console.log('🔗 SHARE DATA:', { title: shareTitle, text: shareText, url: shareUrl });
       

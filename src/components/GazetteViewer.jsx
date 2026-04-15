@@ -1,5 +1,6 @@
 import React from 'react';
 import { Calendar, User } from 'lucide-react';
+import { APP_NAME, APP_NAME_FULL } from '../constants/app';
 
 const GazetteViewer = ({ gazette, showHeader = true, showFooter = true, className = "" }) => {
   // Render individual block based on type
@@ -226,7 +227,7 @@ const GazetteViewer = ({ gazette, showHeader = true, showFooter = true, classNam
             <p>
               Gazette publiée le {formatDate(dateFields)}
             </p>
-            <p className="mt-2">© Les Échos IEG - Gazette Éditoriale</p>
+            <p className="mt-2"> {APP_NAME_FULL}</p>
           </div>
         </footer>
       )}
