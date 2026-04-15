@@ -112,7 +112,7 @@ export default function Moderation() {
 
   const openPreview = (content) => {
     console.log('=== MODERATION PREVIEW DEBUG ===');
-    console.log('MODERATION PREVIEW CONTENT:', content);
+    console.log('CONTENT:', content);
     console.log('CONTENT TYPE:', content.type);
     console.log('CONTENT FIELDS:', {
       title: content.title,
@@ -122,7 +122,9 @@ export default function Moderation() {
       url: content.url,
       file_url: content.file_url,
       files: content.files,
-      article_content: content.article_content
+      article_content: content.article_content,
+      file_name: content.file_name,
+      mime_type: content.mime_type
     });
     console.log('=== END DEBUG ===');
     
@@ -442,31 +444,48 @@ export default function Moderation() {
                             <span className="font-medium">Type:</span> {selectedContent.mime_type}
                           </p>
                         )}
-                        {(selectedContent.file_url || selectedContent.files?.length > 0) && (
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={() => {
-                              const fileUrl = buildFileUrl(selectedContent.file_url);
-                              const downloadUrl = buildDownloadUrl(fileUrl);
-                              
-                              const link = document.createElement('a');
-                              link.href = downloadUrl;
-                              link.download = selectedContent.file_name || selectedContent.title || 'document';
-                              document.body.appendChild(link);
-                              link.click();
-                              document.body.removeChild(link);
-                            }}
-                            className="text-green-600 border-green-200 hover:bg-green-50"
-                          >
-                            <ExternalLink className="w-4 h-4 mr-1" />
-                            Télécharger
-                          </Button>
+                        
+                        {/* Bouton pour ouvrir le fichier directement */}
+                        {selectedContent.file_url && (
+                          <div className="flex gap-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => {
+                                const fileUrl = buildFileUrl(selectedContent.file_url);
+                                window.open(fileUrl, '_blank');
+                              }}
+                              className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                            >
+                              <ExternalLink className="w-4 h-4 mr-1" />
+                              📄 Ouvrir le fichier
+                            </Button>
+                            
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => {
+                                const fileUrl = buildFileUrl(selectedContent.file_url);
+                                const downloadUrl = buildDownloadUrl(fileUrl);
+                                
+                                const link = document.createElement('a');
+                                link.href = downloadUrl;
+                                link.download = selectedContent.file_name || selectedContent.title || 'document';
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
+                              }}
+                              className="text-green-600 border-green-200 hover:bg-green-50"
+                            >
+                              <ExternalLink className="w-4 h-4 mr-1" />
+                              Télécharger
+                            </Button>
+                          </div>
                         )}
                       </div>
                     </div>
 
-                    {/* Preview for common file types */}
+                    {/* Preview pour les images et PDFs */}
                     {selectedContent.file_url && (
                       <div className="mt-4">
                         {selectedContent.mime_type?.startsWith('image/') && (
@@ -478,7 +497,20 @@ export default function Moderation() {
                             />
                           </div>
                         )}
+                        
+                        {/* Prévisualisation PDF améliorée */}
                         {selectedContent.mime_type === 'application/pdf' && (
+                          <div className="border rounded-lg overflow-hidden">
+                            <iframe
+                              src={buildFileUrl(selectedContent.file_url)}
+                              className="w-full h-96"
+                              title="PDF Preview"
+                            />
+                          </div>
+                        )}
+                        
+                        {/* Fallback pour les PDFs sans mime_type */}
+                        {selectedContent.file_url && selectedContent.file_url.endsWith('.pdf') && (
                           <div className="border rounded-lg overflow-hidden">
                             <iframe
                               src={buildFileUrl(selectedContent.file_url)}
@@ -490,26 +522,47 @@ export default function Moderation() {
                       </div>
                     )}
 
-                    {/* Multiple files support */}
+                    {/* Gestion multi-fichiers */}
                     {selectedContent.files && selectedContent.files.length > 0 && (
                       <div className="mt-4 space-y-2">
-                        <h4 className="font-medium text-slate-900">Fichiers associés:</h4>
+                        <h4 className="font-medium text-slate-900">📁 Fichiers associés:</h4>
                         {selectedContent.files.map((file, index) => (
                           <div key={index} className="p-3 bg-stone-50 rounded-lg border border-stone-200">
                             <div className="flex items-center justify-between">
                               <div>
-                                <p className="font-medium text-slate-900">{file.name}</p>
+                                <p className="font-medium text-slate-900">📄 {file.name}</p>
                                 <p className="text-sm text-slate-500">{file.type} - {(file.size / 1024).toFixed(1)} KB</p>
                               </div>
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => window.open(file.url, '_blank')}
-                                className="text-green-600 border-green-200"
-                              >
-                                <ExternalLink className="w-4 h-4 mr-1" />
-                                Ouvrir
-                              </Button>
+                              <div className="flex gap-2">
+                                {/* Ouvrir */}
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => window.open(file.url, '_blank')}
+                                  className="text-blue-600 border-blue-200"
+                                >
+                                  <ExternalLink className="w-4 h-4 mr-1" />
+                                  Ouvrir
+                                </Button>
+                                
+                                {/* Télécharger */}
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => {
+                                    const link = document.createElement('a');
+                                    link.href = file.url;
+                                    link.download = file.name;
+                                    document.body.appendChild(link);
+                                    link.click();
+                                    document.body.removeChild(link);
+                                  }}
+                                  className="text-green-600 border-green-200"
+                                >
+                                  <ExternalLink className="w-4 h-4 mr-1" />
+                                  Télécharger
+                                </Button>
+                              </div>
                             </div>
                           </div>
                         ))}
