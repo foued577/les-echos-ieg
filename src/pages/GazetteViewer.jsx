@@ -71,6 +71,165 @@ const GazetteViewer = () => {
     }
   };
 
+  // Render individual block based on type
+  const renderBlock = (block, index) => {
+    const blockType = block.type || 'text';
+    const blockContent = block.content || block.description || '';
+    
+    switch (blockType) {
+      case 'title':
+        return (
+          <h1 key={index} className="text-4xl md:text-5xl font-serif text-gray-900 text-center mb-8 leading-tight">
+            {blockContent}
+          </h1>
+        );
+      
+      case 'subtitle':
+        return (
+          <h2 key={index} className="text-2xl md:text-3xl font-serif text-gray-800 text-center mb-6 leading-tight">
+            {blockContent}
+          </h2>
+        );
+      
+      case 'heading':
+        return (
+          <h2 key={index} className="text-2xl md:text-3xl font-serif text-gray-900 mb-6 leading-tight">
+            {blockContent}
+          </h2>
+        );
+      
+      case 'subheading':
+        return (
+          <h3 key={index} className="text-xl md:text-2xl font-serif text-gray-800 mb-4 leading-tight">
+            {blockContent}
+          </h3>
+        );
+      
+      case 'paragraph':
+        return (
+          <p key={index} className="text-lg text-gray-700 leading-relaxed mb-6 font-serif">
+            {blockContent}
+          </p>
+        );
+      
+      case 'quote':
+        return (
+          <blockquote key={index} className="border-l-4 border-blue-600 pl-6 py-4 my-8 bg-gray-50 italic text-xl text-gray-700 font-serif">
+            "{blockContent}"
+          </blockquote>
+        );
+      
+      case 'image':
+        if (blockContent.startsWith('http')) {
+          return (
+            <div key={index} className="my-8">
+              <img 
+                src={blockContent} 
+                alt={block.title || 'Image'} 
+                className="w-full rounded-lg shadow-lg"
+              />
+              {block.title && (
+                <p className="text-center text-sm text-gray-600 mt-2 italic">{block.title}</p>
+              )}
+            </div>
+          );
+        }
+        return null;
+      
+      case 'url':
+        if (blockContent.startsWith('http')) {
+          return (
+            <div key={index} className="my-6">
+              <a 
+                href={blockContent} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:text-blue-800 underline text-lg"
+              >
+                {block.title || blockContent}
+              </a>
+            </div>
+          );
+        }
+        return null;
+      
+      case 'separator':
+        return (
+          <hr key={index} className="border-gray-300 my-8" />
+        );
+      
+      case 'text':
+      default:
+        return (
+          <div key={index} className="prose prose-lg max-w-none mb-6">
+            <div 
+              dangerouslySetInnerHTML={{ __html: blockContent }}
+              className="text-gray-700 leading-relaxed"
+            />
+          </div>
+        );
+    }
+  };
+
+  // Parse content sections - try multiple formats
+  const blocks = [];
+  console.log('=== PARSING GAZETTE CONTENT ===');
+  console.log('Gazette blocks:', gazette?.blocks);
+  console.log('Gazette content:', gazette?.content);
+  
+  // Try blocks first (new format)
+  if (Array.isArray(gazette?.blocks) && gazette.blocks.length > 0) {
+    console.log('Using blocks format');
+    gazette.blocks.forEach((block, index) => {
+      blocks.push({
+        id: index + 1,
+        type: block.type || 'text',
+        content: block.content || block.description || '',
+        title: block.title || ''
+      });
+    });
+  }
+  // Try HTML content with sections (old format)
+  else if (gazette?.content && typeof gazette.content === 'string') {
+    console.log('Using HTML content format');
+    const sectionMatches = gazette.content.match(/<section[^>]*>([\s\S]*?)<\/section>/g);
+    if (sectionMatches) {
+      console.log('Found HTML sections:', sectionMatches.length);
+      sectionMatches.forEach((section, index) => {
+        const titleMatch = section.match(/<h2[^>]*>([\s\S]*?)<\/h2>/);
+        const contentMatch = section.match(/<div[^>]*class="[^"]*content[^"]*"[^>]*>([\s\S]*?)<\/div>/);
+        
+        blocks.push({
+          id: index + 1,
+          type: 'text',
+          content: contentMatch ? contentMatch[1] : section.replace(/<[^>]*>/g, ''),
+          title: titleMatch ? titleMatch[1].replace(/<[^>]*>/g, '') : ''
+        });
+      });
+    } else {
+      console.log('No HTML sections found, using content as single block');
+      // If no sections found, treat entire content as one block
+      blocks.push({
+        id: 1,
+        type: 'text',
+        content: gazette.content,
+        title: ''
+      });
+    }
+  }
+  // Fallback to empty
+  else {
+    console.log('No content found, using empty block');
+    blocks.push({
+      id: 1,
+      type: 'text',
+      content: 'Aucun contenu disponible pour cette gazette.',
+      title: ''
+    });
+  }
+  
+  console.log('Final blocks:', blocks);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -101,221 +260,126 @@ const GazetteViewer = () => {
     );
   }
 
-  // Parse content sections - try multiple formats
-  const sections = [];
-  console.log('=== PARSING GAZETTE CONTENT ===');
-  console.log('Gazette blocks:', gazette.blocks);
-  console.log('Gazette content:', gazette.content);
-  
-  // Try blocks first (new format)
-  if (Array.isArray(gazette.blocks) && gazette.blocks.length > 0) {
-    console.log('Using blocks format');
-    gazette.blocks.forEach((block, index) => {
-      sections.push({
-        id: index + 1,
-        title: block.title || `Section ${index + 1}`,
-        content: block.content || block.description || '',
-        type: block.type || 'text'
-      });
-    });
-  }
-  // Try HTML content with sections (old format)
-  else if (gazette.content && typeof gazette.content === 'string') {
-    console.log('Using HTML content format');
-    const sectionMatches = gazette.content.match(/<section[^>]*>([\s\S]*?)<\/section>/g);
-    if (sectionMatches) {
-      console.log('Found HTML sections:', sectionMatches.length);
-      sectionMatches.forEach((section, index) => {
-        const titleMatch = section.match(/<h2[^>]*>([\s\S]*?)<\/h2>/);
-        const contentMatch = section.match(/<div[^>]*class="[^"]*content[^"]*"[^>]*>([\s\S]*?)<\/div>/);
-        
-        sections.push({
-          id: index + 1,
-          title: titleMatch ? titleMatch[1].replace(/<[^>]*>/g, '') : `Section ${index + 1}`,
-          content: contentMatch ? contentMatch[1] : section.replace(/<[^>]*>/g, '')
-        });
-      });
-    } else {
-      console.log('No HTML sections found, using content as single section');
-      // If no sections found, treat entire content as one section
-      sections.push({
-        id: 1,
-        title: gazette.title || 'Contenu',
-        content: gazette.content
-      });
-    }
-  }
-  // Fallback to empty
-  else {
-    console.log('No content found, using empty section');
-    sections.push({
-      id: 1,
-      title: 'Aucun contenu',
-      content: 'Aucun contenu disponible pour cette gazette.'
-    });
-  }
-  
-  console.log('Final sections:', sections);
-
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header simple et propre */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-4xl mx-auto px-4 py-4">
+      {/* Header minimal et élégant */}
+      <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
+        <div className="max-w-4xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => navigate('/')}
-                className="text-gray-500 hover:text-gray-700 transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </button>
-              <div>
-                <h1 className="text-xl font-semibold text-gray-900">Consultation de Gazette</h1>
-                <p className="text-sm text-gray-500">Lecture seule</p>
-              </div>
-            </div>
+            <button
+              onClick={() => navigate('/')}
+              className="text-gray-500 hover:text-gray-700 transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
             <button
               onClick={handleShare}
-              className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+              className="flex items-center space-x-2 text-gray-600 hover:text-gray-800 transition-colors"
             >
               <Share2 className="w-4 h-4" />
-              <span>Partager</span>
+              <span className="text-sm">Partager</span>
             </button>
           </div>
         </div>
       </div>
 
-      {/* Contenu principal de la gazette */}
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        {/* En-tête de la gazette */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-          <div className="flex items-start justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">{gazette.title}</h1>
-              {gazette.description && (
-                <p className="text-gray-600 mb-4">{gazette.description}</p>
-              )}
-              <div className="flex items-center space-x-4 text-sm text-gray-500">
-                <div className="flex items-center space-x-1">
-                  <Calendar className="w-4 h-4" />
-                  <span>
-                    {(() => {
-                      // Try different date fields in order of preference
-                      const dateFields = [
-                        gazette.publication_date,
-                        gazette.created_at,
-                        gazette.createdAt,
-                        gazette.updated_at,
-                        gazette.updatedAt
-                      ];
-                      
-                      for (const dateField of dateFields) {
-                        if (dateField) {
-                          try {
-                            const date = new Date(dateField);
-                            if (!isNaN(date.getTime())) {
-                              return date.toLocaleDateString('fr-FR');
-                            }
-                          } catch (error) {
-                            console.log('Invalid date field:', dateField);
+      {/* Contenu principal - Style editorial premium */}
+      <div className="max-w-4xl mx-auto px-4 py-12">
+        {/* Article Header */}
+        <article className="bg-white rounded-none shadow-sm">
+          {/* Meta informations */}
+          <div className="text-center mb-8">
+            <div className="flex items-center justify-center space-x-4 text-sm text-gray-500 mb-4">
+              <div className="flex items-center space-x-1">
+                <Calendar className="w-4 h-4" />
+                <span>
+                  {(() => {
+                    // Try different date fields in order of preference
+                    const dateFields = [
+                      gazette.publication_date,
+                      gazette.created_at,
+                      gazette.createdAt,
+                      gazette.updated_at,
+                      gazette.updatedAt
+                    ];
+                    
+                    for (const dateField of dateFields) {
+                      if (dateField) {
+                        try {
+                          const date = new Date(dateField);
+                          if (!isNaN(date.getTime())) {
+                            return date.toLocaleDateString('fr-FR');
                           }
+                        } catch (error) {
+                          console.log('Invalid date field:', dateField);
                         }
                       }
-                      
-                      return 'Date non disponible';
-                    })()}
-                  </span>
+                    }
+                    
+                    return 'Date non disponible';
+                  })()}
+                </span>
+              </div>
+              {gazette.author && (
+                <div className="flex items-center space-x-1">
+                  <User className="w-4 h-4" />
+                  <span>{gazette.author}</span>
                 </div>
-                {gazette.author && (
-                  <div className="flex items-center space-x-1">
-                    <User className="w-4 h-4" />
-                    <span>{gazette.author}</span>
-                  </div>
-                )}
-              </div>
+              )}
             </div>
-            
-            {gazette.cover_image && (
-              <div className="ml-6">
-                <img
-                  src={gazette.cover_image}
-                  alt={gazette.title}
-                  className="w-32 h-32 object-cover rounded-lg"
-                />
-              </div>
+          </div>
+
+          {/* Main Title */}
+          <header className="text-center mb-12">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif text-gray-900 leading-tight mb-6">
+              {gazette.title}
+            </h1>
+            {gazette.description && (
+              <p className="text-xl md:text-2xl text-gray-600 leading-relaxed max-w-3xl mx-auto font-serif italic">
+                {gazette.description}
+              </p>
             )}
-          </div>
-        </div>
+          </header>
 
-        {/* Sections de contenu */}
-        {sections.length > 0 ? (
-          sections.map((section) => (
-            <div key={section.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-4">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">{section.title}</h2>
-              <div 
-                className="prose prose-gray max-w-none"
-                dangerouslySetInnerHTML={{ __html: section.content }}
-              />
-            </div>
-          ))
-        ) : (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <p className="text-gray-600">Aucun contenu disponible pour cette gazette.</p>
+          {/* Article Content */}
+          <div className="prose prose-lg max-w-none">
+            {blocks.map((block, index) => renderBlock(block, index))}
           </div>
-        )}
+        </article>
 
-        {/* Pied de page */}
-        <div className="mt-8 text-center text-sm text-gray-500">
-          <p>
-            Gazette créée le {
-              (() => {
-                const dateFields = [
-                  gazette.created_at,
-                  gazette.createdAt,
-                  gazette.updated_at,
-                  gazette.updatedAt
-                ];
-                
-                for (const dateField of dateFields) {
-                  if (dateField) {
-                    try {
-                      const date = new Date(dateField);
-                      if (!isNaN(date.getTime())) {
-                        return date.toLocaleDateString('fr-FR');
+        {/* Footer */}
+        <footer className="mt-16 pt-8 border-t border-gray-200 text-center">
+          <div className="text-sm text-gray-500">
+            <p>
+              Gazette publiée le {
+                (() => {
+                  const dateFields = [
+                    gazette.created_at,
+                    gazette.createdAt,
+                    gazette.updated_at,
+                    gazette.updatedAt
+                  ];
+                  
+                  for (const dateField of dateFields) {
+                    if (dateField) {
+                      try {
+                        const date = new Date(dateField);
+                        if (!isNaN(date.getTime())) {
+                          return date.toLocaleDateString('fr-FR');
+                        }
+                      } catch (error) {
+                        console.log('Invalid footer date field:', dateField);
                       }
-                    } catch (error) {
-                      console.log('Invalid footer date field:', dateField);
                     }
                   }
-                }
-                
-                return 'Date non disponible';
-              })()
-            }
-          </p>
-          {(() => {
-            const updateDateFields = [
-              gazette.updated_at,
-              gazette.updatedAt
-            ];
-            
-            for (const dateField of updateDateFields) {
-              if (dateField) {
-                try {
-                  const date = new Date(dateField);
-                  if (!isNaN(date.getTime())) {
-                    return <p>Dernière modification le {date.toLocaleDateString('fr-FR')}</p>;
-                  }
-                } catch (error) {
-                  console.log('Invalid update date field:', dateField);
-                }
+                  
+                  return 'Date non disponible';
+                })()
               }
-            }
-            
-            return null;
-          })()}
-        </div>
+            </p>
+            <p className="mt-2">© Les Échos IEG - Gazette Éditoriale</p>
+          </div>
+        </footer>
       </div>
     </div>
   );
