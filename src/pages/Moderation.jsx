@@ -17,6 +17,62 @@ import {
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
+// Fonction pour résoudre les URLs publiques
+const resolvePublicFileUrl = (rawUrl) => {
+  if (!rawUrl) return null;
+
+  // URL déjà absolue
+  if (/^https?:\/\//i.test(rawUrl)) return rawUrl;
+
+  const apiBase = import.meta.env?.VITE_API_URL || 'https://les-echos-ieg.onrender.com/api';
+  const backendBase = apiBase.replace(/\/api$/, '');
+
+  if (rawUrl.startsWith('/')) {
+    return `${backendBase}${rawUrl}`;
+  }
+
+  return `${backendBase}/${rawUrl}`;
+};
+
+// Fonction pour normaliser les fichiers
+const normalizePreviewFiles = (content) => {
+  const result = [];
+
+  // Gérer le tableau files[]
+  if (Array.isArray(content.files) && content.files.length > 0) {
+    content.files.forEach((file, index) => {
+      const rawUrl = file?.url || file?.file_url || file?.secure_url || file?.path || null;
+      const finalUrl = resolvePublicFileUrl(rawUrl);
+
+      if (finalUrl) {
+        result.push({
+          id: file?._id || `${content._id}-file-${index}`,
+          name: file?.name || file?.file_name || `Fichier ${index + 1}`,
+          url: finalUrl,
+          type: file?.type || file?.mime_type || '',
+        });
+      }
+    });
+  }
+
+  // Fallback vers file_url
+  if (result.length === 0) {
+    const rawUrl = content.file_url || content.url || null;
+    const finalUrl = resolvePublicFileUrl(rawUrl);
+
+    if (finalUrl) {
+      result.push({
+        id: `${content._id}-legacy-file`,
+        name: content.file_name || content.title || 'Fichier',
+        url: finalUrl,
+        type: content.mime_type || '',
+      });
+    }
+  }
+
+  return result;
+};
+
 export default function Moderation() {
   const { user } = useAuth();
   const [contents, setContents] = useState([]);
@@ -112,30 +168,10 @@ export default function Moderation() {
 
   const openPreview = (content) => {
     console.log('=== MODERATION PREVIEW DEBUG ===');
-    console.log('CONTENT:', content);
-    console.log('CONTENT TYPE:', content.type);
-    console.log('FILE_URL:', content.file_url);
-    console.log('FILES ARRAY:', content.files);
-    console.log('FILE_NAME:', content.file_name);
-    console.log('MIME_TYPE:', content.mime_type);
+    console.log('SELECTED CONTENT RAW:', content);
     
-    // Debug spécifique pour les fichiers
-    if (content.type === 'file') {
-      console.log('=== FILE DEBUG ===');
-      console.log('file_url exists?', !!content.file_url);
-      console.log('files array exists?', !!content.files);
-      console.log('files length:', content.files?.length);
-      
-      if (content.file_url) {
-        console.log('file_url value:', content.file_url);
-        console.log('buildFileUrl result:', buildFileUrl(content.file_url));
-      }
-      
-      if (content.files && content.files.length > 0) {
-        console.log('files details:', content.files);
-      }
-      console.log('=== END FILE DEBUG ===');
-    }
+    const previewFiles = normalizePreviewFiles(content);
+    console.log('NORMALIZED PREVIEW FILES:', previewFiles);
     
     console.log('=== END DEBUG ===');
     
@@ -439,180 +475,65 @@ export default function Moderation() {
                   </div>
                 )}
 
-                {selectedContent.type === 'file' && (
-                  <div className="space-y-4">
-                    {/* Debug info */}
-                    <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                      <h5 className="font-medium text-yellow-800 mb-2">Debug Info:</h5>
-                      <div className="text-xs text-yellow-700 space-y-1">
-                        <p>file_url: {selectedContent.file_url ? 'EXISTS' : 'NULL'}</p>
-                        <p>files array: {selectedContent.files ? `${selectedContent.files.length} items` : 'NULL'}</p>
-                        <p>file_name: {selectedContent.file_name || 'NULL'}</p>
-                        <p>mime_type: {selectedContent.mime_type || 'NULL'}</p>
-                      </div>
+                {['file', 'fichier'].includes(selectedContent.type) && (() => {
+                  const previewFiles = normalizePreviewFiles(selectedContent);
+                  
+                  return previewFiles.length === 0 ? (
+                    <div className="rounded border border-red-200 bg-red-50 p-4 text-red-700">
+                      Aucun fichier prévisualisable disponible
                     </div>
-                    
-                    <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-                      <h4 className="font-medium text-slate-900 mb-2 flex items-center gap-2">
-                        <File className="w-4 h-4" />
-                        Fichier joint
-                      </h4>
-                      <div className="space-y-2">
-                        <p className="text-slate-700">
-                          <span className="font-medium">Nom:</span> {selectedContent.file_name || selectedContent.title || 'Non spécifié'}
-                        </p>
-                        {selectedContent.mime_type && (
-                          <p className="text-slate-700">
-                            <span className="font-medium">Type:</span> {selectedContent.mime_type}
-                          </p>
-                        )}
-                        
-                        {/* Bouton pour ouvrir le fichier directement */}
-                        {selectedContent.file_url ? (
+                  ) : (
+                    <div className="space-y-4">
+                      {previewFiles.map((file) => (
+                        <div key={file.id} className="rounded border p-4 space-y-3">
+                          <div className="font-medium">{file.name}</div>
+
+                          {/* Preview pour PDF */}
+                          {file.url.toLowerCase().includes('.pdf') && (
+                            <iframe
+                              src={file.url}
+                              title={file.name}
+                              className="w-full h-[500px] rounded border"
+                            />
+                          )}
+                          
+                          {/* Preview pour images */}
+                          {/\.(png|jpg|jpeg|webp|gif|svg)$/i.test(file.url) && (
+                            <img
+                              src={file.url}
+                              alt={file.name}
+                              className="max-h-[500px] w-auto rounded border"
+                            />
+                          )}
+
+                          {/* Boutons d'action */}
                           <div className="flex gap-2">
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              onClick={() => {
-                                console.log('Opening file:', selectedContent.file_url);
-                                const fileUrl = buildFileUrl(selectedContent.file_url);
-                                console.log('Built URL:', fileUrl);
-                                window.open(fileUrl, '_blank');
-                              }}
-                              className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                            <a
+                              href={file.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="px-3 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 inline-flex items-center"
                             >
                               <ExternalLink className="w-4 h-4 mr-1" />
-                              Ouvrir le fichier
-                            </Button>
-                            
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              onClick={() => {
-                                const fileUrl = buildFileUrl(selectedContent.file_url);
-                                const downloadUrl = buildDownloadUrl(fileUrl);
-                                
-                                const link = document.createElement('a');
-                                link.href = downloadUrl;
-                                link.download = selectedContent.file_name || selectedContent.title || 'document';
-                                document.body.appendChild(link);
-                                link.click();
-                                document.body.removeChild(link);
-                              }}
-                              className="text-green-600 border-green-200 hover:bg-green-50"
+                              Ouvrir
+                            </a>
+
+                            <a
+                              href={file.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              download
+                              className="px-3 py-2 rounded border border-gray-300 hover:bg-gray-50 inline-flex items-center"
                             >
                               <ExternalLink className="w-4 h-4 mr-1" />
                               Télécharger
-                            </Button>
+                            </a>
                           </div>
-                        ) : (
-                          <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                            <p className="text-red-700 text-sm">
-                              <strong>file_url manquant</strong> - Le fichier ne peut pas être ouvert
-                            </p>
-                          </div>
-                        )}
-                      </div>
+                        </div>
+                      ))}
                     </div>
-
-                    {/* Preview pour les images et PDFs */}
-                    {selectedContent.file_url && (
-                      <div className="mt-4">
-                        {selectedContent.mime_type?.startsWith('image/') && (
-                          <div className="border rounded-lg overflow-hidden">
-                            <img 
-                              src={buildFileUrl(selectedContent.file_url)} 
-                              alt={selectedContent.title}
-                              className="w-full h-auto max-h-96 object-contain bg-stone-100"
-                            />
-                          </div>
-                        )}
-                        
-                        {/* Prévisualisation PDF améliorée */}
-                        {selectedContent.mime_type === 'application/pdf' && (
-                          <div className="border rounded-lg overflow-hidden">
-                            <iframe
-                              src={buildFileUrl(selectedContent.file_url)}
-                              className="w-full h-96"
-                              title="PDF Preview"
-                            />
-                          </div>
-                        )}
-                        
-                        {/* Fallback pour les PDFs sans mime_type */}
-                        {selectedContent.file_url && selectedContent.file_url.endsWith('.pdf') && (
-                          <div className="border rounded-lg overflow-hidden">
-                            <iframe
-                              src={buildFileUrl(selectedContent.file_url)}
-                              className="w-full h-96"
-                              title="PDF Preview"
-                            />
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Gestion multi-fichiers */}
-                    {selectedContent.files && selectedContent.files.length > 0 && (
-                      <div className="mt-4 space-y-2">
-                        <h4 className="font-medium text-slate-900">Debug Multi-fichiers ({selectedContent.files.length} fichiers):</h4>
-                        {selectedContent.files.map((file, index) => (
-                          <div key={index} className="p-3 bg-stone-50 rounded-lg border border-stone-200">
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <p className="font-medium text-slate-900">File {index + 1}: {file.name}</p>
-                                <p className="text-sm text-slate-500">URL: {file.url}</p>
-                                <p className="text-sm text-slate-500">{file.type} - {(file.size / 1024).toFixed(1)} KB</p>
-                              </div>
-                              <div className="flex gap-2">
-                                {/* Ouvrir */}
-                                <Button 
-                                  variant="outline" 
-                                  size="sm"
-                                  onClick={() => {
-                                    console.log('Opening multi-file:', file.url);
-                                    window.open(file.url, '_blank');
-                                  }}
-                                  className="text-blue-600 border-blue-200"
-                                >
-                                  <ExternalLink className="w-4 h-4 mr-1" />
-                                  Ouvrir
-                                </Button>
-                                {/* Télécharger */}
-                                <Button 
-                                  variant="outline" 
-                                  size="sm"
-                                  onClick={() => {
-                                    const link = document.createElement('a');
-                                    link.href = file.url;
-                                    link.download = file.name;
-                                    document.body.appendChild(link);
-                                    link.click();
-                                    document.body.removeChild(link);
-                                  }}
-                                  className="text-green-600 border-green-200"
-                                >
-                                  <ExternalLink className="w-4 h-4 mr-1" />
-                                  Télécharger
-                                </Button>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    
-                    {/* Fallback si aucun fichier trouvé */}
-                    {!selectedContent.file_url && (!selectedContent.files || selectedContent.files.length === 0) && (
-                      <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                        <h4 className="font-medium text-red-800 mb-2">Aucun fichier trouvé</h4>
-                        <p className="text-red-700 text-sm">
-                          Ni file_url ni files[] ne sont disponibles. Vérifiez l'API backend.
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                )}
+                  );
+                })()}
 
                 {selectedContent.type === 'article' && (
                   <div className="space-y-4">
