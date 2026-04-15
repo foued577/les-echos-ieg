@@ -1,5 +1,5 @@
 // Configuration globale de l'application
-export const APP_NAME = "Les Échos D'IEG";
+export const APP_NAME = "Les Échos";
 
 export const APP_CONFIG = {
   name: APP_NAME,
