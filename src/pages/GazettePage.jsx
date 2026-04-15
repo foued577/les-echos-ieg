@@ -144,7 +144,7 @@ const GazettePage = () => {
         <div className="max-w-4xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <button
-              onClick={() => navigate('/')}
+              onClick={() => navigate('/Gazette')}
               className="text-gray-500 hover:text-gray-700 transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
