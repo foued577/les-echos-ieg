@@ -114,18 +114,29 @@ export default function Moderation() {
     console.log('=== MODERATION PREVIEW DEBUG ===');
     console.log('CONTENT:', content);
     console.log('CONTENT TYPE:', content.type);
-    console.log('CONTENT FIELDS:', {
-      title: content.title,
-      description: content.description,
-      content: content.content,
-      body: content.body,
-      url: content.url,
-      file_url: content.file_url,
-      files: content.files,
-      article_content: content.article_content,
-      file_name: content.file_name,
-      mime_type: content.mime_type
-    });
+    console.log('FILE_URL:', content.file_url);
+    console.log('FILES ARRAY:', content.files);
+    console.log('FILE_NAME:', content.file_name);
+    console.log('MIME_TYPE:', content.mime_type);
+    
+    // Debug spécifique pour les fichiers
+    if (content.type === 'file') {
+      console.log('=== FILE DEBUG ===');
+      console.log('file_url exists?', !!content.file_url);
+      console.log('files array exists?', !!content.files);
+      console.log('files length:', content.files?.length);
+      
+      if (content.file_url) {
+        console.log('file_url value:', content.file_url);
+        console.log('buildFileUrl result:', buildFileUrl(content.file_url));
+      }
+      
+      if (content.files && content.files.length > 0) {
+        console.log('files details:', content.files);
+      }
+      console.log('=== END FILE DEBUG ===');
+    }
+    
     console.log('=== END DEBUG ===');
     
     setSelectedContent(content);
@@ -430,6 +441,17 @@ export default function Moderation() {
 
                 {selectedContent.type === 'file' && (
                   <div className="space-y-4">
+                    {/* Debug info */}
+                    <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      <h5 className="font-medium text-yellow-800 mb-2">Debug Info:</h5>
+                      <div className="text-xs text-yellow-700 space-y-1">
+                        <p>file_url: {selectedContent.file_url ? 'EXISTS' : 'NULL'}</p>
+                        <p>files array: {selectedContent.files ? `${selectedContent.files.length} items` : 'NULL'}</p>
+                        <p>file_name: {selectedContent.file_name || 'NULL'}</p>
+                        <p>mime_type: {selectedContent.mime_type || 'NULL'}</p>
+                      </div>
+                    </div>
+                    
                     <div className="p-4 bg-green-50 rounded-lg border border-green-200">
                       <h4 className="font-medium text-slate-900 mb-2 flex items-center gap-2">
                         <File className="w-4 h-4" />
@@ -446,19 +468,21 @@ export default function Moderation() {
                         )}
                         
                         {/* Bouton pour ouvrir le fichier directement */}
-                        {selectedContent.file_url && (
+                        {selectedContent.file_url ? (
                           <div className="flex gap-2">
                             <Button 
                               variant="outline" 
                               size="sm" 
                               onClick={() => {
+                                console.log('Opening file:', selectedContent.file_url);
                                 const fileUrl = buildFileUrl(selectedContent.file_url);
+                                console.log('Built URL:', fileUrl);
                                 window.open(fileUrl, '_blank');
                               }}
                               className="text-blue-600 border-blue-200 hover:bg-blue-50"
                             >
                               <ExternalLink className="w-4 h-4 mr-1" />
-                              📄 Ouvrir le fichier
+                              Ouvrir le fichier
                             </Button>
                             
                             <Button 
@@ -480,6 +504,12 @@ export default function Moderation() {
                               <ExternalLink className="w-4 h-4 mr-1" />
                               Télécharger
                             </Button>
+                          </div>
+                        ) : (
+                          <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                            <p className="text-red-700 text-sm">
+                              <strong>file_url manquant</strong> - Le fichier ne peut pas être ouvert
+                            </p>
                           </div>
                         )}
                       </div>
@@ -525,12 +555,13 @@ export default function Moderation() {
                     {/* Gestion multi-fichiers */}
                     {selectedContent.files && selectedContent.files.length > 0 && (
                       <div className="mt-4 space-y-2">
-                        <h4 className="font-medium text-slate-900">📁 Fichiers associés:</h4>
+                        <h4 className="font-medium text-slate-900">Debug Multi-fichiers ({selectedContent.files.length} fichiers):</h4>
                         {selectedContent.files.map((file, index) => (
                           <div key={index} className="p-3 bg-stone-50 rounded-lg border border-stone-200">
                             <div className="flex items-center justify-between">
                               <div>
-                                <p className="font-medium text-slate-900">📄 {file.name}</p>
+                                <p className="font-medium text-slate-900">File {index + 1}: {file.name}</p>
+                                <p className="text-sm text-slate-500">URL: {file.url}</p>
                                 <p className="text-sm text-slate-500">{file.type} - {(file.size / 1024).toFixed(1)} KB</p>
                               </div>
                               <div className="flex gap-2">
@@ -538,13 +569,15 @@ export default function Moderation() {
                                 <Button 
                                   variant="outline" 
                                   size="sm"
-                                  onClick={() => window.open(file.url, '_blank')}
+                                  onClick={() => {
+                                    console.log('Opening multi-file:', file.url);
+                                    window.open(file.url, '_blank');
+                                  }}
                                   className="text-blue-600 border-blue-200"
                                 >
                                   <ExternalLink className="w-4 h-4 mr-1" />
                                   Ouvrir
                                 </Button>
-                                
                                 {/* Télécharger */}
                                 <Button 
                                   variant="outline" 
@@ -566,6 +599,16 @@ export default function Moderation() {
                             </div>
                           </div>
                         ))}
+                      </div>
+                    )}
+                    
+                    {/* Fallback si aucun fichier trouvé */}
+                    {!selectedContent.file_url && (!selectedContent.files || selectedContent.files.length === 0) && (
+                      <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                        <h4 className="font-medium text-red-800 mb-2">Aucun fichier trouvé</h4>
+                        <p className="text-red-700 text-sm">
+                          Ni file_url ni files[] ne sont disponibles. Vérifiez l'API backend.
+                        </p>
                       </div>
                     )}
                   </div>
