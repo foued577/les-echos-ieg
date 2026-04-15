@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Share2 } from 'lucide-react';
-import { toast } from 'react-hot-toast';
 import { gazettesAPI } from '../services/api';
 import GazetteViewer from '../components/GazetteViewer';
 
@@ -63,12 +62,47 @@ const GazettePage = () => {
   }, [id]);
 
   const handleShare = async () => {
+    console.log('🔗 SHARE CLICKED - Starting share process');
+    console.log('🔗 GAZETTE DATA:', { title: gazette?.title, description: gazette?.description });
+    
     try {
       const shareUrl = window.location.href;
-      await navigator.clipboard.writeText(shareUrl);
-      toast.success('Lien copié dans le presse-papiers');
+      console.log('🔗 SHARE URL:', shareUrl);
+      
+      const shareTitle = gazette?.title || 'Gazette d\'Occitanie';
+      const shareText = gazette?.description || `Découvrez cette gazette sur Les Échos IEG`;
+      
+      console.log('🔗 SHARE DATA:', { title: shareTitle, text: shareText, url: shareUrl });
+      
+      // Try native share API first
+      if (navigator.share) {
+        console.log('🔗 USING NATIVE SHARE API');
+        try {
+          await navigator.share({
+            title: shareTitle,
+            text: shareText,
+            url: shareUrl
+          });
+          console.log('🔗 NATIVE SHARE SUCCESS');
+          alert('Gazette partagée avec succès !');
+        } catch (shareError) {
+          if (shareError.name !== 'AbortError') {
+            console.log('🔗 NATIVE SHARE FAILED, FALLBACK TO CLIPBOARD');
+            throw shareError;
+          } else {
+            console.log('🔗 USER CANCELLED NATIVE SHARE');
+          }
+        }
+      } else {
+        console.log('🔗 NATIVE SHARE NOT AVAILABLE, USING CLIPBOARD');
+        // Fallback to clipboard
+        await navigator.clipboard.writeText(`${shareTitle}\n${shareText}\n${shareUrl}`);
+        console.log('🔗 CLIPBOARD COPY SUCCESS');
+        alert('Lien copié dans le presse-papiers !');
+      }
     } catch (error) {
-      toast.error('Erreur lors de la copie du lien');
+      console.error('🔗 SHARE ERROR:', error);
+      alert('Erreur lors du partage: ' + error.message);
     }
   };
 
