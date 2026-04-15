@@ -12,7 +12,8 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import ContentDetail from './pages/ContentDetail';
 import GazetteEditor from './pages/GazetteEditor';
-import GazetteViewer from './pages/GazetteViewer';
+import GazetteViewer from './components/GazetteViewer';
+import GazettePage from './pages/GazettePage';
 import UserProfile from './pages/UserProfile';
 import RubriqueDetail from './pages/RubriqueDetail';
 import EditContent from './pages/EditContent';
@@ -77,7 +78,7 @@ const AuthenticatedApp = () => {
       
       {/* Gazette routes - public viewing vs editing */}
       {/* Public viewing route - accessible without authentication for sharing */}
-      <Route path="/gazette/:id" element={<GazetteViewer />} />
+      <Route path="/gazette/:id" element={<GazettePage />} />
       
       {/* Editing route - protected, requires authentication */}
       <Route path="/gazette-editor/:id" element={
