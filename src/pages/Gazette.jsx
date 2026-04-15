@@ -344,7 +344,7 @@ export default function Gazette() {
                       onClick={(e) => {
                         e.stopPropagation();
                         const gazetteId = gazette.id || gazette._id;
-                        navigate(`/gazette/${gazetteId}/edit`);
+                        navigate(`/gazette-editor/${gazetteId}`);
                       }}
                       className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
                     >

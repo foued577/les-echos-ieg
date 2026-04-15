@@ -12,6 +12,7 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import ContentDetail from './pages/ContentDetail';
 import GazetteEditor from './pages/GazetteEditor';
+import GazetteViewer from './pages/GazetteViewer';
 import UserProfile from './pages/UserProfile';
 import RubriqueDetail from './pages/RubriqueDetail';
 import EditContent from './pages/EditContent';
@@ -74,8 +75,12 @@ const AuthenticatedApp = () => {
         </ProtectedRoute>
       } />
       
-      {/* Gazette detail and edit routes */}
-      <Route path="/gazette/:id" element={
+      {/* Gazette routes - public viewing vs editing */}
+      {/* Public viewing route - accessible without authentication for sharing */}
+      <Route path="/gazette/:id" element={<GazetteViewer />} />
+      
+      {/* Editing route - protected, requires authentication */}
+      <Route path="/gazette-editor/:id" element={
         <ProtectedRoute>
           <LayoutWrapper currentPageName="GazetteEditor">
             <GazetteEditor />
@@ -83,6 +88,7 @@ const AuthenticatedApp = () => {
         </ProtectedRoute>
       } />
       
+      {/* Legacy edit route - redirect to editor */}
       <Route path="/gazette/:id/edit" element={
         <ProtectedRoute>
           <LayoutWrapper currentPageName="GazetteEditor">
