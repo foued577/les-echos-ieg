@@ -132,6 +132,21 @@ export default function Moderation() {
   };
 
   const openPreview = (content) => {
+    console.log('=== MODERATION PREVIEW DEBUG ===');
+    console.log('MODERATION PREVIEW CONTENT:', content);
+    console.log('CONTENT TYPE:', content.type);
+    console.log('CONTENT FIELDS:', {
+      title: content.title,
+      description: content.description,
+      content: content.content,
+      body: content.body,
+      url: content.url,
+      file_url: content.file_url,
+      files: content.files,
+      article_content: content.article_content
+    });
+    console.log('=== END DEBUG ===');
+    
     setSelectedContent(content);
     setShowPreview(true);
   };
@@ -398,152 +413,135 @@ export default function Moderation() {
                         </span>
                       )}
                     </div>
-                  </div>
+                  )}
+                  {selectedContent.mime_type === 'application/pdf' && (
+                    <div className="border rounded-lg overflow-hidden">
+                      <iframe
+                        src={buildFileUrl(selectedContent.file_url)}
+                        className="w-full h-96"
+                        title="PDF Preview"
+                      />
+                    </div>
+                  )}
                 </div>
-              </DialogHeader>
+              )}
 
-              {/* Content Preview */}
-              <div className="py-6">
-                {selectedContent.description && (
-                  <div className="mb-6 p-4 bg-stone-50 rounded-lg border border-stone-200">
-                    <h4 className="font-medium text-slate-900 mb-2">Description</h4>
-                    <p className="text-slate-700">{selectedContent.description}</p>
-                  </div>
-                )}
-
-                {/* Type-specific content */}
-                {selectedContent.type === 'link' && (
-                  <div className="space-y-4">
-                    <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                      <h4 className="font-medium text-slate-900 mb-2 flex items-center gap-2">
-                        <LinkIcon className="w-4 h-4" />
-                        Lien externe
-                      </h4>
-                      <div className="space-y-2">
-                        <p className="text-slate-700 break-all">{selectedContent.url}</p>
+              {/* Multiple files support */}
+              {selectedContent.files && selectedContent.files.length > 0 && (
+                <div className="mt-4 space-y-2">
+                  <h4 className="font-medium text-slate-900">Fichiers associés:</h4>
+                  {selectedContent.files.map((file, index) => (
+                    <div key={index} className="p-3 bg-stone-50 rounded-lg border border-stone-200">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-medium text-slate-900">{file.name}</p>
+                          <p className="text-sm text-slate-500">{file.type} - {(file.size / 1024).toFixed(1)} KB</p>
+                        </div>
                         <Button 
                           variant="outline" 
-                          size="sm" 
-                          onClick={() => window.open(selectedContent.url, '_blank')}
-                          className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                          size="sm"
+                          onClick={() => window.open(file.url, '_blank')}
+                          className="text-green-600 border-green-200"
                         >
                           <ExternalLink className="w-4 h-4 mr-1" />
-                          Ouvrir dans un nouvel onglet
+                          Ouvrir
                         </Button>
                       </div>
                     </div>
-                  </div>
-                )}
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
-                {selectedContent.type === 'file' && (
-                  <div className="space-y-4">
-                    <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-                      <h4 className="font-medium text-slate-900 mb-2 flex items-center gap-2">
-                        <File className="w-4 h-4" />
-                        Fichier joint
-                      </h4>
-                      <div className="space-y-2">
-                        <p className="text-slate-700">
-                          <span className="font-medium">Nom:</span> {selectedContent.file_name || selectedContent.title}
-                        </p>
-                        {selectedContent.mime_type && (
-                          <p className="text-slate-700">
-                            <span className="font-medium">Type:</span> {selectedContent.mime_type}
-                          </p>
-                        )}
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => {
-                            const fileUrl = buildFileUrl(selectedContent.file_url);
-                            const downloadUrl = buildDownloadUrl(fileUrl);
-                            
-                            const link = document.createElement('a');
-                            link.href = downloadUrl;
-                            link.download = selectedContent.file_name || selectedContent.title || 'document';
-                            document.body.appendChild(link);
-                            link.click();
-                            document.body.removeChild(link);
-                          }}
-                          className="text-green-600 border-green-200 hover:bg-green-50"
-                        >
-                          <ExternalLink className="w-4 h-4 mr-1" />
-                          Télécharger
-                        </Button>
-                      </div>
-                    </div>
-
-                    {/* Preview for common file types */}
-                    {selectedContent.file_url && (
-                      <div className="mt-4">
-                        {selectedContent.mime_type?.startsWith('image/') && (
-                          <div className="border rounded-lg overflow-hidden">
-                            <img 
-                              src={buildFileUrl(selectedContent.file_url)} 
-                              alt={selectedContent.title}
-                              className="w-full h-auto max-h-96 object-contain bg-stone-100"
-                            />
-                          </div>
-                        )}
-                        {selectedContent.mime_type === 'application/pdf' && (
-                          <div className="border rounded-lg overflow-hidden">
-                            <iframe
-                              src={buildFileUrl(selectedContent.file_url)}
-                              className="w-full h-96"
-                              title="PDF Preview"
-                            />
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {selectedContent.type === 'article' && (
-                  <div className="prose prose-slate max-w-none">
-                    {selectedContent.content ? (
-                      <div dangerouslySetInnerHTML={{ __html: selectedContent.content }} />
-                    ) : selectedContent.article_content ? (
-                      <div dangerouslySetInnerHTML={{ __html: selectedContent.article_content }} />
-                    ) : (
-                      <p className="text-slate-500 italic">Aucun contenu textuel disponible</p>
-                    )}
+          {selectedContent.type === 'article' && (
+            <div className="space-y-4">
+              {/* Tags */}
+              {selectedContent.tags && selectedContent.tags.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {selectedContent.tags.map((tag, index) => (
+                    <span key={index} className="px-2 py-1 bg-stone-100 text-stone-600 rounded-full text-sm">
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+              
+              {/* Article content */}
+              <div className="prose prose-slate max-w-none">
+                {selectedContent.content ? (
+                  <div dangerouslySetInnerHTML={{ __html: selectedContent.content }} />
+                ) : selectedContent.article_content ? (
+                  <div dangerouslySetInnerHTML={{ __html: selectedContent.article_content }} />
+                ) : selectedContent.body ? (
+                  <div dangerouslySetInnerHTML={{ __html: selectedContent.body }} />
+                ) : selectedContent.description ? (
+                  <div className="text-slate-700 whitespace-pre-wrap">{selectedContent.description}</div>
+                ) : (
+                  <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                    <p className="text-amber-800 italic">Aucun contenu textuel disponible pour cet article</p>
                   </div>
                 )}
               </div>
-
-              {/* Footer with actions */}
-              <DialogFooter className="flex-col sm:flex-row gap-2 pt-4 border-t">
-                <Button variant="outline" onClick={() => setShowPreview(false)}>
-                  Fermer
-                </Button>
-                <div className="flex-1" />
-                <Button
-                  variant="ghost"
-                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                  onClick={() => {
-                    setShowPreview(false);
-                    openRejectDialog(selectedContent);
-                  }}
-                >
-                  <XCircle className="w-4 h-4 mr-1" />
-                  Refuser
-                </Button>
-                <Button
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white"
-                  onClick={() => {
-                    setShowPreview(false);
-                    handleApprove(selectedContent.id);
-                  }}
-                >
-                  <CheckCircle className="w-4 h-4 mr-1" />
-                  Approuver
-                </Button>
-              </DialogFooter>
-            </>
+            </div>
           )}
-        </DialogContent>
-      </Dialog>
-    </div>
+
+          {/* Fallback for unknown types */}
+          {!['link', 'file', 'article'].includes(selectedContent.type) && (
+            <div className="space-y-4">
+              <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                <h4 className="font-medium text-slate-900 mb-2">Type de contenu: {selectedContent.type}</h4>
+                <div className="space-y-2">
+                  {selectedContent.description && (
+                    <p className="text-slate-700">{selectedContent.description}</p>
+                  )}
+                  {selectedContent.content && (
+                    <div className="prose prose-slate max-w-none">
+                      <div dangerouslySetInnerHTML={{ __html: selectedContent.content }} />
+                    </div>
+                  )}
+                  {!selectedContent.description && !selectedContent.content && (
+                    <p className="text-amber-800 italic">Aucun contenu disponible pour ce type</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Footer with actions */}
+        <DialogFooter className="flex-col sm:flex-row gap-2 pt-4 border-t">
+          <Button variant="outline" onClick={() => setShowPreview(false)}>
+            Fermer
+          </Button>
+          <div className="flex-1" />
+          <Button
+            variant="ghost"
+            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+            onClick={() => {
+              setShowPreview(false);
+              openRejectDialog(selectedContent);
+            }}
+          >
+            <XCircle className="w-4 h-4 mr-1" />
+            Refuser
+          </Button>
+          <Button
+            className="bg-emerald-600 hover:bg-emerald-700 text-white"
+            onClick={() => {
+              setShowPreview(false);
+              handleApprove(selectedContent.id);
+            }}
+          >
+            <CheckCircle className="w-4 h-4 mr-1" />
+            Approuver
+          </Button>
+        </DialogFooter>
+      </>
+    )}
+  </DialogContent>
+</Dialog>
+
+// ... (rest of the code remains the same)
   );
 }
