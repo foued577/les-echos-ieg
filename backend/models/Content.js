@@ -7,6 +7,11 @@ const contentSchema = new mongoose.Schema({
     trim: true,
     maxlength: [100, 'Le titre ne peut pas dépasser 100 caractères']
   },
+  description: {
+    type: String,
+    default: '',
+    trim: true
+  },
   content: {
     type: String,
     required: false // Rendu optionnel pour les fichiers

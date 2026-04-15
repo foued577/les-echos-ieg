@@ -248,9 +248,9 @@ export default function EditContent() {
           title: formData.title,
           description: formData.description,
           type: formData.type,
-          rubrique_id: formData.rubrique_id,
+          rubrique_id: formData.rubrique_id, // Correct field name
           tags: formData.tags,
-          team_ids: formData.team_ids
+          team_ids: formData.team_ids // Correct field name
         };
 
         // Add content based on type
@@ -265,6 +265,7 @@ export default function EditContent() {
           payload.status = formData.status;
         }
 
+        console.log('FORM DATA BEFORE UPDATE:', formData);
         console.log('UPDATE PAYLOAD (REGULAR):', payload);
 
         response = await contentsAPI.update(id, payload);

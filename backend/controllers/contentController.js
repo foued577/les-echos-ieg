@@ -579,15 +579,15 @@ const updateContent = async (req, res) => {
 
     console.log('Permission granted - Updating content field by field...');
 
-    // Extract fields from request body
+    // Extract fields from request body with correct field names
     const {
       title,
       description,
       type,
       content: contentField,
-      rubrique_id,
+      rubrique_id, // Correct field name
       tags,
-      team_ids,
+      team_ids, // Correct field name
       status,
       file_url,
       file_name,
