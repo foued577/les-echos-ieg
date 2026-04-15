@@ -83,26 +83,27 @@ const GazettePage = () => {
             text: shareText,
             url: shareUrl
           });
-          console.log('🔗 NATIVE SHARE SUCCESS');
-          alert('Gazette partagée avec succès !');
+          console.log('🔗 NATIVE SHARE SUCCESS - Silent feedback');
+          // Silent success - native share provides its own feedback
         } catch (shareError) {
           if (shareError.name !== 'AbortError') {
             console.log('🔗 NATIVE SHARE FAILED, FALLBACK TO CLIPBOARD');
             throw shareError;
           } else {
-            console.log('🔗 USER CANCELLED NATIVE SHARE');
+            console.log('🔗 USER CANCELLED NATIVE SHARE - Silent');
           }
         }
       } else {
         console.log('🔗 NATIVE SHARE NOT AVAILABLE, USING CLIPBOARD');
         // Fallback to clipboard
         await navigator.clipboard.writeText(`${shareTitle}\n${shareText}\n${shareUrl}`);
-        console.log('🔗 CLIPBOARD COPY SUCCESS');
-        alert('Lien copié dans le presse-papiers !');
+        console.log('🔗 CLIPBOARD COPY SUCCESS - Silent feedback');
+        // Silent success - clipboard copy is immediate
       }
     } catch (error) {
       console.error('🔗 SHARE ERROR:', error);
-      alert('Erreur lors du partage: ' + error.message);
+      // Silent error handling - no intrusive alerts
+      console.log('🔗 Share failed silently - user can try again');
     }
   };
 
