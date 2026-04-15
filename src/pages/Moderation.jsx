@@ -205,6 +205,10 @@ export default function Moderation() {
             
             {showActions && (
               <div className="flex items-center gap-2 mt-4 pt-4 border-t border-stone-100">
+                <Button variant="ghost" size="sm" onClick={() => openPreview(content)} className="text-slate-600">
+                  <Eye className="w-4 h-4 mr-1" />
+                  Voir
+                </Button>
                 {content.type === 'link' && content.url && (
                   <Button variant="ghost" size="sm" onClick={() => window.open(content.url, '_blank')} className="text-slate-600">
                     <ExternalLink className="w-4 h-4 mr-1" />
@@ -225,12 +229,6 @@ export default function Moderation() {
                   }} className="text-slate-600">
                     <ExternalLink className="w-4 h-4 mr-1" />
                     Télécharger
-                  </Button>
-                )}
-                {content.type === 'article' && (
-                  <Button variant="ghost" size="sm" onClick={() => openPreview(content)} className="text-slate-600">
-                    <Eye className="w-4 h-4 mr-1" />
-                    Prévisualiser
                   </Button>
                 )}
                 <div className="flex-1" />
@@ -367,22 +365,181 @@ export default function Moderation() {
         </DialogContent>
       </Dialog>
 
-      {/* Preview Dialog */}
+      {/* Enhanced Preview Dialog */}
       <Dialog open={showPreview} onOpenChange={(open) => {
         if (!open) {
           setShowPreview(false);
         }
       }}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           {selectedContent && (
             <>
               <DialogHeader>
-                <DialogTitle className="font-serif text-xl">{selectedContent.title}</DialogTitle>
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <DialogTitle className="font-serif text-xl text-left">{selectedContent.title}</DialogTitle>
+                    <div className="flex items-center gap-3 mt-2 text-sm text-slate-500">
+                      <span className="flex items-center gap-1">
+                        <User className="w-3 h-3" />
+                        {selectedContent.author_name || 'Anonyme'}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Calendar className="w-3 h-3" />
+                        {format(new Date(selectedContent.created_at), 'dd MMM yyyy', { locale: fr })}
+                      </span>
+                      <span className="px-2 py-0.5 bg-stone-100 text-stone-600 rounded-full text-xs">
+                        {selectedContent.type === 'link' && 'Lien'}
+                        {selectedContent.type === 'file' && 'Fichier'}
+                        {selectedContent.type === 'article' && 'Article'}
+                      </span>
+                      {getTeam(selectedContent.team_id) && (
+                        <span className="px-2 py-0.5 bg-stone-100 text-stone-600 rounded-full text-xs">
+                          {getTeam(selectedContent.team_id).name}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </DialogHeader>
-              <div 
-                className="prose prose-slate max-w-none py-4"
-                dangerouslySetInnerHTML={{ __html: selectedContent.article_content }}
-              />
+
+              {/* Content Preview */}
+              <div className="py-6">
+                {selectedContent.description && (
+                  <div className="mb-6 p-4 bg-stone-50 rounded-lg border border-stone-200">
+                    <h4 className="font-medium text-slate-900 mb-2">Description</h4>
+                    <p className="text-slate-700">{selectedContent.description}</p>
+                  </div>
+                )}
+
+                {/* Type-specific content */}
+                {selectedContent.type === 'link' && (
+                  <div className="space-y-4">
+                    <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                      <h4 className="font-medium text-slate-900 mb-2 flex items-center gap-2">
+                        <LinkIcon className="w-4 h-4" />
+                        Lien externe
+                      </h4>
+                      <div className="space-y-2">
+                        <p className="text-slate-700 break-all">{selectedContent.url}</p>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => window.open(selectedContent.url, '_blank')}
+                          className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                        >
+                          <ExternalLink className="w-4 h-4 mr-1" />
+                          Ouvrir dans un nouvel onglet
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {selectedContent.type === 'file' && (
+                  <div className="space-y-4">
+                    <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+                      <h4 className="font-medium text-slate-900 mb-2 flex items-center gap-2">
+                        <File className="w-4 h-4" />
+                        Fichier joint
+                      </h4>
+                      <div className="space-y-2">
+                        <p className="text-slate-700">
+                          <span className="font-medium">Nom:</span> {selectedContent.file_name || selectedContent.title}
+                        </p>
+                        {selectedContent.mime_type && (
+                          <p className="text-slate-700">
+                            <span className="font-medium">Type:</span> {selectedContent.mime_type}
+                          </p>
+                        )}
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => {
+                            const fileUrl = buildFileUrl(selectedContent.file_url);
+                            const downloadUrl = buildDownloadUrl(fileUrl);
+                            
+                            const link = document.createElement('a');
+                            link.href = downloadUrl;
+                            link.download = selectedContent.file_name || selectedContent.title || 'document';
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                          }}
+                          className="text-green-600 border-green-200 hover:bg-green-50"
+                        >
+                          <ExternalLink className="w-4 h-4 mr-1" />
+                          Télécharger
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Preview for common file types */}
+                    {selectedContent.file_url && (
+                      <div className="mt-4">
+                        {selectedContent.mime_type?.startsWith('image/') && (
+                          <div className="border rounded-lg overflow-hidden">
+                            <img 
+                              src={buildFileUrl(selectedContent.file_url)} 
+                              alt={selectedContent.title}
+                              className="w-full h-auto max-h-96 object-contain bg-stone-100"
+                            />
+                          </div>
+                        )}
+                        {selectedContent.mime_type === 'application/pdf' && (
+                          <div className="border rounded-lg overflow-hidden">
+                            <iframe
+                              src={buildFileUrl(selectedContent.file_url)}
+                              className="w-full h-96"
+                              title="PDF Preview"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {selectedContent.type === 'article' && (
+                  <div className="prose prose-slate max-w-none">
+                    {selectedContent.content ? (
+                      <div dangerouslySetInnerHTML={{ __html: selectedContent.content }} />
+                    ) : selectedContent.article_content ? (
+                      <div dangerouslySetInnerHTML={{ __html: selectedContent.article_content }} />
+                    ) : (
+                      <p className="text-slate-500 italic">Aucun contenu textuel disponible</p>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Footer with actions */}
+              <DialogFooter className="flex-col sm:flex-row gap-2 pt-4 border-t">
+                <Button variant="outline" onClick={() => setShowPreview(false)}>
+                  Fermer
+                </Button>
+                <div className="flex-1" />
+                <Button
+                  variant="ghost"
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                  onClick={() => {
+                    setShowPreview(false);
+                    openRejectDialog(selectedContent);
+                  }}
+                >
+                  <XCircle className="w-4 h-4 mr-1" />
+                  Refuser
+                </Button>
+                <Button
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                  onClick={() => {
+                    setShowPreview(false);
+                    handleApprove(selectedContent.id);
+                  }}
+                >
+                  <CheckCircle className="w-4 h-4 mr-1" />
+                  Approuver
+                </Button>
+              </DialogFooter>
             </>
           )}
         </DialogContent>
