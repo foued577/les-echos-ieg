@@ -127,12 +127,11 @@ router.post('/cloudinary', authMiddleware, upload.single('file'), async (req, re
     // Configure upload options based on type (upload normal)
     const uploadOptions = {
       folder: `gazette_${type}s`,
-      resource_type: type === 'video' ? 'video' : 'auto',
-      type: 'upload',
-      access_mode: 'public',
+      resource_type: type === 'video' ? 'video' : 'auto'
+      // ❌ Supprimé : type et access_mode (ignorés par le preset)
     };
     
-    console.log('Normal upload options:', uploadOptions);
+    console.log('SIMPLIFIED UPLOAD OPTIONS:', uploadOptions);
 
     // Upload to Cloudinary
     const result = await new Promise((resolve, reject) => {

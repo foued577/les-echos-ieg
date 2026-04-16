@@ -16,9 +16,8 @@ const storage = new CloudinaryStorage({
 
     const uploadParams = {
       folder: 'les-echos-ieg-files',
-      resource_type: 'auto', // ✅ FORCÉ : auto pour TOUS les fichiers
-      type: 'upload', // ✅ FORCÉ : rend les fichiers publics
-      access_mode: 'public', // ✅ FORCÉ : accès public explicite
+      resource_type: 'auto', // ✅ Simple : auto pour tous les fichiers
+      // ❌ Supprimé : type et access_mode (ignorés par le preset)
       public_id: `${Date.now()}-${path.basename(file.originalname, ext)
         .normalize('NFD')
         .replace(/[\u0300-\u036f]/g, '')
@@ -26,7 +25,7 @@ const storage = new CloudinaryStorage({
       format: ext.replace('.', ''),
     };
 
-    console.log('🚀 FORCED UPLOAD PARAMS:', uploadParams);
+    console.log('🚀 SIMPLIFIED UPLOAD PARAMS:', uploadParams);
     return uploadParams;
   },
 });
