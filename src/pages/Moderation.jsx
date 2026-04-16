@@ -3,7 +3,7 @@ import { teamsAPI, contentsAPI, buildFileUrl, buildDownloadUrl } from '@/service
 import { getFileUrl } from '../utils';
 import { useAuth } from '@/lib/AuthContext';
 import { toast } from 'sonner';
-import { CheckCircle, XCircle, Clock, FileText, Link as LinkIcon, File, ExternalLink, Eye, User, Calendar } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, FileText, Link as LinkIcon, File, ExternalLink, Eye, User, Calendar, Trash2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -170,6 +170,24 @@ export default function Moderation() {
     }
   };
 
+  const handleDeleteContent = async (contentId, contentTitle) => {
+    // Confirmation avant suppression
+    const confirmed = window.confirm(
+      `Voulez-vous vraiment supprimer définitivement ce contenu ?\n\n${contentTitle || 'Sans titre'}`
+    );
+    
+    if (!confirmed) return;
+
+    try {
+      await contentsAPI.delete(contentId);
+      toast.success('Contenu supprimé avec succès');
+      loadData(); // Recharger les données
+    } catch (error) {
+      console.error('Error deleting content:', error);
+      toast.error('Erreur lors de la suppression');
+    }
+  };
+
   const openRejectDialog = (content) => {
     setSelectedContent(content);
     setShowRejectDialog(true);
@@ -288,6 +306,16 @@ export default function Moderation() {
               <XCircle className="w-4 h-4 mr-1" />
               Refuser
             </Button>
+            {user?.role === 'ADMIN' && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => handleDeleteContent(content.id, content.title)}
+              >
+                <Trash2 className="w-4 h-4 mr-1" />
+                Supprimer
+              </Button>
+            )}
             <Button
               size="sm"
               className="bg-emerald-600 hover:bg-emerald-700 text-white"
