@@ -58,18 +58,77 @@ router.post('/cloudinary', authMiddleware, upload.single('file'), async (req, re
             reject(error);
           } else {
             console.log('Direct upload success:', result.secure_url);
-            resolve(result);
+            
+            // Test immédiat de l'URL
+            const https = require('https');
+            const url = new URL(result.secure_url);
+            
+            https.get(url, (res) => {
+              console.log('=== DIRECT UPLOAD URL TEST ===');
+              console.log('URL:', result.secure_url);
+              console.log('Status Code:', res.statusCode);
+              console.log('Content-Type:', res.headers['content-type']);
+              console.log('Content-Length:', res.headers['content-length']);
+              
+              if (res.statusCode === 200) {
+                console.log('SUCCESS: Direct upload URL is accessible!');
+              } else {
+                console.error('ERROR: Direct upload URL returns', res.statusCode);
+              }
+              
+              resolve(result);
+            }).on('error', (err) => {
+              console.error('ERROR testing direct upload URL:', err.message);
+              resolve(result);
+            });
           }
         }
       ).end(tempBuffer);
     });
     
-    console.log('DIRECT UPLOAD RESULT:', {
+    console.log('DIRECT UPLOAD FULL RESULT:', JSON.stringify(directResult, null, 2));
+    console.log('DIRECT UPLOAD KEY FIELDS:', {
       secure_url: directResult.secure_url,
+      url: directResult.url,
       resource_type: directResult.resource_type,
       type: directResult.type,
-      access_mode: directResult.access_mode
+      access_mode: directResult.access_mode,
+      public_id: directResult.public_id,
+      format: directResult.format
     });
+
+    // Test avec signed URL (alternative)
+    console.log('=== SIGNED URL TEST ===');
+    try {
+      const signedUrl = cloudinary.utils.url(directResult.public_id, {
+        resource_type: directResult.resource_type,
+        type: 'upload',
+        secure: true,
+        sign_url: true
+      });
+      
+      console.log('SIGNED URL:', signedUrl);
+      
+      // Test de la signed URL
+      const https = require('https');
+      const signedUrlObj = new URL(signedUrl);
+      
+      https.get(signedUrlObj, (res) => {
+        console.log('=== SIGNED URL TEST RESULT ===');
+        console.log('Signed URL Status:', res.statusCode);
+        console.log('Signed URL Content-Type:', res.headers['content-type']);
+        
+        if (res.statusCode === 200) {
+          console.log('SUCCESS: Signed URL works - Cloudinary requires signed URLs!');
+        } else {
+          console.log('INFO: Signed URL also returns', res.statusCode);
+        }
+      }).on('error', (err) => {
+        console.error('ERROR testing signed URL:', err.message);
+      });
+    } catch (error) {
+      console.error('ERROR generating signed URL:', error.message);
+    }
 
     // Configure upload options based on type (upload normal)
     const uploadOptions = {
