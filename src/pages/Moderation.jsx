@@ -17,6 +17,15 @@ import {
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
+// Fonction pour corriger l'encodage des noms de fichiers
+const fixEncoding = (text) => {
+  try {
+    return decodeURIComponent(escape(text));
+  } catch {
+    return text;
+  }
+};
+
 // Fonction pour résoudre les URLs publiques
 const resolvePublicFileUrl = (rawUrl) => {
   if (!rawUrl) return null;
@@ -486,13 +495,13 @@ export default function Moderation() {
                     <div className="space-y-4">
                       {previewFiles.map((file) => (
                         <div key={file.id} className="rounded border p-4 space-y-3">
-                          <div className="font-medium">{file.name}</div>
+                          <div className="font-medium">{fixEncoding(file.name)}</div>
 
                           {/* Preview pour PDF */}
                           {file.url.toLowerCase().includes('.pdf') && (
                             <iframe
                               src={file.url}
-                              title={file.name}
+                              title={fixEncoding(file.name)}
                               className="w-full h-[500px] rounded border"
                             />
                           )}
@@ -501,7 +510,7 @@ export default function Moderation() {
                           {/\.(png|jpg|jpeg|webp|gif|svg)$/i.test(file.url) && (
                             <img
                               src={file.url}
-                              alt={file.name}
+                              alt={fixEncoding(file.name)}
                               className="max-h-[500px] w-auto rounded border"
                             />
                           )}
@@ -566,28 +575,6 @@ export default function Moderation() {
                     </div>
                   </div>
                 )}
-
-                {/* Fallback for unknown types */}
-                {!['link', 'file', 'article'].includes(selectedContent.type) && (
-                  <div className="space-y-4">
-                    <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                      <h4 className="font-medium text-slate-900 mb-2">Type de contenu: {selectedContent.type}</h4>
-                      <div className="space-y-2">
-                        {selectedContent.description && (
-                          <p className="text-slate-700">{selectedContent.description}</p>
-                        )}
-                        {selectedContent.content && (
-                          <div className="prose prose-slate max-w-none">
-                            <div dangerouslySetInnerHTML={{ __html: selectedContent.content }} />
-                          </div>
-                        )}
-                        {!selectedContent.description && !selectedContent.content && (
-                          <p className="text-amber-800 italic">Aucun contenu disponible pour ce type</p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
 
               {/* Footer with actions */}
@@ -624,4 +611,4 @@ export default function Moderation() {
       </Dialog>
     </div>
   );
-}
+};
