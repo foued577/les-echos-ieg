@@ -42,7 +42,9 @@ router.post('/cloudinary', authMiddleware, upload.single('file'), async (req, re
     // Configure upload options based on type
     const uploadOptions = {
       folder: `gazette_${type}s`,
-      resource_type: type === 'video' ? 'video' : 'auto',
+      resource_type: type === 'video' ? 'video' : 'auto', // ✅ CORRIGÉ : auto au lieu de raw
+      type: 'upload', // ✅ AJOUTÉ : rend les fichiers publics
+      access_mode: 'public', // ✅ AJOUTÉ : accès public explicite
       // Remove format parameter - it's causing the error
     };
     

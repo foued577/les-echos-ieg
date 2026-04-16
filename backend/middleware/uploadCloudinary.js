@@ -10,7 +10,9 @@ const storage = new CloudinaryStorage({
 
     return {
       folder: 'les-echos-ieg-files',
-      resource_type: 'raw',
+      resource_type: 'auto', // ✅ CORRIGÉ : auto au lieu de raw
+      type: 'upload', // ✅ AJOUTÉ : rend les fichiers publics
+      access_mode: 'public', // ✅ AJOUTÉ : accès public explicite
       public_id: `${Date.now()}-${path.basename(file.originalname, ext)
         .normalize('NFD')
         .replace(/[\u0300-\u036f]/g, '')
