@@ -16,13 +16,14 @@ const upload = multer({
 // Upload endpoint for gazette media
 router.post('/cloudinary', authMiddleware, upload.single('file'), async (req, res) => {
   try {
-    console.log('🚀 DEBUG: Upload request received');
-    console.log('📁 DEBUG: Request file:', req.file);
-    console.log('📝 DEBUG: Request body:', req.body);
-    console.log('🔐 DEBUG: User authenticated:', !!req.user);
+    console.log('=== CLOUDINARY UPLOAD DIAGNOSTIC START ===');
+    console.log('Upload request received');
+    console.log('Request file:', req.file);
+    console.log('Request body:', req.body);
+    console.log('User authenticated:', !!req.user);
     
     if (!req.file) {
-      console.error('❌ ERROR: No file received');
+      console.error('ERROR: No file received');
       return res.status(400).json({
         success: false,
         message: 'Aucun fichier fourni'
@@ -30,25 +31,55 @@ router.post('/cloudinary', authMiddleware, upload.single('file'), async (req, re
     }
 
     const { type = 'image' } = req.body;
-    console.log(`🚀 Backend: Uploading ${type} to Cloudinary:`, req.file.originalname);
+    console.log(`Backend: Uploading ${type} to Cloudinary:`, req.file.originalname);
 
     // Check Cloudinary configuration
-    console.log('☁️ DEBUG: Cloudinary config check:', {
+    console.log('Cloudinary config check:', {
       cloud_name: process.env.CLOUDINARY_CLOUD_NAME ? 'SET' : 'MISSING',
       api_key: process.env.CLOUDINARY_API_KEY ? 'SET' : 'MISSING',
       api_secret: process.env.CLOUDINARY_API_SECRET ? 'SET' : 'MISSING'
     });
 
-    // Configure upload options based on type
+    // Test direct d'upload minimal (sans middleware)
+    console.log('=== MINIMAL DIRECT UPLOAD TEST ===');
+    const directResult = await new Promise((resolve, reject) => {
+      const tempBuffer = req.file.buffer;
+      
+      cloudinary.uploader.upload_stream(
+        {
+          resource_type: 'auto',
+          type: 'upload',
+          access_mode: 'public',
+          folder: 'test-direct-upload'
+        },
+        (error, result) => {
+          if (error) {
+            console.error('Direct upload error:', error);
+            reject(error);
+          } else {
+            console.log('Direct upload success:', result.secure_url);
+            resolve(result);
+          }
+        }
+      ).end(tempBuffer);
+    });
+    
+    console.log('DIRECT UPLOAD RESULT:', {
+      secure_url: directResult.secure_url,
+      resource_type: directResult.resource_type,
+      type: directResult.type,
+      access_mode: directResult.access_mode
+    });
+
+    // Configure upload options based on type (upload normal)
     const uploadOptions = {
       folder: `gazette_${type}s`,
-      resource_type: type === 'video' ? 'video' : 'auto', // ✅ CORRIGÉ : auto au lieu de raw
-      type: 'upload', // ✅ AJOUTÉ : rend les fichiers publics
-      access_mode: 'public', // ✅ AJOUTÉ : accès public explicite
-      // Remove format parameter - it's causing the error
+      resource_type: type === 'video' ? 'video' : 'auto',
+      type: 'upload',
+      access_mode: 'public',
     };
     
-    console.log('⚙️ DEBUG: Upload options:', uploadOptions);
+    console.log('Normal upload options:', uploadOptions);
 
     // Upload to Cloudinary
     const result = await new Promise((resolve, reject) => {
@@ -60,6 +91,7 @@ router.post('/cloudinary', authMiddleware, upload.single('file'), async (req, re
             reject(error);
           } else {
             console.log('✅ Cloudinary upload success:');
+            console.log('CLOUDINARY RESULT FULL:', JSON.stringify(result, null, 2));
             console.log('CLOUDINARY UPLOAD RESULT:', {
               public_id: result.public_id,
               resource_type: result.resource_type,
@@ -68,7 +100,9 @@ router.post('/cloudinary', authMiddleware, upload.single('file'), async (req, re
               url: result.url,
               secure_url: result.secure_url,
               format: result.format,
-              original_filename: result.original_filename
+              original_filename: result.original_filename,
+              bytes: result.bytes,
+              created_at: result.created_at
             });
             resolve(result);
           }
@@ -78,15 +112,47 @@ router.post('/cloudinary', authMiddleware, upload.single('file'), async (req, re
 
     console.log('TEST THIS URL DIRECTLY:', result.secure_url);
     
-    // ✅ VÉRIFICATION CRITIQUE : URL doit contenir image/upload
+    // Test direct de l'URL juste après upload
+    try {
+      const https = require('https');
+      const url = new URL(result.secure_url);
+      
+      const testResponse = await new Promise((resolve, reject) => {
+        const req = https.get(url, (res) => {
+          resolve({
+            statusCode: res.statusCode,
+            headers: res.headers
+          });
+        });
+        req.on('error', reject);
+        req.setTimeout(10000, () => {
+          req.destroy();
+          reject(new Error('Timeout'));
+        });
+      });
+      
+      console.log('=== DIRECT URL TEST AFTER UPLOAD ===');
+      console.log('URL:', result.secure_url);
+      console.log('Status Code:', testResponse.statusCode);
+      console.log('Content-Type:', testResponse.headers['content-type']);
+      console.log('Content-Length:', testResponse.headers['content-length']);
+      
+      if (testResponse.statusCode === 200) {
+        console.log('SUCCESS: URL is directly accessible after upload!');
+      } else {
+        console.error('ERROR: URL returns', testResponse.statusCode, 'immediately after upload!');
+      }
+    } catch (error) {
+      console.error('ERROR testing URL directly:', error.message);
+    }
+    
+    // Vérification format URL (mais plus critique que 401)
     if (result.secure_url.includes('/raw/upload/')) {
-      console.error('🚨 CRITICAL ERROR: URL still contains /raw/upload/ - Backend fix not working!');
-      console.error('🚨 EXPECTED: /image/upload/');
-      console.error('🚨 ACTUAL:', result.secure_url);
+      console.log('INFO: URL contains /raw/upload/ - this may be normal for PDFs');
     } else if (result.secure_url.includes('/image/upload/')) {
-      console.log('✅ SUCCESS: URL contains /image/upload/ - Fix working!');
+      console.log('INFO: URL contains /image/upload/ - PDF delivered as image');
     } else {
-      console.log('⚠️ WARNING: Unexpected URL format:', result.secure_url);
+      console.log('WARNING: Unexpected URL format:', result.secure_url);
     }
 
     res.json({
