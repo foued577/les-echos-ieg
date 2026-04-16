@@ -77,6 +77,17 @@ router.post('/cloudinary', authMiddleware, upload.single('file'), async (req, re
     });
 
     console.log('TEST THIS URL DIRECTLY:', result.secure_url);
+    
+    // ✅ VÉRIFICATION CRITIQUE : URL doit contenir image/upload
+    if (result.secure_url.includes('/raw/upload/')) {
+      console.error('🚨 CRITICAL ERROR: URL still contains /raw/upload/ - Backend fix not working!');
+      console.error('🚨 EXPECTED: /image/upload/');
+      console.error('🚨 ACTUAL:', result.secure_url);
+    } else if (result.secure_url.includes('/image/upload/')) {
+      console.log('✅ SUCCESS: URL contains /image/upload/ - Fix working!');
+    } else {
+      console.log('⚠️ WARNING: Unexpected URL format:', result.secure_url);
+    }
 
     res.json({
       success: true,
