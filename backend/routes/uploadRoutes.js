@@ -40,94 +40,88 @@ router.post('/cloudinary', authMiddleware, upload.single('file'), async (req, re
       api_secret: process.env.CLOUDINARY_API_SECRET ? 'SET' : 'MISSING'
     });
 
-    // Test direct d'upload minimal (sans middleware)
-    console.log('=== MINIMAL DIRECT UPLOAD TEST ===');
-    const directResult = await new Promise((resolve, reject) => {
-      const tempBuffer = req.file.buffer;
-      
-      cloudinary.uploader.upload_stream(
-        {
-          resource_type: 'auto',
-          type: 'upload',
-          access_mode: 'public',
-          folder: 'test-direct-upload'
-        },
-        (error, result) => {
-          if (error) {
-            console.error('Direct upload error:', error);
-            reject(error);
-          } else {
-            console.log('Direct upload success:', result.secure_url);
-            
-            // Test immédiat de l'URL
-            const https = require('https');
-            const url = new URL(result.secure_url);
-            
-            https.get(url, (res) => {
-              console.log('=== DIRECT UPLOAD URL TEST ===');
-              console.log('URL:', result.secure_url);
-              console.log('Status Code:', res.statusCode);
-              console.log('Content-Type:', res.headers['content-type']);
-              console.log('Content-Length:', res.headers['content-length']);
-              
-              if (res.statusCode === 200) {
-                console.log('SUCCESS: Direct upload URL is accessible!');
-              } else {
-                console.error('ERROR: Direct upload URL returns', res.statusCode);
-              }
-              
-              resolve(result);
-            }).on('error', (err) => {
-              console.error('ERROR testing direct upload URL:', err.message);
-              resolve(result);
-            });
-          }
-        }
-      ).end(tempBuffer);
-    });
-    
-    console.log('DIRECT UPLOAD FULL RESULT:', JSON.stringify(directResult, null, 2));
-    console.log('DIRECT UPLOAD KEY FIELDS:', {
-      secure_url: directResult.secure_url,
-      url: directResult.url,
-      resource_type: directResult.resource_type,
-      type: directResult.type,
-      access_mode: directResult.access_mode,
-      public_id: directResult.public_id,
-      format: directResult.format
-    });
-
-    // Test avec signed URL (alternative)
-    console.log('=== SIGNED URL TEST ===');
+    // Test ultra-minimal (zéro abstraction)
+    console.log('=== ULTRA MINIMAL UPLOAD TEST ===');
     try {
-      const signedUrl = cloudinary.utils.url(directResult.public_id, {
-        resource_type: directResult.resource_type,
+      // Écrire le buffer dans un fichier temporaire
+      const fs = require('fs');
+      const path = require('path');
+      const os = require('os');
+      
+      const tempDir = os.tmpdir();
+      const tempFilePath = path.join(tempDir, `test-${Date.now()}.pdf`);
+      
+      fs.writeFileSync(tempFilePath, req.file.buffer);
+      console.log('Temp file written:', tempFilePath);
+      
+      // Upload ultra-minimal avec cloudinary.uploader.upload
+      const minimalResult = await cloudinary.uploader.upload(tempFilePath, {
+        resource_type: 'auto',
         type: 'upload',
-        secure: true,
-        sign_url: true
+        access_mode: 'public',
+        folder: 'ultra-minimal-test'
       });
       
-      console.log('SIGNED URL:', signedUrl);
+      console.log('=== MINIMAL UPLOAD RESULT ===');
+      console.log('CLOUDINARY RESULT FULL:', JSON.stringify(minimalResult, null, 2));
+      console.log('=== MINIMAL UPLOAD KEY FIELDS ===');
+      console.log('secure_url:', minimalResult.secure_url);
+      console.log('url:', minimalResult.url);
+      console.log('resource_type:', minimalResult.resource_type);
+      console.log('type:', minimalResult.type);
+      console.log('access_mode:', minimalResult.access_mode);
+      console.log('public_id:', minimalResult.public_id);
+      console.log('format:', minimalResult.format);
       
-      // Test de la signed URL
+      // Test immédiat de l'URL minimal
       const https = require('https');
-      const signedUrlObj = new URL(signedUrl);
+      const minimalUrl = new URL(minimalResult.secure_url);
       
-      https.get(signedUrlObj, (res) => {
-        console.log('=== SIGNED URL TEST RESULT ===');
-        console.log('Signed URL Status:', res.statusCode);
-        console.log('Signed URL Content-Type:', res.headers['content-type']);
+      const minimalTest = await new Promise((resolve) => {
+        const req = https.get(minimalUrl, (res) => {
+          console.log('=== MINIMAL URL TEST ===');
+          console.log('URL:', minimalResult.secure_url);
+          console.log('Status Code:', res.statusCode);
+          console.log('Content-Type:', res.headers['content-type']);
+          console.log('Content-Length:', res.headers['content-length']);
+          console.log('Response Headers:', res.headers);
+          
+          if (res.statusCode === 200) {
+            console.log('SUCCESS: Minimal upload URL is accessible!');
+          } else {
+            console.error('ERROR: Minimal upload URL returns', res.statusCode);
+          }
+          
+          resolve(res.statusCode);
+        });
         
-        if (res.statusCode === 200) {
-          console.log('SUCCESS: Signed URL works - Cloudinary requires signed URLs!');
-        } else {
-          console.log('INFO: Signed URL also returns', res.statusCode);
-        }
-      }).on('error', (err) => {
-        console.error('ERROR testing signed URL:', err.message);
+        req.on('error', (err) => {
+          console.error('ERROR testing minimal URL:', err.message);
+          resolve(500);
+        });
+        
+        req.setTimeout(10000, () => {
+          req.destroy();
+          console.error('TIMEOUT testing minimal URL');
+          resolve(408);
+        });
       });
-    } catch (error) {
-      console.error('ERROR generating signed URL:', error.message);
+      
+      // Nettoyer le fichier temporaire
+      fs.unlinkSync(tempFilePath);
+      console.log('Temp file cleaned up');
+      
+      console.log('=== MINIMAL TEST CONCLUSION ===');
+      if (minimalTest === 200) {
+        console.log('✅ CONCLUSION: Cloudinary CAN deliver files publicly');
+        console.log('❌ PROBLEM: The issue is in the upload pipeline/middleware');
+      } else {
+        console.log('❌ CONCLUSION: Cloudinary CANNOT deliver files publicly');
+        console.log('❌ PROBLEM: Cloudinary account/settings/security issue');
+      }
+      
+    } catch (minimalError) {
+      console.error('ERROR in minimal upload test:', minimalError);
     }
 
     // Configure upload options based on type (upload normal)
