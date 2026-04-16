@@ -274,56 +274,67 @@ export default function Moderation() {
               <Eye className="w-4 h-4 mr-1" />
               Voir
             </Button>
-            {content.type === 'link' && content.url && (
-              <Button variant="ghost" size="sm" onClick={() => window.open(content.url, '_blank')} className="text-slate-600">
-                <ExternalLink className="w-4 h-4 mr-1" />
-                Ouvrir
-              </Button>
+            
+            {/* Actions pour l'onglet En attente */}
+            {(showActions === true || showActions === 'pending') && (
+              <>
+                {content.type === 'link' && content.url && (
+                  <Button variant="ghost" size="sm" onClick={() => window.open(content.url, '_blank')} className="text-slate-600">
+                    <ExternalLink className="w-4 h-4 mr-1" />
+                    Ouvrir
+                  </Button>
+                )}
+                {content.type === 'file' && content.file_url && (
+                  <Button variant="ghost" size="sm" onClick={() => {
+                    const fileUrl = buildFileUrl(content.file_url);
+                    const downloadUrl = buildDownloadUrl(fileUrl);
+                    
+                    const link = document.createElement('a');
+                    link.href = downloadUrl;
+                    link.download = content.file_name || content.title || 'document';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                  }} className="text-slate-600">
+                    <ExternalLink className="w-4 h-4 mr-1" />
+                    Télécharger
+                  </Button>
+                )}
+                <div className="flex-1" />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                  onClick={() => openRejectDialog(content)}
+                >
+                  <XCircle className="w-4 h-4 mr-1" />
+                  Refuser
+                </Button>
+                <Button
+                  size="sm"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                  onClick={() => handleApprove(content.id)}
+                >
+                  <CheckCircle className="w-4 h-4 mr-1" />
+                  Approuver
+                </Button>
+              </>
             )}
-            {content.type === 'file' && content.file_url && (
-              <Button variant="ghost" size="sm" onClick={() => {
-                const fileUrl = buildFileUrl(content.file_url);
-                const downloadUrl = buildDownloadUrl(fileUrl);
-                
-                const link = document.createElement('a');
-                link.href = downloadUrl;
-                link.download = content.file_name || content.title || 'document';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-              }} className="text-slate-600">
-                <ExternalLink className="w-4 h-4 mr-1" />
-                Télécharger
-              </Button>
+            
+            {/* Actions pour l'onglet Refusés */}
+            {showActions === "rejected" && user?.role === 'ADMIN' && (
+              <>
+                <div className="flex-1" />
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => handleDeleteContent(content.id, content.title)}
+                >
+                  <Trash2 className="w-4 h-4 mr-1" />
+                  Supprimer
+                </Button>
+              </>
             )}
-            <div className="flex-1" />
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-red-600 hover:text-red-700 hover:bg-red-50"
-              onClick={() => openRejectDialog(content)}
-            >
-              <XCircle className="w-4 h-4 mr-1" />
-              Refuser
-            </Button>
-            {user?.role === 'ADMIN' && (
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={() => handleDeleteContent(content.id, content.title)}
-              >
-                <Trash2 className="w-4 h-4 mr-1" />
-                Supprimer
-              </Button>
-            )}
-            <Button
-              size="sm"
-              className="bg-emerald-600 hover:bg-emerald-700 text-white"
-              onClick={() => handleApprove(content.id)}
-            >
-              <CheckCircle className="w-4 h-4 mr-1" />
-              Approuver
-            </Button>
           </div>
         )}
       </div>
@@ -400,7 +411,7 @@ export default function Moderation() {
             <p className="text-center py-12 text-slate-400">Aucun contenu refusé</p>
           ) : (
             rejectedContents.slice(0, 20).map((content) => (
-              <ContentItem key={content.id} content={content} showActions={false} />
+              <ContentItem key={content.id} content={content} showActions="rejected" />
             ))
           )}
         </TabsContent>
