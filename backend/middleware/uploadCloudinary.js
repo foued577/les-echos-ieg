@@ -7,12 +7,20 @@ const storage = new CloudinaryStorage({
   cloudinary,
   params: async (req, file) => {
     const ext = path.extname(file.originalname).toLowerCase();
+    const isPDF = ext === '.pdf';
+    
+    console.log('🔍 FILE TYPE DETECTION:', {
+      originalname: file.originalname,
+      extension: ext,
+      isPDF: isPDF,
+      mimetype: file.mimetype
+    });
 
     return {
       folder: 'les-echos-ieg-files',
-      resource_type: 'auto', // ✅ CORRIGÉ : auto au lieu de raw
-      type: 'upload', // ✅ AJOUTÉ : rend les fichiers publics
-      access_mode: 'public', // ✅ AJOUTÉ : accès public explicite
+      resource_type: isPDF ? 'raw' : 'auto', // ✅ TEST : raw pour PDFs, auto pour autres
+      type: 'upload', // ✅ FORCER : rend les fichiers publics
+      access_mode: 'public', // ✅ FORCER : accès public explicite
       public_id: `${Date.now()}-${path.basename(file.originalname, ext)
         .normalize('NFD')
         .replace(/[\u0300-\u036f]/g, '')

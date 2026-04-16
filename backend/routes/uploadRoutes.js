@@ -59,12 +59,24 @@ router.post('/cloudinary', authMiddleware, upload.single('file'), async (req, re
             console.error('❌ Cloudinary upload error:', error);
             reject(error);
           } else {
-            console.log('✅ Cloudinary upload success:', result);
+            console.log('✅ Cloudinary upload success:');
+            console.log('CLOUDINARY UPLOAD RESULT:', {
+              public_id: result.public_id,
+              resource_type: result.resource_type,
+              type: result.type,
+              access_mode: result.access_mode,
+              url: result.url,
+              secure_url: result.secure_url,
+              format: result.format,
+              original_filename: result.original_filename
+            });
             resolve(result);
           }
         }
       ).end(req.file.buffer);
     });
+
+    console.log('TEST THIS URL DIRECTLY:', result.secure_url);
 
     res.json({
       success: true,

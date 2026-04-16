@@ -267,8 +267,27 @@ const getContents = async (req, res) => {
         team_ids_type: typeof content.team_ids,
         rubrique_id: content.rubrique_id,
         rubrique_id_type: typeof content.rubrique_id,
-        rubrique_name: content.rubrique_id?.name
+        rubrique_name: content.rubrique_id?.name,
+        file_url: content.file_url,
+        files: content.files,
+        public_id: content.public_id
       });
+    });
+
+    console.log('=== MODERATION CONTENT RESPONSE ===');
+    console.log('Total contents for moderation:', validContents.length);
+    validContents.forEach((content, index) => {
+      if (content.type === 'fichier' || content.type === 'file') {
+        console.log(`MODERATION FILE CONTENT ${index + 1}:`, {
+          id: content._id,
+          title: content.title,
+          type: content.type,
+          file_url: content.file_url,
+          files: content.files,
+          public_id: content.public_id,
+          cloudinary_public_id: content.cloudinary_public_id
+        });
+      }
     });
 
     res.status(200).json({
@@ -412,17 +431,20 @@ const createContent = async (req, res) => {
       if (uploadedFiles.length > 0) {
         contentData.files = uploadedFiles.map(file => ({
           name: file.originalname,
-          url: file.path, // URL Cloudinary
+          url: file.secure_url || file.path, // ✅ FORCER secure_url
+          file_url: file.secure_url || file.path, // ✅ FORCER secure_url
           type: file.mimetype,
           size: file.size,
-          cloudinary_public_id: file.filename
+          cloudinary_public_id: file.filename || file.public_id,
+          public_id: file.public_id // ✅ AJOUTER public_id
         }));
         
         // Fallback to legacy format for compatibility
-        contentData.file_url = uploadedFiles[0].path;
+        contentData.file_url = uploadedFiles[0].secure_url || uploadedFiles[0].path; // ✅ FORCER secure_url
         contentData.file_name = uploadedFiles[0].originalname;
         contentData.mime_type = uploadedFiles[0].mimetype;
-        contentData.cloudinary_public_id = uploadedFiles[0].filename;
+        contentData.cloudinary_public_id = uploadedFiles[0].filename || uploadedFiles[0].public_id;
+        contentData.public_id = uploadedFiles[0].public_id; // ✅ AJOUTER public_id
         contentData.content = uploadedFiles[0].originalname;
         
         console.log('=== FILE HANDLING DEBUG ===');
@@ -431,23 +453,26 @@ const createContent = async (req, res) => {
         console.log('Legacy fallback:', {
           file_url: contentData.file_url,
           file_name: contentData.file_name,
-          mime_type: contentData.mime_type
+          mime_type: contentData.mime_type,
+          public_id: contentData.public_id
         });
       } 
       // Backward compatibility for single file
       else if (req.file) {
-        contentData.file_url = req.file.path; // URL Cloudinary
+        contentData.file_url = req.file.secure_url || req.file.path; // ✅ FORCER secure_url
         contentData.file_name = req.file.originalname;
         contentData.mime_type = req.file.mimetype;
-        contentData.cloudinary_public_id = req.file.filename; // important
-        contentData.content = req.file.originalname; // Nom du fichier comme content
+        contentData.cloudinary_public_id = req.file.filename || req.file.public_id;
+        contentData.public_id = req.file.public_id; // ✅ AJOUTER public_id
+        contentData.content = req.file.originalname;
         
         console.log('=== LEGACY SINGLE FILE DEBUG ===');
         console.log('Single file uploaded:', {
           file_url: contentData.file_url,
           file_name: contentData.file_name,
           mime_type: contentData.mime_type,
-          cloudinary_public_id: contentData.cloudinary_public_id
+          cloudinary_public_id: contentData.cloudinary_public_id,
+          public_id: contentData.public_id
         });
       }
       // No files uploaded - block creation
@@ -469,6 +494,10 @@ const createContent = async (req, res) => {
       }
       contentData.content = content;
     }
+
+    console.log('CONTENT FILES BEFORE SAVE:', contentData.files);
+    console.log('CONTENT FILE_URL BEFORE SAVE:', contentData.file_url);
+    console.log('CONTENT PUBLIC_ID BEFORE SAVE:', contentData.public_id);
 
     const newContent = await Content.create(contentData);
 
