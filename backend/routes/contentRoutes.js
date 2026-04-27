@@ -13,8 +13,8 @@ const contentValidation = [
     .trim()
     .notEmpty()
     .withMessage('Le titre est requis')
-    .isLength({ max: 100 })
-    .withMessage('Le titre ne peut pas dépasser 100 caractères'),
+    .isLength({ max: 200 })
+    .withMessage('Le titre ne peut pas dépasser 200 caractères'),
   body('content')
     .optional()
     .trim()

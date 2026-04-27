@@ -5,7 +5,7 @@ const contentSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Le titre est requis'],
     trim: true,
-    maxlength: [100, 'Le titre ne peut pas dépasser 100 caractères']
+    maxlength: [200, 'Le titre ne peut pas dépasser 200 caractères']
   },
   description: {
     type: String,

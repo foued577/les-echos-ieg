@@ -331,6 +331,7 @@ export default function EditContent() {
                   value={formData.title}
                   onChange={(e) => handleInputChange('title', e.target.value)}
                   placeholder="Titre du contenu"
+                  maxLength={200}
                   required
                 />
               </div>

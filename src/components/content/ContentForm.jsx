@@ -152,6 +152,7 @@ export default function ContentForm({ teams, categories, onSubmit, isLoading }) 
             value={formData.title}
             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
             placeholder="Titre du contenu"
+            maxLength={200}
             className="bg-white/5 border-white/10 text-white placeholder:text-slate-500"
           />
         </div>
