@@ -138,6 +138,8 @@ export default function Admin() {
   };
 
   const createUser = async () => {
+    console.log('🚀 DEBUG: createUser called, current modal state:', showEditDialog);
+    
     if (!newUser.name || !newUser.email || !newUser.password) {
       alert('Le nom, l\'email et le mot de passe sont requis');
       return;
@@ -152,8 +154,11 @@ export default function Admin() {
       });
 
       if (response.success) {
+        console.log('🎉 DEBUG: User created successfully, closing modal...');
+        
         // Fermer la modal
         setShowEditDialog(false);
+        console.log('🔒 DEBUG: setShowEditDialog(false) called');
         
         // Réinitialiser le formulaire
         setNewUser({
@@ -162,12 +167,15 @@ export default function Admin() {
           role: 'MEMBER',
           password: ''
         });
+        console.log('📝 DEBUG: Form reset completed');
         
         // Afficher un toast succès
         toast.success('Utilisateur créé avec succès');
+        console.log('🍞 DEBUG: Toast success shown');
         
         // Rafraîchir la liste des utilisateurs
         await loadData();
+        console.log('🔄 DEBUG: User list refreshed');
       } else {
         alert('Erreur lors de la création de l\'utilisateur: ' + (response.message || 'Erreur inconnue'));
       }
