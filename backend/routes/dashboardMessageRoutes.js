@@ -149,6 +149,55 @@ router.put('/:id/activate', authMiddleware, isAdmin, async (req, res) => {
   }
 });
 
+// PUT /api/dashboard-messages/:id - Modifier un message (admin uniquement)
+router.put('/:id', authMiddleware, isAdmin, async (req, res) => {
+  try {
+    console.log('📋 DEBUG: Updating dashboard message:', req.params.id, 'with data:', req.body);
+    
+    const { label, content, icon, isActive } = req.body;
+    
+    // Validation
+    if (!label || !content) {
+      return res.status(400).json({
+        success: false,
+        message: 'Le label et le contenu sont requis'
+      });
+    }
+    
+    const updatedMessage = await DashboardMessage.findByIdAndUpdate(
+      req.params.id,
+      {
+        label: label.trim(),
+        content: content.trim(),
+        icon: icon?.trim() || '👋',
+        isActive: isActive !== undefined ? isActive : false
+      },
+      { new: true, runValidators: true }
+    ).populate('createdBy', 'name email');
+    
+    if (!updatedMessage) {
+      return res.status(404).json({
+        success: false,
+        message: 'Message introuvable'
+      });
+    }
+    
+    console.log('📋 DEBUG: Dashboard message updated successfully:', updatedMessage._id);
+    
+    res.json({
+      success: true,
+      message: 'Message mis à jour avec succès',
+      data: updatedMessage
+    });
+  } catch (error) {
+    console.error('📋 ERROR: Failed to update dashboard message:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur serveur lors de la mise à jour du message'
+    });
+  }
+});
+
 // PUT /api/dashboard-messages/:id/deactivate - Désactiver un message (admin uniquement)
 router.put('/:id/deactivate', authMiddleware, isAdmin, async (req, res) => {
   try {
