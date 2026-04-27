@@ -1,6 +1,6 @@
 const express = require('express');
 const { body } = require('express-validator');
-const { getUsers, getUserById, updateUser, deleteUser, searchUsers, debugUsers, uploadProfileImage, getCurrentUserProfile } = require('../controllers/userController');
+const { createUser, getUsers, getUserById, updateUser, deleteUser, searchUsers, debugUsers, uploadProfileImage, getCurrentUserProfile } = require('../controllers/userController');
 const authMiddleware = require('../middleware/authMiddleware');
 const roleMiddleware = require('../middleware/roleMiddleware');
 const uploadProfileImageMiddleware = require('../middleware/uploadProfileImage');
@@ -26,6 +26,9 @@ const updateValidation = [
     .isIn(['ADMIN', 'EDITOR', 'MEMBER'])
     .withMessage('Le rôle doit être ADMIN, EDITOR ou MEMBER')
 ];
+
+// Routes publiques
+router.post('/', createUser);
 
 // Routes protégées - Admin uniquement
 router.get('/', authMiddleware, roleMiddleware('ADMIN'), getUsers);

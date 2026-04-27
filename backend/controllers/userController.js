@@ -1,6 +1,62 @@
 const User = require('../models/User');
 const { validationResult } = require('express-validator');
 const cloudinary = require('../config/cloudinary');
+const bcrypt = require('bcryptjs');
+
+// Créer un utilisateur
+const createUser = async (req, res) => {
+  try {
+    console.log('📋 DEBUG: Creating new user:', req.body);
+    
+    const { name, email, password, role } = req.body;
+    
+    // Validation
+    if (!name || !email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Le nom, l\'email et le mot de passe sont requis'
+      });
+    }
+    
+    // Vérifier si l'email existe déjà
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: 'Cet email existe déjà'
+      });
+    }
+    
+    // Hasher le mot de passe
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+    
+    // Créer l'utilisateur
+    const user = await User.create({
+      name: name.trim(),
+      email: email.trim().toLowerCase(),
+      password: hashedPassword,
+      role: role || 'MEMBER'
+    });
+    
+    // Retourner l'utilisateur sans le mot de passe
+    const userResponse = await User.findById(user._id).select('-password');
+    
+    console.log('📋 DEBUG: User created successfully:', user._id);
+    
+    res.status(201).json({
+      success: true,
+      message: 'Utilisateur créé avec succès',
+      data: userResponse
+    });
+  } catch (error) {
+    console.error('📋 ERROR: Failed to create user:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur serveur lors de la création de l\'utilisateur'
+    });
+  }
+};
 
 // Obtenir tous les utilisateurs
 const getUsers = async (req, res) => {
@@ -325,6 +381,7 @@ const debugUsers = async (req, res) => {
 };
 
 module.exports = {
+  createUser,
   getUsers,
   getUserById,
   updateUser,
