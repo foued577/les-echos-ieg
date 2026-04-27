@@ -42,6 +42,11 @@ export default function Admin() {
     loadData();
   }, []);
 
+  // Debug : surveiller les changements d'état de la modal
+  useEffect(() => {
+    console.log('🔄 DEBUG: showEditDialog changed to:', showEditDialog);
+  }, [showEditDialog]);
+
   const loadData = async () => {
     try {
       console.log('ADMIN DEBUG: Loading admin data...');
