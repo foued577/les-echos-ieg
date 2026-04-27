@@ -142,26 +142,44 @@ export default function Contents() {
     });
 
   const handleViewContent = (content) => {
-    console.log('Viewing content:', content);
+    console.log('🔍 DEBUG: Viewing content:', content);
+    console.log('🔍 DEBUG: TYPE CONTENT:', content.type);
     
-    if (content.type === 'lien') {
-      const linkUrl = content.content || content.url || content.link || content.file_url;
-      if (linkUrl && linkUrl.trim() !== '') {
-        window.open(linkUrl.trim(), '_blank', 'noopener,noreferrer');
-      } else {
-        alert('Ce lien ne contient pas d\'URL valide.');
-      }
-    } else if (content.type === 'fichier') {
-      const fileUrl = content.file_url || content.url || content.secure_url;
-      if (fileUrl && fileUrl.trim() !== '') {
-        window.open(fileUrl.trim(), '_blank', 'noopener,noreferrer');
-      } else {
-        alert('Ce fichier n\'a pas d\'URL valide.');
-      }
-    } else if (content.type === 'article') {
-      // Ouvrir la modale de prévisualisation pour les articles
-      setSelectedArticle(content);
-      setShowArticleModal(true);
+    // Normaliser le type pour éviter les problèmes de casse
+    const type = content.type?.toLowerCase();
+    console.log('🔍 DEBUG: NORMALIZED TYPE:', type);
+    
+    switch (type) {
+      case 'lien':
+        const linkUrl = content.content || content.url || content.link || content.file_url;
+        if (linkUrl && linkUrl.trim() !== '') {
+          window.open(linkUrl.trim(), '_blank', 'noopener,noreferrer');
+        } else {
+          alert('Ce lien ne contient pas d\'URL valide.');
+        }
+        break;
+        
+      case 'fichier':
+        const fileUrl = content.file_url || content.url || content.secure_url;
+        if (fileUrl && fileUrl.trim() !== '') {
+          window.open(fileUrl.trim(), '_blank', 'noopener,noreferrer');
+        } else {
+          alert('Ce fichier n\'a pas d\'URL valide.');
+        }
+        break;
+        
+      case 'article':
+        // Ouvrir la modale de prévisualisation pour les articles
+        console.log('🔍 DEBUG: Opening article preview for:', content.title);
+        setSelectedArticle(content);
+        setShowArticleModal(true);
+        break;
+        
+      default:
+        console.warn('⚠️ Type non géré:', content.type);
+        console.warn('⚠️ Content object:', content);
+        // Plus d'alerte - juste un warning dans la console
+        break;
     }
   };
 
