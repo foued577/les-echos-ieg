@@ -118,9 +118,13 @@ app.use('/api/uploads', (req, res, next) => {
 }, express.static(path.join(__dirname, 'uploads')));
 
 // Routes
+console.log('🔧 Mounting routes...');
 app.use('/api/auth', require('./routes/authRoutes'));
+console.log('✅ authRoutes mounted at /api/auth');
 app.use('/api/users', require('./routes/userRoutes'));
+console.log('✅ userRoutes mounted at /api/users');
 app.use('/api/teams', require('./routes/teamRoutes'));
+console.log('✅ teamRoutes mounted at /api/teams');
 app.use('/api/teams', require('./routes/teamStatsRoutes'));
 app.use('/api/upload', require('./routes/uploadRoutes'));
 app.use('/api/test', require('./routes/testRoutes'));

@@ -29,6 +29,7 @@ const updateValidation = [
 
 // Routes publiques
 router.post('/', createUser);
+console.log('✅ POST /api/users route registered for user creation');
 
 // Routes protégées - Admin uniquement
 router.get('/', authMiddleware, roleMiddleware('ADMIN'), getUsers);
