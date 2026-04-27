@@ -111,14 +111,14 @@ export default function Admin() {
         setEditingUser(null);
         setNewUser({ name: '', email: '', role: 'MEMBER', password: '' });
         
-        alert(`Utilisateur ${newUser.name} mis à jour avec succès`);
+        toast.success(`Utilisateur ${newUser.name} mis à jour avec succès`);
         await loadData();
       } else {
-        alert('Erreur lors de la mise à jour de l\'utilisateur');
+        toast.error('Erreur lors de la mise à jour de l\'utilisateur');
       }
     } catch (error) {
       console.error('Error updating user:', error);
-      alert('Erreur lors de la mise à jour de l\'utilisateur');
+      toast.error('Erreur lors de la mise à jour de l\'utilisateur');
     }
   };
 
@@ -126,14 +126,14 @@ export default function Admin() {
     try {
       const response = await usersAPI.delete(userId);
       if (response.success) {
-        alert('Utilisateur supprimé avec succès');
+        toast.success('Utilisateur supprimé avec succès');
         await loadData();
       } else {
-        alert('Erreur lors de la suppression de l\'utilisateur');
+        toast.error('Erreur lors de la suppression de l\'utilisateur');
       }
     } catch (error) {
       console.error('Error deleting user:', error);
-      alert('Erreur lors de la suppression de l\'utilisateur');
+      toast.error('Erreur lors de la suppression de l\'utilisateur');
     }
   };
 
@@ -152,8 +152,21 @@ export default function Admin() {
       });
 
       if (response.success) {
-        setNewUser({ name: '', email: '', role: 'MEMBER', password: '' });
-        alert('Utilisateur créé avec succès');
+        // Fermer la modal
+        setShowEditDialog(false);
+        
+        // Réinitialiser le formulaire
+        setNewUser({
+          name: '',
+          email: '',
+          role: 'MEMBER',
+          password: ''
+        });
+        
+        // Afficher un toast succès
+        toast.success('Utilisateur créé avec succès');
+        
+        // Rafraîchir la liste des utilisateurs
         await loadData();
       } else {
         alert('Erreur lors de la création de l\'utilisateur: ' + (response.message || 'Erreur inconnue'));
