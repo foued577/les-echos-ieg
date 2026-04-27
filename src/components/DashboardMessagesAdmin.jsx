@@ -9,7 +9,8 @@ import {
   Settings, 
   Loader2,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Edit
 } from 'lucide-react';
 
 // Icônes prédéfinies par catégories
@@ -56,6 +57,8 @@ const DashboardMessagesAdmin = () => {
   const [activatingId, setActivatingId] = useState(null);
   const [expandedCategories, setExpandedCategories] = useState(['information']);
   const [showIconPicker, setShowIconPicker] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   useEffect(() => {
     loadMessages();
@@ -84,21 +87,45 @@ const DashboardMessagesAdmin = () => {
     }
 
     try {
-      setIsCreating(true);
-      await dashboardMessagesAPI.create(formData);
-      toast.success('Message créé avec succès');
+      if (editingId) {
+        // Mode mise à jour
+        setIsUpdating(true);
+        await dashboardMessagesAPI.update(editingId, formData);
+        toast.success('Message mis à jour avec succès');
+      } else {
+        // Mode création
+        setIsCreating(true);
+        await dashboardMessagesAPI.create(formData);
+        toast.success('Message créé avec succès');
+      }
       
-      // Reset form
-      setFormData({ label: '', content: '', icon: '👋' });
+      // Reset form and exit edit mode
+      resetForm();
       
       // Reload messages
       loadMessages();
     } catch (error) {
-      console.error('📋 Error creating message:', error);
-      toast.error('Erreur lors de la création du message');
+      console.error('📋 Error during message operation:', error);
+      toast.error(editingId ? 'Erreur lors de la mise à jour du message' : 'Erreur lors de la création du message');
     } finally {
       setIsCreating(false);
+      setIsUpdating(false);
     }
+  };
+
+  const resetForm = () => {
+    setFormData({ label: '', content: '', icon: '👋' });
+    setEditingId(null);
+  };
+
+  const handleEdit = (message) => {
+    setFormData({
+      label: message.label,
+      content: message.content,
+      icon: message.icon
+    });
+    setEditingId(message._id);
+    setShowIconPicker(false);
   };
 
   const handleActivate = async (messageId) => {
@@ -248,9 +275,11 @@ const DashboardMessagesAdmin = () => {
         <h2 className="text-2xl font-serif text-gray-900">Messages du Dashboard</h2>
       </div>
 
-      {/* Create New Message Form */}
+      {/* Create/Edit Message Form */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Créer un nouveau message</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          {editingId ? 'Modifier un message existant' : 'Créer un nouveau message'}
+        </h3>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
@@ -271,24 +300,34 @@ const DashboardMessagesAdmin = () => {
               <IconPicker />
             </div>
             
-            <div className="md:col-span-1">
+            <div className="md:col-span-1 flex gap-2">
               <button
                 type="submit"
-                disabled={isCreating}
-                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                disabled={isCreating || isUpdating}
+                className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
               >
-                {isCreating ? (
+                {(isCreating || isUpdating) ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    Création...
+                    {editingId ? 'Mise à jour...' : 'Création...'}
                   </>
                 ) : (
                   <>
                     <Plus className="w-4 h-4" />
-                    Créer
+                    {editingId ? 'Mettre à jour' : 'Créer'}
                   </>
                 )}
               </button>
+              
+              {editingId && (
+                <button
+                  type="button"
+                  onClick={resetForm}
+                  className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-medium transition-colors"
+                >
+                  Annuler
+                </button>
+              )}
             </div>
           </div>
           
@@ -358,6 +397,14 @@ const DashboardMessagesAdmin = () => {
                   </div>
                   
                   <div className="flex flex-col gap-2">
+                    <button
+                      onClick={() => handleEdit(message)}
+                      className="px-3 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2"
+                    >
+                      <Edit className="w-4 h-4" />
+                      Modifier
+                    </button>
+                    
                     {!message.isActive && (
                       <button
                         onClick={() => handleActivate(message._id)}

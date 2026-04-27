@@ -271,6 +271,18 @@ export const dashboardMessagesAPI = {
     }
   },
   
+  update: async (id, messageData) => {
+    console.log('📡 DEBUG: dashboardMessagesAPI.update called with id:', id, 'data:', messageData);
+    try {
+      const response = await api.put(`/dashboard-messages/${id}`, messageData);
+      console.log('📡 DEBUG: dashboardMessagesAPI.update response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ ERROR: dashboardMessagesAPI.update failed:', error);
+      throw error;
+    }
+  },
+  
   delete: async (id) => {
     console.log('📡 DEBUG: dashboardMessagesAPI.delete called with id:', id);
     try {
