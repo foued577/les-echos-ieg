@@ -601,7 +601,7 @@ const updateContent = async (req, res) => {
       });
     }
 
-    let { title, description, type, team_ids, rubrique_id, tags } = req.body;
+    let { title, description, type, team_ids, rubrique_id, tags, status, moderated_by, moderation_date, moderation_comment } = req.body;
 
     // Parser les champs stringifiés depuis FormData
     if (typeof team_ids === "string") {
@@ -621,6 +621,12 @@ const updateContent = async (req, res) => {
       team_ids,
       tags
     };
+
+    // Ajouter les champs de modération si présents
+    if (status !== undefined) updateData.status = status;
+    if (moderated_by !== undefined) updateData.moderated_by = moderated_by;
+    if (moderation_date !== undefined) updateData.moderation_date = moderation_date;
+    if (moderation_comment !== undefined) updateData.moderation_comment = moderation_comment;
 
     // Gérer le contenu selon le type
     if (type === 'lien') {

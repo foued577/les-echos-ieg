@@ -153,6 +153,7 @@ export default function Moderation() {
 
   const handleApprove = async (contentId) => {
     try {
+      console.log("Approve clicked", contentId);
       const updateData = {
         status: 'approved',
         moderated_by: user.email,
@@ -170,6 +171,7 @@ export default function Moderation() {
 
   const handleReject = async () => {
     try {
+      console.log("Reject clicked", selectedContent._id);
       const updateData = {
         status: 'rejected',
         moderated_by: user.email,
@@ -177,7 +179,7 @@ export default function Moderation() {
         moderation_comment: comment,
       };
       
-      await contentsAPI.update(selectedContent.id, updateData);
+      await contentsAPI.update(selectedContent._id, updateData);
       toast.success('Contenu refusé');
       setShowRejectDialog(false);
       setComment('');
@@ -332,7 +334,7 @@ export default function Moderation() {
                 <Button
                   size="sm"
                   className="bg-emerald-600 hover:bg-emerald-700 text-white"
-                  onClick={() => handleApprove(content.id)}
+                  onClick={() => handleApprove(content._id)}
                 >
                   <CheckCircle className="w-4 h-4 mr-1" />
                   Approuver
@@ -347,7 +349,7 @@ export default function Moderation() {
                 <Button
                   variant="destructive"
                   size="sm"
-                  onClick={() => handleDeleteContent(content.id, content.title)}
+                  onClick={() => handleDeleteContent(content._id, content.title)}
                 >
                   <Trash2 className="w-4 h-4 mr-1" />
                   Supprimer
@@ -656,7 +658,7 @@ export default function Moderation() {
                   className="bg-emerald-600 hover:bg-emerald-700 text-white"
                   onClick={() => {
                     setShowPreview(false);
-                    handleApprove(selectedContent.id);
+                    handleApprove(selectedContent._id);
                   }}
                 >
                   <CheckCircle className="w-4 h-4 mr-1" />
