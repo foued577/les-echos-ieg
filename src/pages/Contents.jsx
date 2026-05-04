@@ -88,13 +88,25 @@ export default function Contents() {
   const [showArticleModal, setShowArticleModal] = useState(false);
   const [selectedArticle, setSelectedArticle] = useState(null);
 
+  const isAdmin = user?.role === "admin";
+
   const loadMyContents = useCallback(async () => {
     try {
       setLoading(true);
       console.log('Loading contents for user:', user?.id);
+      console.log('Is admin:', isAdmin);
       
-      // Récupérer tous les contenus de l'utilisateur
-      const response = await contentsAPI.getAll({ author_id: user?.id });
+      let response;
+      
+      if (isAdmin) {
+        // Admin: Use global API to see all contents
+        console.log('👨‍💼 Loading all contents for admin');
+        response = await contentsAPI.getAll();
+      } else {
+        // Simple user: Use personal API to see only their own contents
+        console.log('👤 Loading personal contents for simple user');
+        response = await contentsAPI.getMy();
+      }
       
       if (response.success) {
         setContents(response.data || []);
@@ -103,14 +115,14 @@ export default function Contents() {
         setContents(response || []);
       }
       
-      console.log('My contents loaded:', response.data?.length || response?.length || 0);
+      console.log('Contents loaded:', response.data?.length || response?.length || 0);
     } catch (error) {
-      console.error('Error loading my contents:', error);
+      console.error('Error loading contents:', error);
       setContents([]);
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, isAdmin]);
 
   useEffect(() => {
     if (user) {

@@ -199,14 +199,12 @@ export default function Layout({ children, currentPageName }) {
           </div>
 
           <div className="flex items-center gap-3">
-            {isAdmin && (
-              <Link to={createPageUrl('CreateContent')}>
-                <button className="apple-button-secondary flex items-center gap-2">
-                  <PenLine className="w-4 h-4" />
-                  <span className="hidden sm:inline">Proposer</span>
-                </button>
-              </Link>
-            )}
+            <Link to={createPageUrl('CreateContent')}>
+              <button className="apple-button-secondary flex items-center gap-2">
+                <PenLine className="w-4 h-4" />
+                <span className="hidden sm:inline">Proposer</span>
+              </button>
+            </Link>
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

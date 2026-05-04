@@ -97,6 +97,8 @@ export default function Dashboard() {
   const [activeMessage, setActiveMessage] = useState(null);
   const [activeMessages, setActiveMessages] = useState([]);
 
+  const isAdmin = user?.role === "admin";
+
   // Global refresh function for other components
   useEffect(() => {
     window.refreshDashboard = () => {
@@ -134,13 +136,27 @@ export default function Dashboard() {
       console.log('🔍=== DASHBOARD LOAD START ===');
       console.log('👤 Current user:', user);
       console.log('🆔 User ID:', user.id);
+      console.log('🔐 Is admin:', isAdmin);
       
-      // Use new dashboard endpoint with pre-filtered data
-      const [myContentsResponse, pendingContentsResponse, approvedContentsResponse] = await Promise.all([
-        contentsAPI.getDashboard().catch(err => ({ success: false, error: err })),
-        contentsAPI.getDashboard({ status: 'pending_review' }).catch(err => ({ success: false, error: err })),
-        contentsAPI.getAll({ status: 'approved' }).catch(err => ({ success: false, error: err })),
-      ]);
+      let myContentsResponse, pendingContentsResponse, approvedContentsResponse;
+      
+      if (isAdmin) {
+        // Admin: Use global APIs for all contents
+        console.log('👨‍💼 Loading admin dashboard with global stats');
+        [myContentsResponse, pendingContentsResponse, approvedContentsResponse] = await Promise.all([
+          contentsAPI.getAll().catch(err => ({ success: false, error: err })),
+          contentsAPI.getAll({ status: 'pending_review' }).catch(err => ({ success: false, error: err })),
+          contentsAPI.getAll({ status: 'approved' }).catch(err => ({ success: false, error: err })),
+        ]);
+      } else {
+        // Simple user: Use personal APIs for their own contents only
+        console.log('👤 Loading simple user dashboard with personal stats');
+        [myContentsResponse, pendingContentsResponse, approvedContentsResponse] = await Promise.all([
+          contentsAPI.getMy().catch(err => ({ success: false, error: err })),
+          contentsAPI.getMy({ status: 'pending_review' }).catch(err => ({ success: false, error: err })),
+          contentsAPI.getMy({ status: 'approved' }).catch(err => ({ success: false, error: err })),
+        ]);
+      }
 
       const myContents = myContentsResponse.success ? myContentsResponse.data : [];
       const pendingContents = pendingContentsResponse.success ? pendingContentsResponse.data : [];
