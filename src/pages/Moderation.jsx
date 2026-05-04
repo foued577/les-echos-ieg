@@ -43,6 +43,25 @@ const resolvePublicFileUrl = (rawUrl) => {
   return `${backendBase}/${rawUrl}`;
 };
 
+// Fonction pour récupérer le nom de l'auteur de manière robuste
+const getAuthorName = (content) => {
+  // Debug temporaire
+  console.log("Contenu modération:", content);
+  
+  const author = content.author_id || content.created_by || content.author;
+
+  if (!author) return "Auteur inconnu";
+
+  if (typeof author === "string") return "Auteur inconnu";
+
+  return (
+    author.name ||
+    `${author.firstName || ""} ${author.lastName || ""}`.trim() ||
+    author.email ||
+    "Auteur inconnu"
+  );
+};
+
 // Fonction pour normaliser les fichiers
 const normalizePreviewFiles = (content) => {
   const result = [];
@@ -248,7 +267,7 @@ export default function Moderation() {
             <div className="flex items-center gap-3 mt-3 text-xs text-slate-400 flex-wrap">
               <span className="flex items-center gap-1">
                 <User className="w-3 h-3" />
-                {content.author_name || 'Anonyme'}
+                {getAuthorName(content)}
               </span>
               <span className="flex items-center gap-1">
                 <Calendar className="w-3 h-3" />
