@@ -34,7 +34,11 @@ export default function Layout({ children, currentPageName }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [teams, setTeams] = useState([]);
   const [pendingCount, setPendingCount] = useState(0);
+  const [rubriques, setRubriques] = useState([]);
+  const [contents, setContents] = useState([]);
   const { user, logout, isAuthenticated } = useAuth();
+
+  const isAdmin = user?.role === 'ADMIN' || user?.role === 'admin';
 
   useEffect(() => {
     console.log('🏗️ Layout mounted');
@@ -44,9 +48,13 @@ export default function Layout({ children, currentPageName }) {
     
     if (user) {
       loadPendingCount();
-      loadTeams();
+      if (isAdmin) {
+        loadTeams();
+      } else {
+        loadRubriquesAndContents();
+      }
     }
-  }, [user]);
+  }, [user, isAdmin]);
 
   // Refresh pending count when currentPage changes to Moderation
   useEffect(() => {
@@ -116,19 +124,39 @@ export default function Layout({ children, currentPageName }) {
     }
   };
 
-  const isAdmin = user?.role === 'ADMIN' || user?.role === 'admin';
-  
+  const loadRubriquesAndContents = async () => {
+    try {
+      console.log('🔍 Loading rubriques and contents...');
+      
+      // Load rubriques
+      const rubriquesResponse = await apiClient.get('/rubriques');
+      const rubriquesArray = Array.isArray(rubriquesResponse.data?.data) ? rubriquesResponse.data.data : [];
+      setRubriques(rubriquesArray);
+      
+      // Load approved contents
+      const { contentsAPI } = await import('@/services/api');
+      const contentsResponse = await contentsAPI.getAll({ status: 'approved' });
+      const contentsArray = Array.isArray(contentsResponse.data) ? contentsResponse.data : [];
+      setContents(contentsArray);
+      
+      console.log('✅ Rubriques and contents loaded');
+    } catch (error) {
+      console.error('💥 Error loading rubriques and contents:', error);
+      setRubriques([]);
+      setContents([]);
+    }
+  };
+
   console.log('Layout - Current user:', user);
   console.log('Layout - User role:', user?.role);
-  console.log('Layout - Is admin:', isAdmin);
   console.log('Layout - Is authenticated:', isAuthenticated);
 
   const navigation = [
     { name: 'Accueil', page: 'Dashboard', icon: Home },
-    { name: 'Équipes', page: 'Teams', icon: Users2 },
-    { name: 'Rubriques', page: 'Rubriques', icon: FolderOpen },
     { name: 'La Gazette d\'Occitanie', page: 'Gazette', icon: Newspaper },
     ...(isAdmin ? [
+      { name: 'Équipes', page: 'Teams', icon: Users2 },
+      { name: 'Rubriques', page: 'Rubriques', icon: FolderOpen },
       { name: 'Administration', page: 'Admin', icon: Shield },
       { name: 'Modération', page: 'Moderation', icon: Shield, badge: pendingCount }
     ] : []),
@@ -137,6 +165,17 @@ export default function Layout({ children, currentPageName }) {
   const getInitials = (name) => {
     if (!name) return 'U';
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  };
+
+  // Helper function to get contents by rubrique for simple users
+  const getContentsByRubrique = () => {
+    return rubriques.map(rubrique => ({
+      ...rubrique,
+      contents: contents.filter(content =>
+        content.rubrique_id === rubrique._id ||
+        content.rubrique_id?._id === rubrique._id
+      )
+    })).filter(rubrique => rubrique.contents.length > 0);
   };
 
   return (
@@ -160,12 +199,14 @@ export default function Layout({ children, currentPageName }) {
           </div>
 
           <div className="flex items-center gap-3">
-            <Link to={createPageUrl('CreateContent')}>
-              <button className="apple-button-secondary flex items-center gap-2">
-                <PenLine className="w-4 h-4" />
-                <span className="hidden sm:inline">Proposer</span>
-              </button>
-            </Link>
+            {isAdmin && (
+              <Link to={createPageUrl('CreateContent')}>
+                <button className="apple-button-secondary flex items-center gap-2">
+                  <PenLine className="w-4 h-4" />
+                  <span className="hidden sm:inline">Proposer</span>
+                </button>
+              </Link>
+            )}
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -229,21 +270,45 @@ export default function Layout({ children, currentPageName }) {
         <div className="px-4 mt-8">
           <p className="px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">Espaces</p>
           <div className="space-y-1">
-            {teams.map((team) => (
-              <Link
-                key={team.id}
-                to={createPageUrl(`TeamDetail?id=${team._id}`)}
-                onClick={() => setMobileMenuOpen(false)}
-                className="apple-sidebar-item"
-              >
-                <div 
-                  className="w-2.5 h-2.5 rounded-full"
-                  style={{ backgroundColor: team.color || '#0071e3' }}
-                />
-                <span className="flex-1 truncate">{team.name}</span>
-                <ChevronRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-              </Link>
-            ))}
+            {isAdmin ? (
+              // Admin: Show teams
+              teams.map((team) => (
+                <Link
+                  key={team.id}
+                  to={createPageUrl(`TeamDetail?id=${team._id}`)}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="apple-sidebar-item"
+                >
+                  <div 
+                    className="w-2.5 h-2.5 rounded-full"
+                    style={{ backgroundColor: team.color || '#0071e3' }}
+                  />
+                  <span className="flex-1 truncate">{team.name}</span>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                </Link>
+              ))
+            ) : (
+              // Simple user: Show rubriques with contents
+              getContentsByRubrique().map((rubrique) => (
+                <div key={rubrique._id} className="space-y-1">
+                  <div className="apple-sidebar-item">
+                    <FolderOpen className="w-5 h-5 text-muted-foreground" />
+                    <span className="flex-1 truncate">{rubrique.name}</span>
+                  </div>
+                  {rubrique.contents.map((content) => (
+                    <Link
+                      key={content._id}
+                      to={createPageUrl(`ContentDetail?id=${content._id}`)}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="apple-sidebar-item ml-8"
+                    >
+                      <span className="w-2 h-2 text-muted-foreground">•</span>
+                      <span className="flex-1 truncate text-sm">{content.title}</span>
+                    </Link>
+                  ))}
+                </div>
+              ))
+            )}
           </div>
         </div>
       </aside>
