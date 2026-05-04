@@ -571,6 +571,7 @@ const updateContent = async (req, res) => {
     console.log('=== UPDATE CONTENT START ===');
     console.log('Params ID:', req.params.id);
     console.log('REQ.BODY UPDATE:', req.body);
+    console.log('REQ.FILES UPDATE:', req.files);
     console.log('User from token:', req.user);
     
     // Validation des entrées
@@ -693,6 +694,40 @@ const updateContent = async (req, res) => {
     if (files !== undefined) {
       content.files = files;
       console.log('Updated files to:', files);
+    }
+
+    // Handle file uploads if present
+    if (req.files && req.files.length > 0) {
+      console.log('📁 Processing uploaded files for update:', req.files.length);
+      
+      // Create new files array
+      const newFiles = req.files.map(file => ({
+        name: file.originalname,
+        url: file.secure_url || file.path,
+        file_url: file.secure_url || file.path,
+        type: file.mimetype,
+        size: file.size,
+        cloudinary_public_id: file.filename || file.public_id,
+        public_id: file.public_id
+      }));
+      
+      // Add to existing files or replace
+      if (content.files && content.files.length > 0) {
+        content.files = [...content.files, ...newFiles];
+      } else {
+        content.files = newFiles;
+      }
+      
+      // Update legacy fields for backward compatibility
+      if (newFiles.length > 0) {
+        content.file_url = newFiles[0].url;
+        content.file_name = newFiles[0].name;
+        content.mime_type = newFiles[0].type;
+        content.cloudinary_public_id = newFiles[0].cloudinary_public_id;
+        content.content = newFiles[0].name;
+      }
+      
+      console.log('✅ Files updated:', content.files);
     }
 
     console.log('CONTENT BEFORE SAVE:', content);

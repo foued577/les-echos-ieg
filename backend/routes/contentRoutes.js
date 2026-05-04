@@ -39,7 +39,7 @@ router.get('/:id/download', authMiddleware, downloadContentFile); // Download ro
 
 // Route de création avec upload de fichiers (multiple support)
 router.post('/', authMiddleware, upload.array('files', 10), contentValidation, createContent); // Support up to 10 files
-router.put('/:id', authMiddleware, updateContent);
+router.put('/:id', authMiddleware, upload.array('files', 10), updateContent); // Support file updates
 router.delete('/:id', authMiddleware, deleteContent);
 
 module.exports = router;

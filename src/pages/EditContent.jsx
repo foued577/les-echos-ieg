@@ -199,8 +199,10 @@ export default function EditContent() {
       return;
     }
 
-    if (formData.type === 'fichier' && selectedFiles.length === 0) {
-      toast.error('Au moins un fichier est requis');
+    // For file type, only require files if it's a new content OR if user explicitly wants to replace files
+    // Allow editing existing file content without uploading new files
+    if (formData.type === 'fichier' && !isEditing && selectedFiles.length === 0) {
+      toast.error('Au moins un fichier est requis pour créer un contenu de type fichier');
       return;
     }
 
@@ -211,8 +213,8 @@ export default function EditContent() {
 
       let response;
       
-      if (formData.type === 'fichier') {
-        // Create FormData for file upload
+      if (formData.type === 'fichier' && selectedFiles.length > 0) {
+        // Create FormData for file upload ONLY when new files are selected
         const formDataToSend = new FormData();
         formDataToSend.append('title', formData.title);
         formDataToSend.append('description', formData.description);
@@ -233,7 +235,8 @@ export default function EditContent() {
           rubrique_id: formData.rubrique_id,
           tags: formData.tags,
           team_ids: formData.team_ids,
-          status: formData.status || 'NOT_SENT'
+          status: formData.status || 'NOT_SENT',
+          filesCount: selectedFiles.length
         });
         
         // Append all files
