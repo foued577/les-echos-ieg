@@ -556,8 +556,9 @@ const createContent = async (req, res) => {
       message: 'Contenu créé avec succès',
       data: populatedContent
     });
+
   } catch (error) {
-    console.error('Erreur createContent:', error);
+    console.error('Erreur updateContent:', error);
     res.status(500).json({
       success: false,
       message: 'Erreur serveur'
@@ -568,11 +569,9 @@ const createContent = async (req, res) => {
 // Mettre à jour un contenu
 const updateContent = async (req, res) => {
   try {
-    console.log('=== UPDATE CONTENT START ===');
-    console.log('Params ID:', req.params.id);
-    console.log('REQ.BODY UPDATE:', req.body);
-    console.log('REQ.FILES UPDATE:', req.files);
-    console.log('User from token:', req.user);
+    console.log("BODY:", req.body);
+    console.log("FILE:", req.file);
+    console.log("FILES:", req.files);
     
     // Validation des entrées
     const errors = validationResult(req);
@@ -585,13 +584,9 @@ const updateContent = async (req, res) => {
       });
     }
 
+    // Vérifier que le contenu existe
     const content = await Content.findById(req.params.id);
-    console.log('CONTENT BEFORE UPDATE:', content);
-    console.log('Original status:', content?.status);
-    console.log('Original description:', content?.description);
-    
     if (!content) {
-      console.log('Content not found');
       return res.status(404).json({
         success: false,
         message: 'Contenu non trouvé'
@@ -600,157 +595,83 @@ const updateContent = async (req, res) => {
 
     // Vérifier les permissions
     if (req.user.role !== 'ADMIN' && content.author_id.toString() !== req.user._id.toString()) {
-      console.log('Permission denied - User role:', req.user.role, 'Author:', content.author_id, 'User:', req.user._id);
       return res.status(403).json({
         success: false,
         message: 'Non autorisé à modifier ce contenu'
       });
     }
 
-    console.log('Permission granted - Updating content field by field...');
+    let { title, description, type, team_ids, rubrique_id, tags } = req.body;
 
-    // Extract fields from request body with correct field names
-    const {
+    // Parser les champs stringifiés depuis FormData
+    if (typeof team_ids === "string") {
+      team_ids = JSON.parse(team_ids);
+    }
+
+    if (typeof tags === "string") {
+      tags = JSON.parse(tags);
+    }
+
+    // Construire l'objet de mise à jour propre
+    const updateData = {
       title,
-      description,
+      description: description || "",
       type,
-      content: contentField,
-      rubrique_id, // Correct field name
-      tags,
-      team_ids, // Correct field name
-      status,
-      file_url,
-      file_name,
-      mime_type,
-      cloudinary_public_id,
-      files
-    } = req.body;
+      rubrique_id,
+      team_ids,
+      tags
+    };
 
-    // Update ONLY fields that are explicitly provided
-    if (title !== undefined && title !== null && title !== '') {
-      content.title = title;
-      console.log('Updated title to:', title);
+    // Gérer le contenu selon le type
+    if (type === 'lien') {
+      updateData.content = req.body.url || req.body.content;
+    } else if (type === 'article') {
+      updateData.content = req.body.content;
     }
 
-    if (description !== undefined && description !== null && description !== '') {
-      content.description = description;
-      console.log('Updated description to:', description);
-    }
-
-    if (type !== undefined && type !== null && type !== '') {
-      content.type = type;
-      console.log('Updated type to:', type);
-    }
-
-    if (contentField !== undefined) {
-      content.content = contentField;
-      console.log('Updated content field to:', contentField);
-    }
-
-    if (rubrique_id !== undefined && rubrique_id !== null && rubrique_id !== '') {
-      content.rubrique_id = rubrique_id;
-      console.log('Updated rubrique_id to:', rubrique_id);
-    }
-
-    if (tags !== undefined) {
-      content.tags = tags;
-      console.log('Updated tags to:', tags);
-    }
-
-    if (team_ids !== undefined) {
-      content.team_ids = team_ids;
-      console.log('Updated team_ids to:', team_ids);
-    }
-
-    // TRÈS IMPORTANT: Ne changer le statut que s'il est explicitement envoyé ET non vide
-    if (status !== undefined && status !== null && status !== '') {
-      content.status = status;
-      console.log('Updated status to:', status);
-    } else {
-      console.log('Status NOT changed (not provided or empty), keeping:', content.status);
-    }
-
-    // Update file fields only if provided
-    if (file_url !== undefined) {
-      content.file_url = file_url;
-      console.log('Updated file_url to:', file_url);
-    }
-
-    if (file_name !== undefined) {
-      content.file_name = file_name;
-      console.log('Updated file_name to:', file_name);
-    }
-
-    if (mime_type !== undefined) {
-      content.mime_type = mime_type;
-      console.log('Updated mime_type to:', mime_type);
-    }
-
-    if (cloudinary_public_id !== undefined) {
-      content.cloudinary_public_id = cloudinary_public_id;
-      console.log('Updated cloudinary_public_id to:', cloudinary_public_id);
-    }
-
-    if (files !== undefined) {
-      content.files = files;
-      console.log('Updated files to:', files);
-    }
-
-    // Handle file uploads if present
-    if (req.files && req.files.length > 0) {
-      console.log('📁 Processing uploaded files for update:', req.files.length);
-      
-      // Create new files array
+    // Gérer l'upload de fichier
+    if (req.file) {
+      updateData.file_url = req.file.path;
+      updateData.file_name = req.file.originalname;
+      updateData.mime_type = req.file.mimetype;
+    } else if (req.files && req.files.length > 0) {
+      // Pour les fichiers multiples
       const newFiles = req.files.map(file => ({
         name: file.originalname,
         url: file.secure_url || file.path,
         file_url: file.secure_url || file.path,
         type: file.mimetype,
         size: file.size,
-        cloudinary_public_id: file.filename || file.public_id,
-        public_id: file.public_id
+        cloudinary_public_id: file.filename || file.public_id
       }));
       
-      // Add to existing files or replace
-      if (content.files && content.files.length > 0) {
-        content.files = [...content.files, ...newFiles];
-      } else {
-        content.files = newFiles;
-      }
-      
-      // Update legacy fields for backward compatibility
+      updateData.files = content.files ? [...content.files, ...newFiles] : newFiles;
+      // Mettre à jour les champs legacy pour compatibilité
       if (newFiles.length > 0) {
-        content.file_url = newFiles[0].url;
-        content.file_name = newFiles[0].name;
-        content.mime_type = newFiles[0].type;
-        content.cloudinary_public_id = newFiles[0].cloudinary_public_id;
-        content.content = newFiles[0].name;
+        updateData.file_url = newFiles[0].url;
+        updateData.file_name = newFiles[0].name;
+        updateData.mime_type = newFiles[0].type;
+        updateData.cloudinary_public_id = newFiles[0].cloudinary_public_id;
       }
-      
-      console.log('✅ Files updated:', content.files);
     }
 
-    console.log('CONTENT BEFORE SAVE:', content);
-    console.log('Final status will be:', content.status);
-    console.log('Final description will be:', content.description);
+    // Mettre à jour avec findByIdAndUpdate
+    const updatedContent = await Content.findByIdAndUpdate(
+      req.params.id, 
+      updateData, 
+      { new: true, runValidators: true }
+    ).populate('author_id', 'name email avatar')
+     .populate('team_ids', 'name')
+     .populate('rubrique_id', 'name description color');
 
-    const updatedContent = await content.save();
-
-    // Populate the updated content
-    await updatedContent.populate('author_id', 'name email avatar');
-    await updatedContent.populate('team_ids', 'name');
-    await updatedContent.populate('rubrique_id', 'name description color');
-
-    console.log('CONTENT AFTER SAVE:', updatedContent);
-    console.log('Final status:', updatedContent.status);
-    console.log('Final description:', updatedContent.description);
-    console.log('Content updated successfully');
+    console.log('Content updated successfully:', updatedContent);
 
     res.status(200).json({
       success: true,
       message: 'Contenu mis à jour avec succès',
       data: updatedContent
     });
+
   } catch (error) {
     console.error('Erreur updateContent:', error);
     res.status(500).json({

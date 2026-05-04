@@ -213,47 +213,33 @@ export default function EditContent() {
 
       let response;
       
+      // CAS 1 : avec nouveau fichier
       if (formData.type === 'fichier' && selectedFiles.length > 0) {
-        // Create FormData for file upload ONLY when new files are selected
-        const formDataToSend = new FormData();
-        formDataToSend.append('title', formData.title);
-        formDataToSend.append('description', formData.description);
-        formDataToSend.append('type', formData.type);
-        formDataToSend.append('rubrique_id', formData.rubrique_id);
-        formDataToSend.append('tags', JSON.stringify(formData.tags));
-        formDataToSend.append('team_ids', JSON.stringify(formData.team_ids));
-        
-        // IMPORTANT: Only send status if it was actually loaded/changed
-        if (formData.status) {
-          formDataToSend.append('status', formData.status);
+        const fd = new FormData();
+        fd.append("title", formData.title);
+        fd.append("description", formData.description);
+        fd.append("type", formData.type);
+        fd.append("rubrique_id", formData.rubrique_id);
+        fd.append("team_ids", JSON.stringify(formData.team_ids || []));
+        fd.append("tags", JSON.stringify(formData.tags || []));
+
+        if (selectedFiles.length > 0) {
+          fd.append("file", selectedFiles[0]); // Single file for update
         }
+
+        console.log('UPDATE WITH FILE - FormData prepared');
         
-        console.log('UPDATE PAYLOAD (FILES):', {
-          title: formData.title,
-          description: formData.description,
-          type: formData.type,
-          rubrique_id: formData.rubrique_id,
-          tags: formData.tags,
-          team_ids: formData.team_ids,
-          status: formData.status || 'NOT_SENT',
-          filesCount: selectedFiles.length
-        });
-        
-        // Append all files
-        selectedFiles.forEach((file, index) => {
-          formDataToSend.append('files', file);
-        });
-        
-        response = await contentsAPI.updateWithFile(id, formDataToSend);
-      } else {
-        // Build COMPLETE payload without forcing status
+        response = await contentsAPI.update(id, fd);
+      } 
+      // CAS 2 : pas de nouveau fichier (JSON simple)
+      else {
         const payload = {
           title: formData.title,
           description: formData.description,
           type: formData.type,
-          rubrique_id: formData.rubrique_id, // Correct field name
-          tags: formData.tags,
-          team_ids: formData.team_ids // Correct field name
+          rubrique_id: formData.rubrique_id,
+          team_ids: formData.team_ids,
+          tags: formData.tags
         };
 
         // Add content based on type
@@ -263,14 +249,8 @@ export default function EditContent() {
           payload.content = formData.content;
         }
 
-        // IMPORTANT: Only send status if it was actually loaded/changed
-        if (formData.status) {
-          payload.status = formData.status;
-        }
-
-        console.log('FORM DATA BEFORE UPDATE:', formData);
-        console.log('UPDATE PAYLOAD (REGULAR):', payload);
-
+        console.log('UPDATE WITHOUT FILE - Payload:', payload);
+        
         response = await contentsAPI.update(id, payload);
       }
 
