@@ -7,7 +7,8 @@ const {
   getGazetteById,
   updateGazette,
   deleteGazette,
-  searchUsers
+  searchUsers,
+  duplicateGazette
 } = require('../controllers/gazetteController');
 
 // Route de test pour vérifier que l'API fonctionne
@@ -34,6 +35,7 @@ router.use(authMiddleware);
 // Routes
 router.post('/', createGazette);                              // POST /api/gazettes
 router.get('/', getGazettes);                               // GET /api/gazettes
+router.post('/:id/duplicate', duplicateGazette);             // POST /api/gazettes/:id/duplicate
 router.delete('/:id', (req, res, next) => {
   console.log('DEBUG: DELETE /api/gazettes/:id route called');
   console.log('DEBUG: Params:', req.params);

@@ -206,6 +206,13 @@ export const gazettesAPI = {
     const response = await api.get(`/gazettes/users/search?q=${encodeURIComponent(query)}`);
     console.log('📡 DEBUG: gazettesAPI.searchUsers response:', response.data);
     return response.data;
+  },
+
+  duplicate: async (id) => {
+    console.log('📡 DEBUG: gazettesAPI.duplicate called with id:', id);
+    const response = await api.post(`/gazettes/${id}/duplicate`);
+    console.log('📡 DEBUG: gazettesAPI.duplicate response:', response.data);
+    return response.data;
   }
 };
 

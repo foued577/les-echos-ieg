@@ -10,6 +10,7 @@ import {
   Eye,
   Edit,
   Trash2,
+  Copy,
   FileText,
   Image,
   Video,
@@ -61,6 +62,31 @@ export default function Gazette() {
     } catch (error) {
       console.error('❌ Error deleting gazette:', error);
       alert('Erreur lors de la suppression de la gazette');
+    }
+  };
+
+  // Handle gazette duplication
+  const handleDuplicateGazette = async (gazette, event) => {
+    event.stopPropagation();
+    
+    if (!window.confirm(`Voulez-vous dupliquer la gazette "${gazette.title}" ?`)) {
+      return;
+    }
+
+    try {
+      const gazetteId = gazette.id || gazette._id;
+      console.log('📋 Duplicating gazette:', gazetteId);
+      
+      const response = await gazettesAPI.duplicate(gazetteId);
+      
+      if (response.success) {
+        // Recharger la liste des gazettes
+        await loadGazettes();
+        console.log('✅ Gazette duplicated successfully');
+      }
+    } catch (error) {
+      console.error('❌ Error duplicating gazette:', error);
+      alert('Erreur lors de la duplication de la gazette');
     }
   };
 
@@ -350,6 +376,13 @@ export default function Gazette() {
                     >
                       <Edit className="w-4 h-4 inline mr-2" />
                       Modifier
+                    </button>
+                    <button
+                      onClick={(e) => handleDuplicateGazette(gazette, e)}
+                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      <Copy className="w-4 h-4 inline mr-2" />
+                      Dupliquer
                     </button>
                     {gazette.status === 'published' && (
                       <button

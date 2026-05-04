@@ -351,11 +351,69 @@ const searchUsers = async (req, res) => {
   }
 };
 
+// Dupliquer une gazette
+const duplicateGazette = async (req, res) => {
+  try {
+    console.log('📋 DEBUG: Duplicating gazette with ID:', req.params.id);
+    
+    // Récupérer la gazette originale
+    const original = await Gazette.findById(req.params.id);
+    if (!original) {
+      return res.status(404).json({ 
+        success: false,
+        message: "Gazette introuvable" 
+      });
+    }
+
+    console.log('📋 DEBUG: Original gazette found:', original.title);
+
+    // Créer la copie avec les mêmes données
+    const copy = new Gazette({
+      title: `${original.title} - Copie`,
+      description: original.description || "",
+      blocks: original.blocks || [],
+      status: "draft",
+      author_id: req.user._id,
+      team_ids: original.team_ids || [],
+      assigned_users: original.assigned_users || []
+    });
+
+    const savedCopy = await copy.save();
+    
+    // Populate les références
+    await savedCopy.populate([
+      { path: 'author_id', select: 'name email' },
+      { path: 'assigned_users', select: 'name email' },
+      { path: 'team_ids', select: 'name' }
+    ]);
+
+    console.log('✅ DEBUG: Gazette duplicated successfully:', savedCopy.title);
+
+    res.status(201).json({
+      success: true,
+      message: 'Gazette dupliquée avec succès',
+      data: {
+        ...savedCopy.toObject(),
+        id: savedCopy._id.toString() // Convertir _id en id string
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ DEBUG: Error duplicating gazette:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur serveur lors de la duplication',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   createGazette,
   getGazettes,
   getGazetteById,
   updateGazette,
   deleteGazette,
-  searchUsers
+  searchUsers,
+  duplicateGazette
 };
