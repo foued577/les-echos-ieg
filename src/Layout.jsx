@@ -126,7 +126,12 @@ export default function Layout({ children, currentPageName }) {
 
   const loadRubriquesAndContents = async () => {
     try {
-      console.log('🔍 Loading rubriques and contents...');
+      console.log('🔍 Loading rubriques, contents and teams...');
+      
+      // Load teams for simple users
+      const teamsResponse = await apiClient.get('/teams');
+      const teamsArray = Array.isArray(teamsResponse.data?.data) ? teamsResponse.data.data : [];
+      setTeams(teamsArray);
       
       // Load rubriques
       const rubriquesResponse = await apiClient.get('/rubriques');
@@ -139,9 +144,10 @@ export default function Layout({ children, currentPageName }) {
       const contentsArray = Array.isArray(contentsResponse.data) ? contentsResponse.data : [];
       setContents(contentsArray);
       
-      console.log('✅ Rubriques and contents loaded');
+      console.log('✅ Rubriques, contents and teams loaded');
     } catch (error) {
-      console.error('💥 Error loading rubriques and contents:', error);
+      console.error('💥 Error loading rubriques, contents and teams:', error);
+      setTeams([]);
       setRubriques([]);
       setContents([]);
     }
@@ -176,6 +182,43 @@ export default function Layout({ children, currentPageName }) {
         content.rubrique_id?._id === rubrique._id
       )
     })).filter(rubrique => rubrique.contents.length > 0);
+  };
+
+  // Helper function to group contents by team then by rubrique for simple users
+  const getGroupedSpaces = () => {
+    // Filter approved contents only
+    const approvedContents = contents.filter(c =>
+      c.status === "approved" || c.status === "approuve"
+    );
+
+    return teams.map(team => {
+      const teamContents = approvedContents.filter(content =>
+        content.team_ids?.some(t =>
+          String(t._id || t) === String(team._id)
+        ) ||
+        content.teams?.some(t =>
+          String(t._id || t) === String(team._id)
+        )
+      );
+
+      const rubriquesForTeam = rubriques
+        .map(rubrique => {
+          const rubriqueContents = teamContents.filter(content =>
+            String(content.rubrique_id?._id || content.rubrique_id) === String(rubrique._id)
+          );
+
+          return {
+            ...rubrique,
+            contents: rubriqueContents
+          };
+        })
+        .filter(rubrique => rubrique.contents.length > 0);
+
+      return {
+        ...team,
+        rubriques: rubriquesForTeam
+      };
+    }).filter(team => team.rubriques.length > 0);
   };
 
   return (
@@ -286,23 +329,39 @@ export default function Layout({ children, currentPageName }) {
                 </Link>
               ))
             ) : (
-              // Simple user: Show rubriques with contents
-              getContentsByRubrique().map((rubrique) => (
-                <div key={rubrique._id} className="space-y-1">
-                  <div className="apple-sidebar-item">
-                    <FolderOpen className="w-5 h-5 text-muted-foreground" />
-                    <span className="flex-1 truncate">{rubrique.name}</span>
+              // Simple user: Show teams with rubriques and contents (hierarchical)
+              getGroupedSpaces().map((team) => (
+                <div key={team._id} className="space-y-2">
+                  {/* Team name - first level */}
+                  <div className="font-semibold text-sm flex items-center gap-2 px-4 py-2 text-foreground">
+                    <div 
+                      className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: team.color || '#0071e3' }}
+                    />
+                    <span className="truncate">{team.name}</span>
                   </div>
-                  {rubrique.contents.map((content) => (
-                    <Link
-                      key={content._id}
-                      to={createPageUrl(`ContentDetail?id=${content._id}`)}
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="apple-sidebar-item ml-8"
-                    >
-                      <span className="w-2 h-2 text-muted-foreground">•</span>
-                      <span className="flex-1 truncate text-sm">{content.title}</span>
-                    </Link>
+
+                  {/* Rubriques for this team - second level */}
+                  {team.rubriques.map((rubrique) => (
+                    <div key={rubrique._id} className="ml-4 space-y-1">
+                      {/* Rubrique name */}
+                      <div className="text-sm font-medium text-muted-foreground flex items-center gap-2 px-4 py-1">
+                        <FolderOpen className="w-4 h-4 flex-shrink-0" />
+                        <span className="truncate">{rubrique.name || rubrique.title}</span>
+                      </div>
+
+                      {/* Contents for this rubrique - third level */}
+                      {rubrique.contents.map((content) => (
+                        <Link
+                          key={content._id}
+                          to={createPageUrl(`ContentDetail?id=${content._id}`)}
+                          onClick={() => setMobileMenuOpen(false)}
+                          className="block ml-4 text-xs text-muted-foreground hover:text-blue-600 truncate px-4 py-1 transition-colors"
+                        >
+                          • {content.title}
+                        </Link>
+                      ))}
+                    </div>
                   ))}
                 </div>
               ))
