@@ -161,6 +161,7 @@ export default function CreateContent() {
         // Pour les fichiers, utiliser FormData
         const fd = new FormData();
         fd.append("title", formData.title);
+        fd.append("description", formData.description || "");
         fd.append("type", "fichier");
         fd.append("team_ids", JSON.stringify(formData.team_ids || []));
         fd.append("rubrique_id", formData.category_id || '');

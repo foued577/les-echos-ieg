@@ -386,6 +386,11 @@ export default function Contents() {
                             <h3 className="text-lg font-semibold text-gray-900 mb-1">
                               {content.title}
                             </h3>
+                            {content.description && (
+                              <p className="text-sm text-gray-600 mb-2 line-clamp-2">
+                                {content.description}
+                              </p>
+                            )}
                             <div className="flex items-center gap-2 flex-wrap">
                               <Badge className={StatusConfig.color}>
                                 <StatusIcon className="w-3 h-3 mr-1" />
