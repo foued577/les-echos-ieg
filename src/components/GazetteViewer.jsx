@@ -36,6 +36,22 @@ const GazetteViewer = ({ gazette, showHeader = true, showFooter = true, classNam
     }
     return additionalClasses;
   };
+
+  // Helper function to apply block-specific styles
+  const getBlockStyleClasses = (block, additionalClasses = "") => {
+    const blockStyle = block.style || {
+      fontFamily: "serif",
+      fontSize: "text-base", 
+      fontWeight: "font-normal",
+      italic: false,
+      align: "text-left"
+    };
+    
+    const fontClass = fontClassMap[blockStyle.fontFamily] || "font-serif";
+    const italicClass = blockStyle.italic ? "italic" : "";
+    
+    return `${fontClass} ${blockStyle.fontSize} ${blockStyle.fontWeight} ${italicClass} ${blockStyle.align} ${additionalClasses}`;
+  };
   // Render individual block based on type
   const renderBlock = (block, index) => {
     const blockType = block.type || 'text';
@@ -44,7 +60,7 @@ const GazetteViewer = ({ gazette, showHeader = true, showFooter = true, classNam
     switch (blockType) {
       case 'title':
         return (
-          <h1 key={index} className={getTypographyClasses('title', 'text-gray-900 text-center mb-8 leading-tight')}>
+          <h1 key={index} className={getBlockStyleClasses(block, 'text-gray-900 mb-8 leading-tight')}>
             {blockContent}
           </h1>
         );
@@ -72,7 +88,7 @@ const GazetteViewer = ({ gazette, showHeader = true, showFooter = true, classNam
       
       case 'paragraph':
         return (
-          <p key={index} className={getTypographyClasses('body', 'text-gray-700 leading-relaxed mb-6')}>
+          <p key={index} className={getBlockStyleClasses(block, 'text-gray-700 leading-relaxed mb-6')}>
             {blockContent}
           </p>
         );

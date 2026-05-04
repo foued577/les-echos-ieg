@@ -36,6 +36,13 @@ const GazetteSchema = new mongoose.Schema({
     order: {
       type: Number,
       default: 0
+    },
+    style: {
+      fontFamily: { type: String, default: "serif" },
+      fontSize: { type: String, default: "text-base" },
+      fontWeight: { type: String, default: "font-normal" },
+      italic: { type: Boolean, default: false },
+      align: { type: String, default: "text-left" }
     }
   }],
   author_id: {

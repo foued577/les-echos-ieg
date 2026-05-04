@@ -119,7 +119,7 @@ const uploadToCloudinary = async (file, type = 'image') => {
 };
 
 // Block components
-const BlockRenderer = ({ block, onUpdate, onRemove, onMoveUp, onMoveDown, isFirst, isLast }) => {
+const BlockRenderer = ({ block, onUpdate, onRemove, onMoveUp, onMoveDown, isFirst, isLast, index, onSelect, isSelected, onUpdateStyle }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [content, setContent] = useState(block.content || '');
   const [uploading, setUploading] = useState(false);
@@ -215,11 +215,14 @@ const BlockRenderer = ({ block, onUpdate, onRemove, onMoveUp, onMoveDown, isFirs
   switch (block.type) {
     case BLOCK_TYPES.TITLE:
       return (
-        <div className="group relative bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow">
+        <div 
+          className={`group relative bg-white rounded-lg border ${isSelected ? 'border-blue-500' : 'border-gray-200'} p-4 hover:shadow-md transition-shadow cursor-pointer`}
+          onClick={() => onSelect()}
+        >
           {/* Block Controls */}
           <div className="absolute -left-12 top-4 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col gap-1">
             <button
-              onClick={() => onMoveUp(block.id)}
+              onClick={(e) => { e.stopPropagation(); onMoveUp(block.id); }}
               disabled={isFirst}
               className="p-1 bg-white border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
@@ -228,7 +231,7 @@ const BlockRenderer = ({ block, onUpdate, onRemove, onMoveUp, onMoveDown, isFirs
               </svg>
             </button>
             <button
-              onClick={() => onMoveDown(block.id)}
+              onClick={(e) => { e.stopPropagation(); onMoveDown(block.id); }}
               disabled={isLast}
               className="p-1 bg-white border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
@@ -237,12 +240,86 @@ const BlockRenderer = ({ block, onUpdate, onRemove, onMoveUp, onMoveDown, isFirs
               </svg>
             </button>
             <button
-              onClick={() => onRemove(block.id)}
+              onClick={(e) => { e.stopPropagation(); onRemove(block.id); }}
               className="p-1 bg-white border border-red-200 rounded hover:bg-red-50 text-red-600"
             >
               <Trash2 className="w-4 h-4" />
             </button>
           </div>
+
+          {/* Style Controls */}
+          {isSelected && (
+            <div className="absolute -right-80 top-4 z-10 bg-white border border-gray-200 rounded-lg shadow-lg p-4 w-72">
+              <h4 className="text-sm font-medium text-gray-900 mb-3">Style du bloc</h4>
+              
+              {/* Police */}
+              <div className="mb-3">
+                <label className="block text-xs font-medium text-gray-700 mb-1">Police</label>
+                <select
+                  value={block.style?.fontFamily || "serif"}
+                  onChange={(e) => onUpdateStyle(index, { fontFamily: e.target.value })}
+                  className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
+                >
+                  <option value="serif">Serif journal</option>
+                  <option value="sans">Sans moderne</option>
+                  <option value="mono">Monospace</option>
+                  <option value="elegant">Élégante</option>
+                </select>
+              </div>
+
+              {/* Taille */}
+              <div className="mb-3">
+                <label className="block text-xs font-medium text-gray-700 mb-1">Taille</label>
+                <select
+                  value={block.style?.fontSize || "text-base"}
+                  onChange={(e) => onUpdateStyle(index, { fontSize: e.target.value })}
+                  className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
+                >
+                  <option value="text-sm">Petit</option>
+                  <option value="text-base">Normal</option>
+                  <option value="text-lg">Grand</option>
+                  <option value="text-xl">Très grand</option>
+                </select>
+              </div>
+
+              {/* Alignement */}
+              <div className="mb-3">
+                <label className="block text-xs font-medium text-gray-700 mb-1">Alignement</label>
+                <select
+                  value={block.style?.align || "text-left"}
+                  onChange={(e) => onUpdateStyle(index, { align: e.target.value })}
+                  className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
+                >
+                  <option value="text-left">Gauche</option>
+                  <option value="text-center">Centre</option>
+                  <option value="text-right">Droite</option>
+                  <option value="text-justify">Justifié</option>
+                </select>
+              </div>
+
+              {/* Style */}
+              <div className="flex gap-4">
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={block.style?.fontWeight === "font-bold"}
+                    onChange={(e) => onUpdateStyle(index, { fontWeight: e.target.checked ? "font-bold" : "font-normal" })}
+                    className="mr-1"
+                  />
+                  <span className="text-xs">Gras</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={block.style?.italic || false}
+                    onChange={(e) => onUpdateStyle(index, { italic: e.target.checked })}
+                    className="mr-1"
+                  />
+                  <span className="text-xs">Italique</span>
+                </label>
+              </div>
+            </div>
+          )}
 
           {/* Block Content */}
           <div className="relative">
@@ -271,11 +348,14 @@ const BlockRenderer = ({ block, onUpdate, onRemove, onMoveUp, onMoveDown, isFirs
 
     case BLOCK_TYPES.TEXT:
       return (
-        <div className="group relative bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow">
+        <div 
+          className={`group relative bg-white rounded-lg border ${isSelected ? 'border-blue-500' : 'border-gray-200'} p-4 hover:shadow-md transition-shadow cursor-pointer`}
+          onClick={() => onSelect()}
+        >
           {/* Block Controls */}
           <div className="absolute -left-12 top-4 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col gap-1">
             <button
-              onClick={() => onMoveUp(block.id)}
+              onClick={(e) => { e.stopPropagation(); onMoveUp(block.id); }}
               disabled={isFirst}
               className="p-1 bg-white border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
@@ -284,7 +364,7 @@ const BlockRenderer = ({ block, onUpdate, onRemove, onMoveUp, onMoveDown, isFirs
               </svg>
             </button>
             <button
-              onClick={() => onMoveDown(block.id)}
+              onClick={(e) => { e.stopPropagation(); onMoveDown(block.id); }}
               disabled={isLast}
               className="p-1 bg-white border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
@@ -293,12 +373,86 @@ const BlockRenderer = ({ block, onUpdate, onRemove, onMoveUp, onMoveDown, isFirs
               </svg>
             </button>
             <button
-              onClick={() => onRemove(block.id)}
+              onClick={(e) => { e.stopPropagation(); onRemove(block.id); }}
               className="p-1 bg-white border border-red-200 rounded hover:bg-red-50 text-red-600"
             >
               <Trash2 className="w-4 h-4" />
             </button>
           </div>
+
+          {/* Style Controls */}
+          {isSelected && (
+            <div className="absolute -right-80 top-4 z-10 bg-white border border-gray-200 rounded-lg shadow-lg p-4 w-72">
+              <h4 className="text-sm font-medium text-gray-900 mb-3">Style du bloc</h4>
+              
+              {/* Police */}
+              <div className="mb-3">
+                <label className="block text-xs font-medium text-gray-700 mb-1">Police</label>
+                <select
+                  value={block.style?.fontFamily || "serif"}
+                  onChange={(e) => onUpdateStyle(index, { fontFamily: e.target.value })}
+                  className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
+                >
+                  <option value="serif">Serif journal</option>
+                  <option value="sans">Sans moderne</option>
+                  <option value="mono">Monospace</option>
+                  <option value="elegant">Élégante</option>
+                </select>
+              </div>
+
+              {/* Taille */}
+              <div className="mb-3">
+                <label className="block text-xs font-medium text-gray-700 mb-1">Taille</label>
+                <select
+                  value={block.style?.fontSize || "text-base"}
+                  onChange={(e) => onUpdateStyle(index, { fontSize: e.target.value })}
+                  className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
+                >
+                  <option value="text-sm">Petit</option>
+                  <option value="text-base">Normal</option>
+                  <option value="text-lg">Grand</option>
+                  <option value="text-xl">Très grand</option>
+                </select>
+              </div>
+
+              {/* Alignement */}
+              <div className="mb-3">
+                <label className="block text-xs font-medium text-gray-700 mb-1">Alignement</label>
+                <select
+                  value={block.style?.align || "text-left"}
+                  onChange={(e) => onUpdateStyle(index, { align: e.target.value })}
+                  className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
+                >
+                  <option value="text-left">Gauche</option>
+                  <option value="text-center">Centre</option>
+                  <option value="text-right">Droite</option>
+                  <option value="text-justify">Justifié</option>
+                </select>
+              </div>
+
+              {/* Style */}
+              <div className="flex gap-4">
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={block.style?.fontWeight === "font-bold"}
+                    onChange={(e) => onUpdateStyle(index, { fontWeight: e.target.checked ? "font-bold" : "font-normal" })}
+                    className="mr-1"
+                  />
+                  <span className="text-xs">Gras</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={block.style?.italic || false}
+                    onChange={(e) => onUpdateStyle(index, { italic: e.target.checked })}
+                    className="mr-1"
+                  />
+                  <span className="text-xs">Italique</span>
+                </label>
+              </div>
+            </div>
+          )}
 
           {/* Block Content */}
           <div className="relative">
@@ -806,6 +960,7 @@ export default function GazetteEditor() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [selectedBlock, setSelectedBlock] = useState(null);
 
   // Load existing gazette
   const loadGazette = async (gazetteId) => {
@@ -898,7 +1053,14 @@ export default function GazetteEditor() {
       id: crypto.randomUUID(),
       type,
       content: '',
-      order: gazette.blocks.length
+      order: gazette.blocks.length,
+      style: {
+        fontFamily: "serif",
+        fontSize: "text-base",
+        fontWeight: "font-normal",
+        italic: false,
+        align: "text-left"
+      }
     };
     
     console.log('🔥 DEBUG: New block created:', newBlock);
@@ -927,6 +1089,23 @@ export default function GazetteEditor() {
       ...prev,
       blocks: prev.blocks.filter(block => block.id !== blockId)
     }));
+  };
+
+  const updateBlockStyle = (index, newStyle) => {
+    setGazette(prev => {
+      const updatedBlocks = [...prev.blocks];
+      updatedBlocks[index] = {
+        ...updatedBlocks[index],
+        style: {
+          ...updatedBlocks[index].style,
+          ...newStyle
+        }
+      };
+      return {
+        ...prev,
+        blocks: updatedBlocks
+      };
+    });
   };
 
   const moveBlock = (blockId, direction) => {
@@ -1342,6 +1521,10 @@ export default function GazetteEditor() {
                     onMoveDown={() => moveBlock(block.id, 'down')}
                     isFirst={index === 0}
                     isLast={index === gazette.blocks.length - 1}
+                    index={index}
+                    onSelect={() => setSelectedBlock(index)}
+                    isSelected={selectedBlock === index}
+                    onUpdateStyle={updateBlockStyle}
                   />
                 ))
               )}
