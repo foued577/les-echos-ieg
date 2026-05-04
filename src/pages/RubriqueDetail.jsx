@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import { contentsAPI, rubriquesAPI } from '@/services/api';
+import { toast } from 'sonner';
 import { 
   ArrowLeft, 
   FileText, 
@@ -77,6 +78,19 @@ const RubriqueDetail = () => {
       console.error('Error loading rubrique details:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteContent = async (contentId) => {
+    if (!window.confirm("Voulez-vous vraiment supprimer ce contenu ?")) return;
+
+    try {
+      await contentsAPI.delete(contentId);
+      toast.success("Contenu supprimé");
+      loadRubriqueAndContents();
+    } catch (error) {
+      console.error("Erreur suppression contenu:", error);
+      toast.error("Erreur lors de la suppression");
     }
   };
 
@@ -395,6 +409,18 @@ const RubriqueDetail = () => {
                             className="text-gray-500 hover:text-green-600"
                           >
                             <Download className="w-4 h-4" />
+                          </Button>
+                        )}
+                        
+                        {user?.role === 'ADMIN' && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteContent(content._id)}
+                            className="text-red-600 hover:text-red-800"
+                            title="Supprimer"
+                          >
+                            <Trash2 className="w-4 h-4" />
                           </Button>
                         )}
                       </div>
