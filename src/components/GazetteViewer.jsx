@@ -3,6 +3,39 @@ import { Calendar, User } from 'lucide-react';
 import { APP_NAME, APP_NAME_FULL } from '../constants/app';
 
 const GazetteViewer = ({ gazette, showHeader = true, showFooter = true, className = "" }) => {
+  // Helper function for font mapping
+  const fontClassMap = {
+    serif: "font-serif",
+    sans: "font-sans",
+    mono: "font-mono",
+    elegant: "font-serif italic"
+  };
+
+  // Get typography with defaults
+  const typography = gazette.typography || {
+    titleFont: "serif",
+    bodyFont: "sans",
+    titleSize: "text-4xl",
+    bodySize: "text-base",
+    titleWeight: "font-bold",
+    bodyWeight: "font-normal",
+    titleItalic: false,
+    bodyItalic: false
+  };
+
+  // Helper function to apply typography classes
+  const getTypographyClasses = (type, additionalClasses = "") => {
+    if (type === 'title') {
+      const fontClass = fontClassMap[typography.titleFont] || "font-serif";
+      const italicClass = typography.titleItalic ? "italic" : "";
+      return `${fontClass} ${typography.titleSize} ${typography.titleWeight} ${italicClass} ${additionalClasses}`;
+    } else if (type === 'body') {
+      const fontClass = fontClassMap[typography.bodyFont] || "font-sans";
+      const italicClass = typography.bodyItalic ? "italic" : "";
+      return `${fontClass} ${typography.bodySize} ${typography.bodyWeight} ${italicClass} ${additionalClasses}`;
+    }
+    return additionalClasses;
+  };
   // Render individual block based on type
   const renderBlock = (block, index) => {
     const blockType = block.type || 'text';
@@ -11,7 +44,7 @@ const GazetteViewer = ({ gazette, showHeader = true, showFooter = true, classNam
     switch (blockType) {
       case 'title':
         return (
-          <h1 key={index} className="text-4xl md:text-5xl font-serif text-gray-900 text-center mb-8 leading-tight">
+          <h1 key={index} className={getTypographyClasses('title', 'text-gray-900 text-center mb-8 leading-tight')}>
             {blockContent}
           </h1>
         );
@@ -39,7 +72,7 @@ const GazetteViewer = ({ gazette, showHeader = true, showFooter = true, classNam
       
       case 'paragraph':
         return (
-          <p key={index} className="text-lg text-gray-700 leading-relaxed mb-6 font-serif">
+          <p key={index} className={getTypographyClasses('body', 'text-gray-700 leading-relaxed mb-6')}>
             {blockContent}
           </p>
         );
@@ -202,11 +235,11 @@ const GazetteViewer = ({ gazette, showHeader = true, showFooter = true, classNam
 
             {/* Main Title */}
             <header className="text-center mb-12">
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif text-gray-900 leading-tight mb-6">
+              <h1 className={getTypographyClasses('title', 'text-gray-900 leading-tight mb-6 md:text-5xl lg:text-6xl')}>
                 {gazette.title}
               </h1>
               {gazette.description && (
-                <p className="text-xl md:text-2xl text-gray-600 leading-relaxed max-w-3xl mx-auto font-serif italic">
+                <p className={getTypographyClasses('body', 'text-gray-600 leading-relaxed max-w-3xl mx-auto text-xl md:text-2xl')}>
                   {gazette.description}
                 </p>
               )}

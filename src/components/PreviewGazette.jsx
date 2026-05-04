@@ -3,7 +3,7 @@ import { X, Download, Share2, Check, AlertCircle } from 'lucide-react';
 import GazetteViewer from './GazetteViewer';
 import { APP_NAME } from '../constants/app';
 
-const PreviewGazette = ({ title, description, blocks, onClose }) => {
+const PreviewGazette = ({ title, description, blocks, typography, onClose }) => {
   const [shareStatus, setShareStatus] = useState('idle'); // idle, copying, success, error
   const [exportStatus, setExportStatus] = useState('idle'); // idle, exporting, success, error
 
@@ -12,6 +12,7 @@ const PreviewGazette = ({ title, description, blocks, onClose }) => {
     title,
     description,
     blocks,
+    typography,
     publication_date: new Date().toISOString(),
     author: APP_NAME
   };

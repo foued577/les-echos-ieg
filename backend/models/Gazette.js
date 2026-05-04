@@ -50,7 +50,17 @@ const GazetteSchema = new mongoose.Schema({
   assigned_users: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
-  }]
+  }],
+  typography: {
+    titleFont: { type: String, default: "serif" },
+    bodyFont: { type: String, default: "sans" },
+    titleSize: { type: String, default: "text-4xl" },
+    bodySize: { type: String, default: "text-base" },
+    titleWeight: { type: String, default: "font-bold" },
+    bodyWeight: { type: String, default: "font-normal" },
+    titleItalic: { type: Boolean, default: false },
+    bodyItalic: { type: Boolean, default: false }
+  }
 }, {
   timestamps: true
 });

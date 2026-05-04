@@ -7,7 +7,7 @@ const createGazette = async (req, res) => {
   try {
     console.log('🗞️ DEBUG: Creating gazette with payload:', req.body);
     
-    const { title, description, status = 'draft', blocks = [], assigned_users = [] } = req.body;
+    const { title, description, status = 'draft', blocks = [], assigned_users = [], typography = {} } = req.body;
     const userId = req.user.id;
 
     // Validation
@@ -29,7 +29,8 @@ const createGazette = async (req, res) => {
       })),
       author_id: userId,
       team_ids: [],
-      assigned_users
+      assigned_users,
+      typography
     });
 
     const savedGazette = await gazette.save();
@@ -179,7 +180,7 @@ const getGazetteById = async (req, res) => {
 const updateGazette = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, description, status, blocks, assigned_users } = req.body;
+    const { title, description, status, blocks, assigned_users, typography } = req.body;
     const userId = req.user.id;
 
     const gazette = await Gazette.findOne({
@@ -217,6 +218,9 @@ const updateGazette = async (req, res) => {
     }
     if (assigned_users !== undefined) {
       gazette.assigned_users = assigned_users;
+    }
+    if (typography !== undefined) {
+      gazette.typography = typography;
     }
 
     const updatedGazette = await gazette.save();
@@ -375,7 +379,8 @@ const duplicateGazette = async (req, res) => {
       status: "draft",
       author_id: req.user._id,
       team_ids: original.team_ids || [],
-      assigned_users: original.assigned_users || []
+      assigned_users: original.assigned_users || [],
+      typography: original.typography || {}
     });
 
     const savedCopy = await copy.save();

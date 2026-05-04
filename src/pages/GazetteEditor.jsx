@@ -791,7 +791,17 @@ export default function GazetteEditor() {
     description: '',
     status: 'draft',
     blocks: [],
-    assigned_users: []
+    assigned_users: [],
+    typography: {
+      titleFont: "serif",
+      bodyFont: "sans",
+      titleSize: "text-4xl",
+      bodySize: "text-base",
+      titleWeight: "font-bold",
+      bodyWeight: "font-normal",
+      titleItalic: false,
+      bodyItalic: false
+    }
   });
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -958,7 +968,17 @@ export default function GazetteEditor() {
         description: gazette.description.trim(),
         status: gazette.status || 'draft',
         blocks: gazette.blocks || [],
-        assigned_users: gazette.assigned_users?.map(user => user._id) || []
+        assigned_users: gazette.assigned_users?.map(user => user._id) || [],
+        typography: gazette.typography || {
+          titleFont: "serif",
+          bodyFont: "sans",
+          titleSize: "text-4xl",
+          bodySize: "text-base",
+          titleWeight: "font-bold",
+          bodyWeight: "font-normal",
+          titleItalic: false,
+          bodyItalic: false
+        }
       };
 
       console.log('📤 DEBUG: Sending payload to API:', JSON.stringify(payload, null, 2));
@@ -1137,6 +1157,165 @@ export default function GazetteEditor() {
                   onUsersChange={(users) => setGazette(prev => ({ ...prev, assigned_users: users }))}
                   disabled={false}
                 />
+
+                {/* Typography Section */}
+                <div className="border-t border-gray-200 pt-4">
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">Style de la gazette</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    
+                    {/* Police du titre */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Police du titre
+                      </label>
+                      <select
+                        value={gazette.typography?.titleFont || "serif"}
+                        onChange={(e) => setGazette(prev => ({
+                          ...prev,
+                          typography: { ...prev.typography, titleFont: e.target.value }
+                        }))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        <option value="serif">Serif journal</option>
+                        <option value="sans">Sans moderne</option>
+                        <option value="mono">Monospace</option>
+                        <option value="elegant">Élégante</option>
+                      </select>
+                    </div>
+
+                    {/* Police du contenu */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Police du contenu
+                      </label>
+                      <select
+                        value={gazette.typography?.bodyFont || "sans"}
+                        onChange={(e) => setGazette(prev => ({
+                          ...prev,
+                          typography: { ...prev.typography, bodyFont: e.target.value }
+                        }))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        <option value="serif">Serif journal</option>
+                        <option value="sans">Sans moderne</option>
+                        <option value="mono">Monospace</option>
+                        <option value="elegant">Élégante</option>
+                      </select>
+                    </div>
+
+                    {/* Taille du titre */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Taille du titre
+                      </label>
+                      <select
+                        value={gazette.typography?.titleSize || "text-4xl"}
+                        onChange={(e) => setGazette(prev => ({
+                          ...prev,
+                          typography: { ...prev.typography, titleSize: e.target.value }
+                        }))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        <option value="text-2xl">Petit</option>
+                        <option value="text-3xl">Moyen</option>
+                        <option value="text-4xl">Grand</option>
+                        <option value="text-5xl">Très grand</option>
+                      </select>
+                    </div>
+
+                    {/* Taille du texte */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Taille du texte
+                      </label>
+                      <select
+                        value={gazette.typography?.bodySize || "text-base"}
+                        onChange={(e) => setGazette(prev => ({
+                          ...prev,
+                          typography: { ...prev.typography, bodySize: e.target.value }
+                        }))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        <option value="text-sm">Petit</option>
+                        <option value="text-base">Normal</option>
+                        <option value="text-lg">Grand</option>
+                      </select>
+                    </div>
+
+                    {/* Style du titre */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Style du titre
+                      </label>
+                      <div className="flex gap-4">
+                        <label className="flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={gazette.typography?.titleWeight === "font-bold"}
+                            onChange={(e) => setGazette(prev => ({
+                              ...prev,
+                              typography: { 
+                                ...prev.typography, 
+                                titleWeight: e.target.checked ? "font-bold" : "font-normal" 
+                              }
+                            }))}
+                            className="mr-2"
+                          />
+                          Gras
+                        </label>
+                        <label className="flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={gazette.typography?.titleItalic || false}
+                            onChange={(e) => setGazette(prev => ({
+                              ...prev,
+                              typography: { ...prev.typography, titleItalic: e.target.checked }
+                            }))}
+                            className="mr-2"
+                          />
+                          Italique
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* Style du texte */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Style du texte
+                      </label>
+                      <div className="flex gap-4">
+                        <label className="flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={gazette.typography?.bodyWeight === "font-bold"}
+                            onChange={(e) => setGazette(prev => ({
+                              ...prev,
+                              typography: { 
+                                ...prev.typography, 
+                                bodyWeight: e.target.checked ? "font-bold" : "font-normal" 
+                              }
+                            }))}
+                            className="mr-2"
+                          />
+                          Gras
+                        </label>
+                        <label className="flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={gazette.typography?.bodyItalic || false}
+                            onChange={(e) => setGazette(prev => ({
+                              ...prev,
+                              typography: { ...prev.typography, bodyItalic: e.target.checked }
+                            }))}
+                            className="mr-2"
+                          />
+                          Italique
+                        </label>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
               </div>
             </section>
 
@@ -1213,6 +1392,7 @@ export default function GazetteEditor() {
           title={gazette.title}
           description={gazette.description}
           blocks={gazette.blocks}
+          typography={gazette.typography}
           onClose={() => setShowPreview(false)}
         />
       )}
