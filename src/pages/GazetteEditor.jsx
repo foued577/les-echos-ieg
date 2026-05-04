@@ -50,6 +50,45 @@ const BLOCK_TYPES = {
   SEPARATOR: 'separator'
 };
 
+// Style mappings
+const fontClassMap = {
+  serif: "font-serif",
+  sans: "font-sans",
+  mono: "font-mono",
+  elegant: "font-serif"
+};
+
+const sizeClassMap = {
+  small: "text-sm",
+  normal: "text-base",
+  large: "text-lg",
+  xlarge: "text-2xl",
+  "text-sm": "text-sm",
+  "text-base": "text-base",
+  "text-lg": "text-lg",
+  "text-2xl": "text-2xl"
+};
+
+const alignClassMap = {
+  left: "text-left",
+  center: "text-center",
+  right: "text-right",
+  justify: "text-justify",
+  "text-left": "text-left",
+  "text-center": "text-center",
+  "text-right": "text-right",
+  "text-justify": "text-justify"
+};
+
+// Default block style
+const defaultBlockStyle = {
+  fontFamily: "serif",
+  fontSize: "text-base",
+  fontWeight: "font-normal",
+  italic: false,
+  align: "text-left"
+};
+
 // Cloudinary upload function (via backend)
 const uploadToCloudinary = async (file, type = 'image') => {
   try {
@@ -123,6 +162,22 @@ const BlockRenderer = ({ block, onUpdate, onRemove, onMoveUp, onMoveDown, isFirs
   const [isEditing, setIsEditing] = useState(false);
   const [content, setContent] = useState(block.content || '');
   const [uploading, setUploading] = useState(false);
+
+  // Helper function to get block class name based on style
+  const getBlockClassName = (block) => {
+    const style = {
+      ...defaultBlockStyle,
+      ...(block.style || {})
+    };
+
+    return [
+      fontClassMap[style.fontFamily] || "font-sans",
+      sizeClassMap[style.fontSize] || "text-base",
+      style.fontWeight === "font-bold" || style.bold ? "font-bold" : "font-normal",
+      style.italic ? "italic" : "",
+      alignClassMap[style.align] || "text-left"
+    ].join(" ").trim();
+  };
 
   const saveContent = () => {
     onUpdate(block.id, { ...block, content });
@@ -278,7 +333,7 @@ const BlockRenderer = ({ block, onUpdate, onRemove, onMoveUp, onMoveDown, isFirs
                   <option value="text-sm">Petit</option>
                   <option value="text-base">Normal</option>
                   <option value="text-lg">Grand</option>
-                  <option value="text-xl">Très grand</option>
+                  <option value="text-2xl">Très grand</option>
                 </select>
               </div>
 
@@ -330,14 +385,14 @@ const BlockRenderer = ({ block, onUpdate, onRemove, onMoveUp, onMoveDown, isFirs
                 onChange={(e) => setContent(e.target.value)}
                 onBlur={saveContent}
                 onKeyPress={(e) => e.key === 'Enter' && saveContent()}
-                className="text-3xl font-serif text-gray-900 bg-transparent border-b-2 border-blue-500 focus:outline-none w-full"
-                placeholder="Titre de la section"
+                className={`w-full text-gray-700 bg-transparent border border-blue-500 rounded-lg p-3 focus:outline-none resize-none ${getBlockClassName(block)}`}
+                placeholder="Entrez un titre..."
                 autoFocus
               />
             ) : (
-              <h2 
+              <h2
                 onClick={() => setIsEditing(true)}
-                className="text-3xl font-serif text-gray-900 cursor-text hover:bg-gray-50 px-2 py-1 rounded"
+                className={`${getBlockClassName(block)} text-gray-900 cursor-text hover:bg-gray-50 px-2 py-1 rounded`}
               >
                 {content || 'Cliquez pour ajouter un titre'}
               </h2>
@@ -411,7 +466,7 @@ const BlockRenderer = ({ block, onUpdate, onRemove, onMoveUp, onMoveDown, isFirs
                   <option value="text-sm">Petit</option>
                   <option value="text-base">Normal</option>
                   <option value="text-lg">Grand</option>
-                  <option value="text-xl">Très grand</option>
+                  <option value="text-2xl">Très grand</option>
                 </select>
               </div>
 
@@ -461,15 +516,15 @@ const BlockRenderer = ({ block, onUpdate, onRemove, onMoveUp, onMoveDown, isFirs
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 onBlur={saveContent}
-                className="w-full text-gray-700 bg-transparent border border-blue-500 rounded-lg p-3 focus:outline-none resize-none"
+                className={`w-full text-gray-700 bg-transparent border border-blue-500 rounded-lg p-3 focus:outline-none resize-none ${getBlockClassName(block)}`}
                 rows={4}
-                placeholder="Ajoutez votre texte ici..."
+                placeholder="Écrivez votre texte ici..."
                 autoFocus
               />
             ) : (
-              <div 
+              <div
                 onClick={() => setIsEditing(true)}
-                className="text-gray-700 cursor-text hover:bg-gray-50 p-3 rounded-lg min-h-[100px]"
+                className={`${getBlockClassName(block)} text-gray-700 cursor-text hover:bg-gray-50 p-3 rounded-lg min-h-[100px]`}
               >
                 {content || 'Cliquez pour ajouter du texte...'}
               </div>
@@ -1091,22 +1146,41 @@ export default function GazetteEditor() {
     }));
   };
 
-  const updateBlockStyle = (index, newStyle) => {
-    setGazette(prev => {
-      const updatedBlocks = [...prev.blocks];
-      updatedBlocks[index] = {
-        ...updatedBlocks[index],
-        style: {
-          ...updatedBlocks[index].style,
-          ...newStyle
-        }
-      };
-      return {
-        ...prev,
-        blocks: updatedBlocks
-      };
-    });
+  // Helper function to get block class name based on style
+const getBlockClassName = (block) => {
+  const style = {
+    ...defaultBlockStyle,
+    ...(block.style || {})
   };
+
+  return [
+    fontClassMap[style.fontFamily] || "font-sans",
+    sizeClassMap[style.fontSize] || "text-base",
+    style.fontWeight === "font-bold" || style.bold ? "font-bold" : "font-normal",
+    style.italic ? "italic" : "",
+    alignClassMap[style.align] || "text-left"
+  ].join(" ").trim();
+};
+
+const updateBlockStyle = (index, newStyle) => {
+  if (index === null || index === undefined) return;
+  
+  setGazette(prev => {
+    const updatedBlocks = [...prev.blocks];
+    updatedBlocks[index] = {
+      ...updatedBlocks[index],
+      style: {
+        ...defaultBlockStyle,
+        ...(updatedBlocks[index].style || {}),
+        ...newStyle
+      }
+    };
+    return {
+      ...prev,
+      blocks: updatedBlocks
+    };
+  });
+};
 
   const moveBlock = (blockId, direction) => {
     setGazette(prev => {
