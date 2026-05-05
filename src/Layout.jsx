@@ -354,7 +354,7 @@ export default function Layout({ children, currentPageName }) {
                       {rubrique.contents.map((content) => (
                         <Link
                           key={content._id}
-                          to={createPageUrl(`ContentDetail?id=${content._id}`)}
+                          to={createPageUrl(`content/${content._id}`)}
                           onClick={() => setMobileMenuOpen(false)}
                           className="block ml-4 text-xs text-muted-foreground hover:text-blue-600 truncate px-4 py-1 transition-colors"
                         >
