@@ -92,32 +92,35 @@ export default function ContentDetail() {
       console.log('🔍=== LOAD CONTENT DETAIL ===');
       console.log('🆔 Content ID:', id);
       
-      const response = await contentsAPI.getById(id);
+      const result = await contentsAPI.getById(id);
+      console.log('🔍 API Response:', result);
       
-      if (response.success) {
-        console.log('✅ Content loaded:', response.data);
-        console.log('🔍 Content type:', response.data?.type);
-        console.log('🔍 Files field:', response.data?.files);
-        console.log('🔍 Files count:', response.data?.files?.length || 0);
-        console.log('🔍 file_url field:', response.data?.file_url);
-        console.log('🔍 file_name field:', response.data?.file_name);
-        console.log('🔍 All content keys:', Object.keys(response.data || {}));
-        console.log('🔍 Full content object:', JSON.stringify(response.data, null, 2));
-        
-        setContent(response.data);
-        setError(null);
-      } else {
-        console.error('❌ Failed to load content:', response);
-        setError('Contenu non trouvé');
+      // Handle both wrapped response and direct content object
+      const loadedContent = result?.data || result;
+      console.log('🔍 Loaded Content:', loadedContent);
+      
+      if (!loadedContent || !loadedContent._id) {
+        throw new Error("Contenu introuvable");
       }
       
-      setLoading(false);
+      console.log('✅ Content loaded successfully');
+      console.log('🔍 Content type:', loadedContent?.type);
+      console.log('🔍 Files field:', loadedContent?.files);
+      console.log('🔍 Files count:', loadedContent?.files?.length || 0);
+      console.log('🔍 file_url field:', loadedContent?.file_url);
+      console.log('🔍 file_name field:', loadedContent?.file_name);
+      console.log('🔍 All content keys:', Object.keys(loadedContent || {}));
+      console.log('🔍 Full content object:', JSON.stringify(loadedContent, null, 2));
+      
+      setContent(loadedContent);
+      setError(null);
     } catch (error) {
       console.error('💥 Error loading content:', error);
       console.log('🔍 Error response status:', error.response?.status);
       console.log('🔍 Error response data:', error.response?.data);
       console.log('🔍 Error message:', error.message);
       setError('Erreur lors du chargement du contenu');
+    } finally {
       setLoading(false);
     }
   };
