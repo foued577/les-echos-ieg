@@ -20,7 +20,8 @@ import {
   Activity,
   Calendar,
   BarChart3,
-  Newspaper
+  Newspaper,
+  Edit
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { format } from 'date-fns';
@@ -151,16 +152,18 @@ export default function Dashboard() {
       } else {
         // Simple user: Use personal APIs for their own contents only
         console.log('👤 Loading simple user dashboard with personal stats');
-        [myContentsResponse, pendingContentsResponse, approvedContentsResponse] = await Promise.all([
+        [myContentsResponse, pendingContentsResponse, approvedContentsResponse, draftContentsResponse] = await Promise.all([
           contentsAPI.getMy().catch(err => ({ success: false, error: err })),
           contentsAPI.getMy({ status: 'pending_review' }).catch(err => ({ success: false, error: err })),
           contentsAPI.getMy({ status: 'approved' }).catch(err => ({ success: false, error: err })),
+          contentsAPI.getMy({ status: 'draft' }).catch(err => ({ success: false, error: err })),
         ]);
       }
 
       const myContents = myContentsResponse.success ? myContentsResponse.data : [];
       const pendingContents = pendingContentsResponse.success ? pendingContentsResponse.data : [];
       const approvedContents = approvedContentsResponse.success ? approvedContentsResponse.data : [];
+      const draftContents = draftContentsResponse ? draftContentsResponse.success ? draftContentsResponse.data : [] : [];
 
       console.log('📊=== DASHBOARD API RESPONSES ===');
       console.log('📝 My Contents from Dashboard API:', myContents.length, myContents.map(c => ({
@@ -342,6 +345,23 @@ export default function Dashboard() {
             </div>
             <div className="text-sm text-gray-600 mt-1">Approuvées</div>
           </div>
+
+          {!isAdmin && draftContents && draftContents.length > 0 && (
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-gray-50 rounded-lg flex items-center justify-center">
+                <Edit className="w-6 h-6 text-gray-600" />
+              </div>
+              <span className="text-sm text-gray-600 font-medium">
+                {draftContents.length} brouillon{draftContents.length > 1 ? 's' : ''}
+              </span>
+            </div>
+            <div className="text-2xl font-bold text-gray-900">
+              <CountUp end={draftContents.length} />
+            </div>
+            <div className="text-sm text-gray-600 mt-1">Brouillons</div>
+          </div>
+        )}
 
           <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
             <div className="flex items-center justify-between mb-4">

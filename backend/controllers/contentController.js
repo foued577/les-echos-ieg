@@ -112,7 +112,20 @@ const getMyContents = async (req, res) => {
     console.log('👤 Raw contents found:', contents.length);
     
     // Filtrage défensif pour exclure les contenus orphelins
+    // MAIS inclure les brouillons même sans rubrique_id ou team_ids valides
     const validContents = contents.filter(content => {
+      // Si c'est un brouillon, l'inclure même sans rubrique_id ou team_ids valides
+      if (content.status === 'draft') {
+        console.log('✅ Including draft content:', {
+          title: content.title,
+          status: content.status,
+          rubrique_id: content.rubrique_id,
+          team_ids: content.team_ids
+        });
+        return true;
+      }
+      
+      // Pour les autres statuts, vérifier les relations valides
       const hasValidTeam = !content.team_ids || content.team_ids.length === 0 || 
         content.team_ids.some(team => team && team._id);
       const hasValidRubrique = content.rubrique_id && content.rubrique_id._id;
@@ -120,6 +133,7 @@ const getMyContents = async (req, res) => {
       if (!hasValidTeam) {
         console.log('🚫 Filtering orphaned content (invalid team):', {
           title: content.title,
+          status: content.status,
           team_ids: content.team_ids
         });
       }
@@ -127,6 +141,7 @@ const getMyContents = async (req, res) => {
       if (!hasValidRubrique) {
         console.log('🚫 Filtering orphaned content (invalid rubrique):', {
           title: content.title,
+          status: content.status,
           rubrique_id: content.rubrique_id
         });
       }
