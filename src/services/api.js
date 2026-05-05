@@ -472,14 +472,17 @@ export const contentsAPI = {
     
     const response = await api.get(`/contents/${id}`);
     console.log('🔍 Raw response:', response.data);
-    console.log('🔍 Response structure:', {
-      success: response.data.success,
-      hasData: !!response.data.data,
-      dataKeys: response.data.data ? Object.keys(response.data.data) : []
-    });
     
-    // Backend returns {success: true, data: content}
-    return response.data.data || response.data;
+    // Handle all possible response formats
+    const normalizedContent = 
+      response.data?.content ||
+      response.data?.data?.content ||
+      response.data?.data?.data ||
+      response.data?.data ||
+      response.data;
+    
+    console.log('🔍 Normalized content:', normalizedContent);
+    return normalizedContent;
   },
   
   create: async (contentData) => {
