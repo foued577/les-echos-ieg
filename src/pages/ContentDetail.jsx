@@ -458,6 +458,50 @@ export default function ContentDetail() {
             </div>
           </div>
         )}
+
+        {/* Content */}
+        <div className="mt-6">
+          {content.type === 'lien' && (
+            <div>
+              <h3 className="font-semibold mb-2">Lien</h3>
+              <a
+                href={content.content}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 underline break-all"
+              >
+                {content.content}
+              </a>
+            </div>
+          )}
+
+          {content.type === 'fichier' && (
+            <div>
+              <h3 className="font-semibold mb-2">Fichier</h3>
+              <a
+                href={content.file_url || content.content}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 underline"
+              >
+                Télécharger le fichier
+              </a>
+            </div>
+          )}
+
+          {content.type === 'texte' && (
+            <div className="whitespace-pre-line text-gray-800">
+              {content.content}
+            </div>
+          )}
+
+          {content.type === 'lien' && content.content.includes("webikeo") && (
+            <iframe
+              src={content.content}
+              className="w-full h-[500px] mt-4 border"
+            />
+          )}
+        </div>
       </div>
 
       {/* Files Modal */}
