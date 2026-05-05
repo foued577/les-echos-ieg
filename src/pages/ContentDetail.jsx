@@ -98,22 +98,24 @@ export default function ContentDetail() {
       const response = await contentsAPI.getById(id);
       console.log('🔍 RAW CONTENT RESPONSE:', response);
 
-      if (!response || !response._id) {
+      // Enhanced normalization for all possible formats
+      const loadedContent =
+        response?._id ? response :
+        response?.content?._id ? response.content :
+        response?.data?._id ? response.data :
+        response?.data?.content?._id ? response.data.content :
+        null;
+
+      if (!loadedContent || !loadedContent._id) {
         console.error("Invalid content response:", response);
         setError("Contenu non trouvé");
         return;
       }
 
-      console.log('✅ Content loaded successfully');
-      console.log('🔍 Content type:', response?.type);
-      console.log('🔍 Files field:', response?.files);
-      console.log('🔍 Files count:', response?.files?.length || 0);
-      console.log('🔍 file_url field:', response?.file_url);
-      console.log('🔍 file_name field:', response?.file_name);
-      console.log('🔍 All content keys:', Object.keys(response || {}));
-      console.log('🔍 Full content object:', JSON.stringify(response, null, 2));
-
-      setContent(response);
+      console.log('✅ Final loaded content:', loadedContent);
+      setContent(loadedContent);
+      console.log('🔍 All content keys:', Object.keys(loadedContent || {}));
+      console.log('🔍 Full content object:', JSON.stringify(loadedContent, null, 2));
       setError(null);
     } catch (error) {
       console.error('❌ Failed to load content:', error.response?.data || error);
