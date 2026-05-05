@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '@/lib/AuthContext';
 import { contentsAPI, dashboardMessagesAPI } from '@/services/api';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '../utils';
 import MessageCarousel from '../components/MessageCarousel';
 import { 
@@ -90,6 +90,7 @@ const QuickAccessCard = ({ icon: Icon, title, description, to, color = "blue" })
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [myContents, setMyContents] = useState([]);
   const [recentApproved, setRecentApproved] = useState([]);
   const [allContents, setAllContents] = useState([]); // Renommé pour clarifier
@@ -216,6 +217,16 @@ export default function Dashboard() {
       case 'link': return LinkIcon;
       case 'file': return File;
       default: return FileText;
+    }
+  };
+
+  const handleProposalClick = (content) => {
+    const isDraft = content.status === 'draft' || content.status === 'brouillon';
+
+    if (isDraft) {
+      navigate(`/edit-content/${content._id}`);
+    } else {
+      navigate(`/content/${content._id}`);
     }
   };
 
@@ -499,8 +510,14 @@ export default function Dashboard() {
                 };
                 const status = statusConfig[content.status] || { label: 'Inconnu', class: 'bg-gray-100 text-gray-600', bgClass: 'bg-gray-50' };
                 
+                const isDraft = content.status === 'draft' || content.status === 'brouillon';
+                
                 return (
-                  <div key={content.id} className={`p-6 flex items-center gap-4 group transition-all duration-200 hover:bg-gray-50 ${index !== myContents.length - 1 ? 'border-b border-gray-200' : ''}`}>
+                  <div 
+                    key={content.id} 
+                    onClick={() => handleProposalClick(content)}
+                    className={`p-6 flex items-center gap-4 group transition-all duration-200 cursor-pointer hover:bg-gray-50 ${index !== myContents.length - 1 ? 'border-b border-gray-200' : ''}`}
+                  >
                     <div className={`w-12 h-12 rounded-xl ${status.bgClass} flex items-center justify-center`}>
                       <Icon className="w-6 h-6 text-gray-700" />
                     </div>
@@ -510,9 +527,25 @@ export default function Dashboard() {
                         {format(new Date(content.created_at), 'dd MMMM yyyy', { locale: fr })}
                       </p>
                     </div>
-                    <span className={`${status.class} px-3 py-1 rounded-full text-xs font-medium`}>
-                      {status.label}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      {isDraft && (
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="border-blue-200 text-blue-600 hover:bg-blue-50 px-3 py-1"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleProposalClick(content);
+                          }}
+                        >
+                          <Edit className="w-3 h-3 mr-1" />
+                          Modifier
+                        </Button>
+                      )}
+                      <span className={`${status.class} px-3 py-1 rounded-full text-xs font-medium`}>
+                        {status.label}
+                      </span>
+                    </div>
                   </div>
                 );
               })}
