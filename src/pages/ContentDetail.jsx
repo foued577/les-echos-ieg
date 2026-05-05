@@ -60,6 +60,7 @@ export default function ContentDetail() {
   const [error, setError] = useState(null);
   const [selectedContentFiles, setSelectedContentFiles] = useState([]);
   const [filesModalOpen, setFilesModalOpen] = useState(false);
+  const [showIframe, setShowIframe] = useState(false);
 
   const handleFileContentClick = (content) => {
     console.log('=== HANDLE FILE CONTENT CLICK DEBUG ===');
@@ -249,10 +250,10 @@ export default function ContentDetail() {
   const Icon = getTypeIcon(content.type);
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-5xl mx-auto px-6 py-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-6">
           <Button 
             variant="ghost" 
             size="icon" 
@@ -261,125 +262,219 @@ export default function ContentDetail() {
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
-          <div className="w-12 h-12 rounded-lg bg-stone-100 flex items-center justify-center">
-            <Icon className="w-6 h-6 text-stone-500" />
+          
+          {/* Bouton supprimer - admin uniquement */}
+          {user?.role === 'admin' && (
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={handleDeleteContent}
+              className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 hover:border-red-300"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Supprimer
+            </Button>
+          )}
+        </div>
+        
+        <div className="flex items-center gap-4">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg">
+            <Icon className="w-8 h-8 text-white" />
           </div>
           <div className="flex-1">
-            <h1 className="font-serif text-2xl font-semibold text-slate-900">{content.title}</h1>
-            <div className="flex items-center gap-3 mt-1 text-sm text-slate-500">
-              <span>{content.author_id?.name || 'Auteur inconnu'}</span>
-              <span>•</span>
-              <span>{format(new Date(content.created_at), 'dd MMMM yyyy à HH:mm', { locale: fr })}</span>
+            <h1 className="font-serif text-3xl md:text-4xl leading-tight text-slate-900 max-w-4xl">
+              {content.title}
+            </h1>
+            <div className="text-sm text-gray-500 flex flex-wrap gap-2 mt-2">
+              <span className="flex items-center gap-1">
+                <span className="w-2 h-2 bg-gray-400 rounded-full"></span>
+                {content.author_id?.name || 'Auteur inconnu'}
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-2 h-2 bg-gray-400 rounded-full"></span>
+                {format(new Date(content.created_at), 'dd MMMM yyyy', { locale: fr })}
+              </span>
               {content.type && (
-                <>
-                  <span>•</span>
-                  <span className="capitalize">{content.type}</span>
-                </>
+                <span className="flex items-center gap-1">
+                  <span className="w-2 h-2 bg-blue-400 rounded-full"></span>
+                  <span className="capitalize bg-blue-50 text-blue-700 px-2 py-1 rounded-full text-xs font-medium">
+                    {content.type}
+                  </span>
+                </span>
+              )}
+              {content.rubrique_id?.name && (
+                <span className="flex items-center gap-1">
+                  <span className="w-2 h-2 bg-purple-400 rounded-full"></span>
+                  <span className="bg-purple-50 text-purple-700 px-2 py-1 rounded-full text-xs font-medium">
+                    {content.rubrique_id.name}
+                  </span>
+                </span>
               )}
             </div>
           </div>
         </div>
-        
-        <Button 
-          variant="outline" 
-          size="sm"
-          onClick={handleDeleteContent}
-          className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 hover:border-red-300"
-        >
-          <Trash2 className="w-4 h-4 mr-2" />
-          Supprimer
-        </Button>
       </div>
 
-      {/* Content based on type */}
-      <div className="bg-white border border-stone-200 rounded-xl p-6">
-        {content.type === 'link' && (
-          <div className="space-y-4">
-            <div className="flex items-start gap-3">
-              <LinkIcon className="w-5 h-5 text-blue-500 mt-1" />
-              <div className="flex-1">
-                <h3 className="font-medium text-slate-900 mb-2">Lien externe</h3>
-                <p className="text-slate-600 mb-4">{content.description || 'Cliquez pour ouvrir le lien'}</p>
-                <div className="bg-stone-50 p-3 rounded-lg">
-                  <p className="text-sm text-stone-600 truncate">{content.url}</p>
+      {/* Tags */}
+      {content.tags && content.tags.length > 0 && (
+        <div className="mb-6">
+          <div className="flex flex-wrap gap-2">
+            {content.tags.map((tag, index) => (
+              <span 
+                key={index} 
+                className="px-3 py-1 bg-gray-100 text-gray-700 text-xs rounded-full font-medium"
+              >
+                #{tag}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Teams */}
+      {content.team_ids && content.team_ids.length > 0 && (
+        <div className="mb-6">
+          <div className="flex flex-wrap gap-2">
+            {content.team_ids.map((team, index) => (
+              <span 
+                key={index} 
+                className="px-3 py-1 bg-blue-50 text-blue-600 text-xs rounded-full font-medium"
+              >
+                {team.name || team}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Main Content Card */}
+      <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6 space-y-6">
+        {content.type === 'lien' && (
+          <div className="rounded-xl border bg-blue-50 p-6">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+                <LinkIcon className="w-6 h-6 text-blue-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Lien externe</h3>
+                <p className="text-gray-600 mb-4 truncate" title={content.content}>
+                  {content.content}
+                </p>
+                <div className="flex gap-3">
+                  <Button 
+                    onClick={handleOpenLink}
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    <ExternalLink className="w-4 h-4 mr-2" />
+                    Ouvrir le lien
+                  </Button>
+                  {content.content && content.content.includes("webikeo") && (
+                    <Button 
+                      variant="outline"
+                      onClick={() => setShowIframe(!showIframe)}
+                      className="border-blue-200 text-blue-600 hover:bg-blue-50"
+                    >
+                      {showIframe ? 'Masquer l\'aperçu' : 'Afficher l\'aperçu'}
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
-            <Button 
-              onClick={handleOpenLink}
-              className="bg-blue-500 hover:bg-blue-600 text-white"
-            >
-              <ExternalLink className="w-4 h-4 mr-2" />
-              Ouvrir le lien
-            </Button>
+            {showIframe && content.content && content.content.includes("webikeo") && (
+              <div className="mt-4 border rounded-lg overflow-hidden">
+                <iframe
+                  src={content.content}
+                  className="w-full h-[500px]"
+                  title="Aperçu du lien"
+                />
+              </div>
+            )}
           </div>
         )}
 
-        {content.type === 'file' && (
-          <div className="space-y-4">
-            <div className="flex items-start gap-3">
-              <File className="w-5 h-5 text-green-500 mt-1" />
-              <div className="flex-1">
-                <h3 className="font-medium text-slate-900 mb-2">
+        {content.type === 'fichier' && (
+          <div className="rounded-xl border border-green-200 bg-green-50 p-6">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
+                <FileText className="w-6 h-6 text-green-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
                   {(() => {
                     const files = normalizeContentFiles(content);
                     return files.length > 1 ? 'Fichiers' : 'Fichier';
                   })()}
                 </h3>
-                <p className="text-slate-600 mb-4">{content.description || 'Cliquez pour accéder au(x) fichier(s)'}</p>
+                <p className="text-gray-600 mb-4">{content.description || 'Documents associés'}</p>
                 
-                <div className="bg-stone-50 p-3 rounded-lg">
+                <div className="space-y-2">
                   {(() => {
                     const files = normalizeContentFiles(content);
-                    console.log('DISPLAY DEBUG - Files count:', files.length);
-                    console.log('DISPLAY DEBUG - Files:', files);
                     
                     if (files.length === 0) {
-                      return <p className="text-sm text-stone-600">Aucun fichier associé</p>;
+                      return <p className="text-sm text-gray-500">Aucun fichier associé</p>;
                     } else if (files.length === 1) {
                       return (
-                        <div>
-                          <p className="text-sm font-medium text-stone-900">{files[0].name}</p>
-                          <p className="text-xs text-stone-500">
-                            {files[0].type && `${files[0].type} `}
-                            {files[0].size > 0 && `(${(files[0].size / 1024).toFixed(1)} KB)`}
-                          </p>
+                        <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-green-200">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded bg-green-100 flex items-center justify-center">
+                              <FileText className="w-4 h-4 text-green-600" />
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-900">{files[0].name}</p>
+                              <p className="text-sm text-gray-500">
+                                {files[0].type && `${files[0].type} `}
+                                {files[0].size > 0 && `(${(files[0].size / 1024).toFixed(1)} KB)`}
+                              </p>
+                            </div>
+                          </div>
+                          <Button
+                            size="sm"
+                            onClick={() => handleOpenFile(0)}
+                            className="bg-green-600 hover:bg-green-700 text-white"
+                          >
+                            <ExternalLink className="w-4 h-4 mr-2" />
+                            Ouvrir
+                          </Button>
                         </div>
                       );
                     } else {
-                      // Afficher TOUS les fichiers directement
                       return (
-                        <div className="space-y-2">
-                          <p className="text-sm font-medium text-stone-900 mb-2">
+                        <div className="space-y-3">
+                          <p className="text-sm font-medium text-gray-900">
                             {files.length} fichiers disponibles
                           </p>
                           {files.map((file, index) => (
-                            <div key={file.id} className="flex items-center justify-between p-2 bg-white rounded border border-stone-200">
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-stone-900 truncate">{file.name}</p>
-                                <p className="text-xs text-stone-500">
-                                  {file.type && `${file.type} `}
-                                  {file.size > 0 && `(${(file.size / 1024).toFixed(1)} KB)`}
-                                </p>
+                            <div key={file.id} className="flex items-center justify-between p-3 bg-white rounded-lg border border-green-200">
+                              <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded bg-green-100 flex items-center justify-center">
+                                  <FileText className="w-4 h-4 text-green-600" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-medium text-gray-900 truncate">{file.name}</p>
+                                  <p className="text-sm text-gray-500">
+                                    {file.type && `${file.type} `}
+                                    {file.size > 0 && `(${(file.size / 1024).toFixed(1)} KB)`}
+                                  </p>
+                                </div>
                               </div>
-                              <div className="flex gap-1 ml-2">
+                              <div className="flex gap-2">
                                 <Button
                                   size="sm"
-                                  variant="outline"
                                   onClick={() => handleOpenFile(index)}
-                                  className="text-blue-600 border-blue-200 hover:bg-blue-50 h-8 px-2"
-                                  title="Ouvrir le fichier"
+                                  className="bg-green-600 hover:bg-green-700 text-white"
                                 >
-                                  <ExternalLink className="w-3 h-3" />
+                                  <ExternalLink className="w-4 h-4 mr-2" />
+                                  Ouvrir
                                 </Button>
                                 <Button
                                   size="sm"
                                   variant="outline"
                                   onClick={() => handleDownloadFile(index)}
-                                  className="text-green-600 border-green-200 hover:bg-green-50 h-8 px-2"
-                                  title="Télécharger le fichier"
+                                  className="text-green-600 border-green-200 hover:bg-green-50"
                                 >
-                                  <Download className="w-3 h-3" />
+                                  <Download className="w-4 h-4 mr-2" />
+                                  Télécharger
                                 </Button>
                               </div>
                             </div>
@@ -391,117 +486,30 @@ export default function ContentDetail() {
                 </div>
               </div>
             </div>
-            
-            <Button 
-              onClick={() => handleFileContentClick(content)}
-              className="bg-green-500 hover:bg-green-600 text-white"
-            >
-              <Download className="w-4 h-4 mr-2" />
-              {(() => {
-                const files = normalizeContentFiles(content);
-                if (files.length === 0) return 'Aucun fichier';
-                if (files.length === 1) return 'Ouvrir le fichier';
-                return 'Voir tous les fichiers';
-              })()}
-            </Button>
           </div>
         )}
 
-        {content.type === 'article' && (
-          <ArticleDisplay content={content} />
-        )}
-
         {content.type === 'texte' && (
-          <div className="mt-4 text-gray-800 whitespace-pre-line">
+          <div className="prose max-w-none whitespace-pre-line leading-relaxed text-gray-800">
             {content.content}
           </div>
         )}
 
+        {content.type === 'article' && (
+          <div className="prose max-w-none">
+            <ArticleDisplay content={content} />
+          </div>
+        )}
+
         {content.type === 'fichier' && content.file_url?.endsWith('.pdf') && (
-          <iframe
-            src={content.file_url}
-            className="w-full h-[600px] mt-4"
-            title="Aperçu PDF"
-          />
-        )}
-
-        {/* Tags */}
-        {content.tags && content.tags.length > 0 && (
-          <div className="pt-4 border-t border-stone-200">
-            <h4 className="text-sm font-medium text-slate-700 mb-2">Tags</h4>
-            <div className="flex flex-wrap gap-2">
-              {content.tags.map((tag, index) => (
-                <span 
-                  key={index} 
-                  className="px-3 py-1 bg-stone-100 text-stone-600 text-xs rounded-full"
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Teams */}
-        {content.team_ids && content.team_ids.length > 0 && (
-          <div className="pt-4 border-t border-stone-200">
-            <h4 className="text-sm font-medium text-slate-700 mb-2">Équipes</h4>
-            <div className="flex flex-wrap gap-2">
-              {content.team_ids.map((team, index) => (
-                <span 
-                  key={index} 
-                  className="px-3 py-1 bg-blue-50 text-blue-600 text-xs rounded-full"
-                >
-                  {team.name || team}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Content */}
-        <div className="mt-6">
-          {content.type === 'lien' && (
-            <div>
-              <h3 className="font-semibold mb-2">Lien</h3>
-              <a
-                href={content.content}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 underline break-all"
-              >
-                {content.content}
-              </a>
-            </div>
-          )}
-
-          {content.type === 'fichier' && (
-            <div>
-              <h3 className="font-semibold mb-2">Fichier</h3>
-              <a
-                href={content.file_url || content.content}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 underline"
-              >
-                Télécharger le fichier
-              </a>
-            </div>
-          )}
-
-          {content.type === 'texte' && (
-            <div className="whitespace-pre-line text-gray-800">
-              {content.content}
-            </div>
-          )}
-
-          {content.type === 'lien' && content.content.includes("webikeo") && (
+          <div className="mt-6 border rounded-lg overflow-hidden">
             <iframe
-              src={content.content}
-              className="w-full h-[500px] mt-4 border"
+              src={content.file_url}
+              className="w-full h-[500px]"
+              title="Aperçu PDF"
             />
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Files Modal */}
