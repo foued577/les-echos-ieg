@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '@/lib/AuthContext';
 import { contentsAPI, dashboardMessagesAPI } from '@/services/api';
 import { Link } from 'react-router-dom';
@@ -92,13 +92,32 @@ export default function Dashboard() {
   const { user } = useAuth();
   const [myContents, setMyContents] = useState([]);
   const [recentApproved, setRecentApproved] = useState([]);
-  const [pendingContents, setPendingContents] = useState([]);
+  const [allContents, setAllContents] = useState([]); // Renommé pour clarifier
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
   const [activeMessage, setActiveMessage] = useState(null);
   const [activeMessages, setActiveMessages] = useState([]);
 
   const isAdmin = user?.role === "admin";
+
+  // Calculer les statuts avec useMemo pour éviter les recalculs et rendre accessible dans tout le composant
+  const contentStats = useMemo(() => {
+    const draftContents = allContents.filter(content => 
+      content.status === 'draft' || content.status === 'brouillon'
+    );
+    const pendingContents = allContents.filter(content => 
+      content.status === 'pending_review' || content.status === 'en_attente'
+    );
+    const approvedContents = allContents.filter(content => 
+      content.status === 'approved' || content.status === 'approuve'
+    );
+    
+    return {
+      draftContents,
+      pendingContents,
+      approvedContents
+    };
+  }, [allContents]);
 
   // Global refresh function for other components
   useEffect(() => {
@@ -139,32 +158,20 @@ export default function Dashboard() {
       console.log('🆔 User ID:', user.id);
       console.log('🔐 Is admin:', isAdmin);
       
-      let myContentsResponse, pendingContentsResponse, approvedContentsResponse;
+      let myContentsResponse;
       
       if (isAdmin) {
         // Admin: Use global APIs for all contents
         console.log('👨‍💼 Loading admin dashboard with global stats');
-        [myContentsResponse, pendingContentsResponse, approvedContentsResponse] = await Promise.all([
-          contentsAPI.getAll().catch(err => ({ success: false, error: err })),
-          contentsAPI.getAll({ status: 'pending_review' }).catch(err => ({ success: false, error: err })),
-          contentsAPI.getAll({ status: 'approved' }).catch(err => ({ success: false, error: err })),
-        ]);
+        myContentsResponse = await contentsAPI.getAll().catch(err => ({ success: false, error: err }));
       } else {
         // Simple user: Use personal APIs for their own contents only
         console.log('👤 Loading simple user dashboard with personal stats');
-        [myContentsResponse, pendingContentsResponse, approvedContentsResponse, draftContentsResponse] = await Promise.all([
-          contentsAPI.getMy().catch(err => ({ success: false, error: err })),
-          contentsAPI.getMy({ status: 'pending_review' }).catch(err => ({ success: false, error: err })),
-          contentsAPI.getMy({ status: 'approved' }).catch(err => ({ success: false, error: err })),
-          contentsAPI.getMy({ status: 'draft' }).catch(err => ({ success: false, error: err })),
-        ]);
+        myContentsResponse = await contentsAPI.getMy().catch(err => ({ success: false, error: err }));
       }
 
       const myContents = myContentsResponse.success ? myContentsResponse.data : [];
-      const pendingContents = pendingContentsResponse.success ? pendingContentsResponse.data : [];
-      const approvedContents = approvedContentsResponse.success ? approvedContentsResponse.data : [];
-      const draftContents = draftContentsResponse ? draftContentsResponse.success ? draftContentsResponse.data : [] : [];
-
+      
       console.log('📊=== DASHBOARD API RESPONSES ===');
       console.log('📝 My Contents from Dashboard API:', myContents.length, myContents.map(c => ({
         id: c._id,
@@ -174,60 +181,27 @@ export default function Dashboard() {
         team_names: c.rubrique_id?.team_ids?.map(t => t.name).join(', ') || 'Aucune équipe',
         created_at: c.created_at
       })));
-      console.log('⏳ Pending Contents from Dashboard API:', pendingContents.length, pendingContents.map(c => ({
-        id: c._id,
-        title: c.title,
-        status: c.status,
-        rubrique_name: c.rubrique_id?.name,
-        team_names: c.rubrique_id?.team_ids?.map(t => t.name).join(', ') || 'Aucune équipe',
-        created_at: c.created_at
-      })));
-      console.log('✅ Approved Contents Raw:', approvedContents.length, approvedContents.slice(0, 3).map(c => ({
-        id: c._id,
-        title: c.title,
-        status: c.status,
-        created_at: c.created_at
-      })));
 
       console.log('📊 Final counts:');
       console.log('  - My contents:', myContents.length);
-      console.log('  - My pending contents:', pendingContents.length);
-      console.log('  - ALL approved contents:', approvedContents.length);
+      console.log('  - Draft contents:', contentStats.draftContents.length);
+      console.log('  - Pending contents:', contentStats.pendingContents.length);
+      console.log('  - Approved contents:', contentStats.approvedContents.length);
       
-      // No filtering needed - backend already filtered valid content
-      console.log('🔍=== NO FRONTEND FILTERING NEEDED ===');
-      console.log('📝 My Contents (already filtered):', myContents.length, 'items');
-      
-      const normalizedMyContents = myContents
+      // Normaliser tous les contenus
+      const normalizedContents = myContents
         .filter(content => content && content._id)
         .map(content => ({
           ...content,
           id: content._id || content.id
-        }));
-
-      const normalizedPending = pendingContents
-        .filter(content => content && content._id)
-        .map(content => ({
-          ...content,
-          id: content._id || content.id
-        }));
-
-      const normalizedApproved = approvedContents
-        .filter(content => content && content._id)
-        .map(content => ({
-          ...content,
-          id: content._id || content.id,
-          author_name: content.author_id?.name || 'Anonyme'
         }));
 
       console.log('🔍=== FINAL RESULTS ===');
-      console.log(' My Contents Final:', normalizedMyContents.length, 'items');
-      console.log('⏳ Pending Contents Final:', normalizedPending.length, 'items');
-      console.log('✅ Approved Contents Final:', normalizedApproved.length, 'items');
+      console.log(' My Contents Final:', normalizedContents.length, 'items');
 
-      setMyContents(normalizedMyContents.slice(0, 5));
-      setPendingContents(normalizedPending);
-      setRecentApproved(normalizedApproved);
+      setAllContents(normalizedContents);
+      setMyContents(normalizedContents.slice(0, 5));
+      setRecentApproved(contentStats.approvedContents);
       setLoading(false);
       
       console.log('✅ Dashboard data loaded successfully');
@@ -324,11 +298,11 @@ export default function Dashboard() {
                 <Clock className="w-6 h-6 text-orange-600" />
               </div>
               <span className="text-sm text-orange-600 font-medium">
-                {pendingContents.length} en attente
+                {contentStats.pendingContents.length} en attente
               </span>
             </div>
             <div className="text-2xl font-bold text-gray-900">
-              <CountUp end={pendingContents.length} />
+              <CountUp end={contentStats.pendingContents.length} />
             </div>
             <div className="text-sm text-gray-600 mt-1">En validation</div>
           </div>
@@ -341,23 +315,23 @@ export default function Dashboard() {
               <span className="text-sm text-green-600 font-medium">+8%</span>
             </div>
             <div className="text-2xl font-bold text-gray-900">
-              <CountUp end={recentApproved.length} />
+              <CountUp end={contentStats.approvedContents.length} />
             </div>
             <div className="text-sm text-gray-600 mt-1">Approuvées</div>
           </div>
 
-          {!isAdmin && draftContents && draftContents.length > 0 && (
+          {!isAdmin && contentStats.draftContents.length > 0 && (
           <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
             <div className="flex items-center justify-between mb-4">
               <div className="w-12 h-12 bg-gray-50 rounded-lg flex items-center justify-center">
                 <Edit className="w-6 h-6 text-gray-600" />
               </div>
               <span className="text-sm text-gray-600 font-medium">
-                {draftContents.length} brouillon{draftContents.length > 1 ? 's' : ''}
+                {contentStats.draftContents.length} brouillon{contentStats.draftContents.length > 1 ? 's' : ''}
               </span>
             </div>
             <div className="text-2xl font-bold text-gray-900">
-              <CountUp end={draftContents.length} />
+              <CountUp end={contentStats.draftContents.length} />
             </div>
             <div className="text-sm text-gray-600 mt-1">Brouillons</div>
           </div>
@@ -425,18 +399,18 @@ export default function Dashboard() {
         </section>
 
         {/* Pending Contents Alert */}
-        {pendingContents.length > 0 && (
+        {contentStats.pendingContents.length > 0 && (
           <section className="animate-fade-in">
             <div className="bg-orange-50 border border-orange-200 rounded-xl p-6">
               <div className="flex items-center gap-3 mb-4">
                 <Clock className="w-5 h-5 text-orange-600" />
                 <h3 className="font-semibold text-gray-900">En attente de validation</h3>
                 <span className="ml-auto text-sm text-orange-600 font-medium bg-orange-100 px-3 py-1 rounded-full">
-                  {pendingContents.length} proposition{pendingContents.length > 1 ? 's' : ''}
+                  {contentStats.pendingContents.length} proposition{contentStats.pendingContents.length > 1 ? 's' : ''}
                 </span>
               </div>
               <div className="space-y-3">
-                {pendingContents.slice(0, 3).map((content) => {
+                {contentStats.pendingContents.slice(0, 3).map((content) => {
                   const Icon = getTypeIcon(content.type);
                   return (
                     <div key={content.id} className="flex items-center gap-4 text-sm bg-white p-3 rounded-lg">
