@@ -137,8 +137,8 @@ export default function ContentDetail() {
   };
 
   const handleOpenLink = () => {
-    if (content?.url) {
-      window.open(content.url, '_blank');
+    if (content?.content) {
+      window.open(content.content, '_blank');
     }
   };
 
@@ -409,6 +409,20 @@ export default function ContentDetail() {
 
         {content.type === 'article' && (
           <ArticleDisplay content={content} />
+        )}
+
+        {content.type === 'texte' && (
+          <div className="mt-4 text-gray-800 whitespace-pre-line">
+            {content.content}
+          </div>
+        )}
+
+        {content.type === 'fichier' && content.file_url?.endsWith('.pdf') && (
+          <iframe
+            src={content.file_url}
+            className="w-full h-[600px] mt-4"
+            title="Aperçu PDF"
+          />
         )}
 
         {/* Tags */}
