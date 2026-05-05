@@ -114,6 +114,9 @@ export default function ContentDetail() {
       setLoading(false);
     } catch (error) {
       console.error('💥 Error loading content:', error);
+      console.log('🔍 Error response status:', error.response?.status);
+      console.log('🔍 Error response data:', error.response?.data);
+      console.log('🔍 Error message:', error.message);
       setError('Erreur lors du chargement du contenu');
       setLoading(false);
     }

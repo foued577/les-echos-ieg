@@ -309,6 +309,7 @@ const getContentById = async (req, res) => {
   try {
     console.log('🔍=== GET CONTENT BY ID ===');
     console.log('🔍 Requested ID:', req.params.id);
+    console.log('🔍 USER:', req.user?._id, req.user?.role);
     
     const content = await Content.findById(req.params.id)
       .populate('author_id', 'name email avatar')
@@ -333,6 +334,26 @@ const getContentById = async (req, res) => {
       });
     }
 
+    // Permission validation
+    const isAdmin = req.user.role === 'admin';
+    const isApproved = content.status === 'approved' || content.status === 'approuve';
+    const authorId = content.author_id?._id || content.author_id;
+    const isOwner = String(authorId) === String(req.user._id);
+
+    console.log('🔍 PERMISSION CHECK:', { isAdmin, isApproved, isOwner });
+    console.log('🔍 Content status:', content.status);
+    console.log('🔍 Author ID:', authorId);
+    console.log('🔍 User ID:', req.user._id);
+
+    if (!isAdmin && !isApproved && !isOwner) {
+      console.log('🔍 ACCESS DENIED - Not admin, not approved, not owner');
+      return res.status(403).json({
+        success: false,
+        message: 'Accès refusé'
+      });
+    }
+
+    console.log('🔍 ACCESS GRANTED');
     res.status(200).json({
       success: true,
       data: content
